@@ -35,6 +35,8 @@ TAB_COLORS = {
     "📐 Chart Patterns":     "880E4F",
     "🎯 Trade Setups":       "E65100",
     "📋 RS Sleeve Lists":    "1A3A5C",
+    "🌍 Country ETFs":       "1A3C5E",
+    "🏅 Commodities":        "4E342E",
 }
 HDR_COLORS = {
     "📸 Market Snapshot":    "0D2137",
@@ -48,6 +50,8 @@ HDR_COLORS = {
     "🔴 Top Picks - Sell":   "B71C1C",
     "📐 Chart Patterns":     "880E4F",
     "🎯 Trade Setups":       "BF360C",
+    "🌍 Country ETFs":       "1A3C5E",
+    "🏅 Commodities":        "4E342E",
 }
 SIG_COLORS = {
     "Strong Buy": ("FFFFFF","006B3C"),
@@ -157,7 +161,7 @@ def _color_cell(cell, col_name, val):
             elif val<1: cell.fill=_F("FFF9C4"); cell.font=_fn(color="5D4037")
             elif val>=2: cell.fill=_F("FFCDD2"); cell.font=_fn(color="B71C1C")
         return
-    # TV_Symbol — styled distinctly
+    # TV_Symbol
     if col == "tv_symbol":
         cell.fill=_F("E8F5E9"); cell.font=_fn(bold=True,color="1B5E20",size=9)
         return
@@ -169,19 +173,24 @@ def _color_cell(cell, col_name, val):
         elif v=="WAIT": cell.fill=_F("FFF9C4"); cell.font=_fn(bold=True,color="5D4037")
         return
     # General % (positive=green, negative=red)
-    pct_set={"chg_1d%","chg_5d%","avg_chg_1d%","avg_chg_5d%","rs_22d%","rs_55d%","rs_120d%","rs_252d%",
+    # NOTE: matches ANY column ending in % or in this set — includes all RS periods dynamically
+    pct_set={"chg_1d%","chg_5d%","avg_chg_1d%","avg_chg_5d%",
+             "rs_22d%","rs_55d%","rs_120d%","rs_252d%",
              "1m%","3m%","6m%","12m%","ytd%","rs_1m%","rs_3m%","rs_6m%","rs_12m%",
              "from_52w_high%","rs_score","total_score","sales_qoq%","sales_yoy%",
-             "pat_qoq%","pat_yoy%","margin%","roe%","sec_rs55%",
-             "rs_22d_idx%","rs_55d_idx%","rs_22d_sec%","rs_55d_sec%",
-             "rs_120d_idx%","rs_252d_idx%",f"ret_22d%",f"ret_55d%"}
+             "pat_qoq%","pat_yoy%","margin%","roe%",
+             # Dynamic Sec_RSXXd% — matches any period
+             "sec_rs22d%","sec_rs55d%","sec_rs120d%","sec_rs252d%",
+             # Stock RS columns — all periods
+             "rs_22d_idx%","rs_55d_idx%","rs_120d_idx%","rs_252d_idx%",
+             "rs_22d_sec%","rs_55d_sec%","rs_120d_sec%","rs_252d_sec%",
+             "ret_22d%","ret_55d%","ret_120d%","ret_252d%"}
     if col in pct_set or col.endswith("%"):
         if isinstance(val,(int,float)) and not np.isnan(val):
             bold=abs(val)>5
             if val>0: cell.fill=_F("C8E6C9"); cell.font=_fn(bold=bold,color="1B5E20")
             elif val<0: cell.fill=_F("FFCDD2"); cell.font=_fn(bold=bold,color="B71C1C")
         return
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  CORE SHEET WRITER
 #  Layout:  Row 1 = Title (merged, dark bg)
@@ -285,14 +294,13 @@ def write_sheet(ws, df, sheet_name, title="", freeze_row=4):
 # ─────────────────────────────────────────────────────────────────────────────
 #  TOP PICKS SHEET WRITER  (sector-group header dividers)
 # ─────────────────────────────────────────────────────────────────────────────
-def write_top_picks_sheet(ws, df, sheet_name, title="", is_sell=False):
+def write_top_picks_sheet(ws, df, sheet_name, title="", is_sell=False, primary_rs=55):
     if df is None or df.empty:
         ws.cell(1,1,"No data available."); return
     if "Message" in df.columns:
         ws.cell(1,1,df["Message"].iloc[0]); return
 
     hdr_bg = HDR_COLORS.get(sheet_name,"0D2137")
-    # Remove internal helper cols
     display_cols = [c for c in df.columns if not c.startswith("_")]
     n_cols = len(display_cols)
 
@@ -302,10 +310,11 @@ def write_top_picks_sheet(ws, df, sheet_name, title="", is_sell=False):
     c.fill = _F(hdr_bg); c.font = _fn(bold=True,color="FFFFFF",size=13)
     c.alignment = _al("left"); ws.row_dimensions[1].height = 28
 
-    # Row 2: Info
+    # Row 2: Info — now shows actual primary RS period used
     ts = datetime.now().strftime("%d-%b-%Y %H:%M")
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=min(n_cols,10))
-    ws.cell(2,1,f"Generated: {ts}  |  Sectors ranked {'strongest→weakest' if not is_sell else 'weakest→strongest'} by RS_55d%")
+    direction_lbl = "strongest→weakest" if not is_sell else "weakest→strongest"
+    ws.cell(2,1, f"Generated: {ts}  |  Sectors ranked {direction_lbl} by RS_{primary_rs}d%  |  Primary RS Period: {primary_rs}d")
     ws.cell(2,1).font = _fn(italic=True,color="777777",size=9)
     ws.cell(2,1).alignment = _al("left"); ws.row_dimensions[2].height = 14
 
@@ -318,17 +327,30 @@ def write_top_picks_sheet(ws, df, sheet_name, title="", is_sell=False):
     ws.auto_filter.ref = f"A3:{get_column_letter(n_cols)}3"
     ws.freeze_panes = "A4"
 
+    # ── Detect the Sec_RSXXd% column name dynamically ─────────────────────
+    # build_top_picks_buy/sell now outputs f"Sec_RS{primary_rs}d%" as the column name
+    sec_rs_col = f"Sec_RS{primary_rs}d%"
+    # fallback: search for any Sec_RS column in the dataframe
+    if sec_rs_col not in display_cols:
+        sec_rs_col = next((c for c in display_cols if c.startswith("Sec_RS") and c.endswith("%")), None)
+
     # Data with sector-group divider rows
     r = 4
     prev_sec = None
     for i, (_, row_data) in enumerate(df.iterrows()):
         sec = row_data.get("Sector","")
-        # Insert sector divider when sector changes
         if sec != prev_sec:
-            sec_rs = row_data.get("Sec_RS55%", np.nan)
-            sec_sig= row_data.get("Sec_Signal","")
-            sec_rank=row_data.get("Sec_Rank","")
-            div_text = f"  ▸  #{sec_rank}  {sec}   {sec_sig}   RS_55d: {sec_rs:+.1f}%" if not np.isnan(sec_rs) else f"  ▸  #{sec_rank}  {sec}   {sec_sig}"
+            # Get sector RS value from the dynamic column
+            sec_rs = np.nan
+            if sec_rs_col and sec_rs_col in row_data.index:
+                sec_rs = row_data.get(sec_rs_col, np.nan)
+            sec_sig  = row_data.get("Sec_Signal","")
+            sec_rank = row_data.get("Sec_Rank","")
+            # Build divider text
+            if not (isinstance(sec_rs, float) and np.isnan(sec_rs)):
+                div_text = f"  ▸  #{sec_rank}  {sec}   {sec_sig}   RS_{primary_rs}d: {sec_rs:+.1f}%"
+            else:
+                div_text = f"  ▸  #{sec_rank}  {sec}   {sec_sig}"
             ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=n_cols)
             dc = ws.cell(r,1,div_text)
             div_bg = "C8E6C9" if sec_sig=="Buy" else ("FFCDD2" if sec_sig=="Sell" else "FFF9C4")
@@ -340,7 +362,8 @@ def write_top_picks_sheet(ws, df, sheet_name, title="", is_sell=False):
         alt_bg="F0FFF0" if not is_sell else "FFF5F5"
         alt_bg=alt_bg if i%2==0 else "FFFFFF"
         _LEFT_COLS2 = {'symbol','tv_symbol','company','company name','name',
-                       'sector','industry','chart_pattern','notes','setup_desc','signal_type','strategy','trend'}
+                       'sector','industry','chart_pattern','notes',
+                       'setup_desc','signal_type','strategy','trend'}
         for j,col in enumerate(display_cols,1):
             val=row_data.get(col,"")
             if isinstance(val,float) and np.isnan(val): val=""
@@ -350,7 +373,7 @@ def write_top_picks_sheet(ws, df, sheet_name, title="", is_sell=False):
             _color_cell(c,col,val)
         ws.row_dimensions[r].height=17; r+=1
 
-    # Column widths (same logic)
+    # Column widths
     ws.column_dimensions["A"].width=6
     for col_obj in ws.iter_cols(min_row=3,max_row=3):
         j=col_obj[0].column; ltr=get_column_letter(j); h=str(col_obj[0].value or "").lower()
@@ -363,7 +386,7 @@ def write_top_picks_sheet(ws, df, sheet_name, title="", is_sell=False):
         elif h=="trend": ws.column_dimensions[ltr].width=16
         else: ws.column_dimensions[ltr].width=min(len(str(col_obj[0].value or ""))+3,16)
     ws.sheet_view.showGridLines=False
-
+    
 # ─────────────────────────────────────────────────────────────────────────────
 #  RS SLEEVE LIST SHEET WRITER  (multi-section: A / B / C + legend)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -515,7 +538,7 @@ def write_rs_sleeve_sheet(ws, df, market="INDIA"):
 def build_workbook(market, snapshot_df, sector_str_df, sector_rot_df,
                    industry_rot_df, breadth_df, sector_perf_df, stock_str_df,
                    top_buy_df, top_sell_df, chart_pat_df, trade_df, output_path,
-                   dashboard_df=None, sleeve_df=None):
+                   dashboard_df=None, sleeve_df=None, primary_rs=55,country_etf_df=None, commodity_df=None):
     wb = Workbook(); wb.remove(wb.active)
     run_time = datetime.now().strftime("%d %b %Y  %H:%M")
 
@@ -576,13 +599,13 @@ def build_workbook(market, snapshot_df, sector_str_df, sector_rot_df,
     ws=wb.create_sheet("🏆 Top Picks - Buy")
     write_top_picks_sheet(ws, top_buy_df, "🏆 Top Picks - Buy",
                           "🏆  TOP BUY STOCKS  —  Strongest Sector → Weakest  |  ≥5 Stocks per Sector",
-                          is_sell=False)
+                          is_sell=False, primary_rs=primary_rs)
 
     # 9. Top Picks - Sell
     ws=wb.create_sheet("🔴 Top Picks - Sell")
     write_top_picks_sheet(ws, top_sell_df, "🔴 Top Picks - Sell",
                           "🔴  TOP SELL STOCKS  —  Weakest Sector → Strongest  |  ≥5 Stocks per Sector",
-                          is_sell=True)
+                          is_sell=True, primary_rs=primary_rs)
 
     # 10. Chart Patterns
     ws=wb.create_sheet("📐 Chart Patterns")
@@ -599,6 +622,17 @@ def build_workbook(market, snapshot_df, sector_str_df, sector_rot_df,
         ws=wb.create_sheet("📋 RS Sleeve Lists")
         write_rs_sleeve_sheet(ws, sleeve_df, market)
 
+    # 13. Country ETFs
+    if country_etf_df is not None and not country_etf_df.empty:
+        ws = wb.create_sheet("🌍 Country ETFs")
+        write_sheet(ws, country_etf_df, "🌍 Country ETFs",
+                    f"🌍  COUNTRY ETF STRENGTH  —  Ranked by RS_{primary_rs}d% vs SPY  |  {len(country_etf_df)} Countries")
+
+    # 14. Commodities
+    if commodity_df is not None and not commodity_df.empty:
+        ws = wb.create_sheet("🏅 Commodities")
+        write_sheet(ws, commodity_df, "🏅 Commodities",
+                    f"🏅  COMMODITY STRENGTH  —  Ranked by RS_{primary_rs}d% vs GLD (Gold)  |  {len(commodity_df)} Commodities")
     # Tab colours
     for ws_obj in wb.worksheets:
         for key, color in TAB_COLORS.items():
