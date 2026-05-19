@@ -591,7 +591,8 @@ def main():
     # NOTE: run_time must use strftime with explicit IST label — do NOT use
     #       datetime.utcnow() here as GitHub Actions runs in UTC, which would
     #       display the wrong clock in the Dashboard sheet.
-    run_time = datetime.now().strftime("%d %b %Y  %H:%M IST")
+    ist_tz = timezone(timedelta(hours=5, minutes=30))
+    run_time = datetime.now(ist_tz).strftime("%d %B %Y %H:%M IST")
 
     print("\n📸 Market Snapshot …");   snap_df     = build_market_snapshot("INDIA")
     print("🏭 Sector Strength …");    sec_str_df  = build_sector_strength(
