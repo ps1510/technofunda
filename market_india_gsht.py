@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 warnings.filterwarnings("ignore")
 
 SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))
-INDEX_DATA_DIR = r"C:\Users\sudhi\Documents\Trading\SectorRotation\IndexData"
+INDEX_DATA_DIR = os.path.join(SCRIPT_DIR, "IndexData")
 OUTPUT_FILE    = os.path.join(SCRIPT_DIR, "India_Market_Analysis_v10.xlsx")
 STOCK_CSV      = os.path.join(INDEX_DATA_DIR, "ind_niftytotalmarket_list.csv")
 MAX_STOCKS          = 500
