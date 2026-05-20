@@ -1,5 +1,5 @@
 # ════════════════════════════════════════════════════════════════════════════
-#  FundaTechno Market Analysis — GitHub Actions v5.8
+#  FundaTechno Market Analysis — GitHub Actions v5.9
 #
 #  KEY FIX v5.8: git push race condition resolved.
 #  Both India and USA jobs used to push to main at overlapping times.
