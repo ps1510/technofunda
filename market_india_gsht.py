@@ -61,6 +61,7 @@ MAX_STOCKS        = 500
 PERIOD_DAYS       = 420   # ↑ 300 → 420 calendar days (covers RS_252d & 12M%)
 ENABLE_PATTERNS   = True
 PATTERN_MAX       = 400
+PRIMARY_RS_PERIOD = 22
 FETCH_FINANCIALS  = True   # always True in cloud — no cache
 ENABLE_SIGNALS    = True
 SIGNAL_MAX_STOCKS = 400
