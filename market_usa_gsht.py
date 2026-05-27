@@ -53,13 +53,13 @@ else:
 STOCK_CSV = os.path.join(INDEX_DATA_DIR, "us_sp500list.csv")
 
 # ── Tunable constants ─────────────────────────────────────────────────────────
-MAX_STOCKS        = 500
-PERIOD_DAYS       = 420   # 420 calendar days covers RS_252d & 12M%
-ENABLE_PATTERNS   = True
-PATTERN_MAX       = 400
+MAX_STOCKS        = 2500
+PERIOD_DAYS       = 1420   # 420 calendar days covers RS_252d & 12M%
+ENABLE_PATTERNS   = False
+PATTERN_MAX       = 800
 FETCH_FINANCIALS  = True   # always True in cloud — no cache
 ENABLE_SIGNALS    = True
-SIGNAL_MAX_STOCKS = 400
+SIGNAL_MAX_STOCKS = 2400
 # ── Primary RS period for sector ranking & rotation ──────────────────────────
 # Options: 22, 55, 120  (120 only works in Strength, not Rotation)
 # Change this one number to switch which RS period drives all sector decisions.
