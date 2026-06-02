@@ -1,5 +1,5 @@
 # ════════════════════════════════════════════════════════════════════════════
-#  FundaTechno Market Analysis — GitHub Actions v6.0
+#  FundaTechno Market Analysis — GitHub Actions v6.1
 #
 #  KEY FIX v5.8: git push race condition resolved.
 #  Both India and USA jobs used to push to main at overlapping times.
@@ -10,10 +10,9 @@
 #  exactly — character for character, including spaces. One space off = skipped.
 #
 #  SCHEDULE (all times UTC):
-#    India  Run 1 → 03:30 UTC = 09:00 AM IST
-#    India  Run 2 → 06:00 UTC = 11:30 AM IST
-#    India  Run 3 → 11:30 UTC = 05:00 PM IST
-#    USA    Run 1 → 23:30 UTC = 05:00 AM IST next day
+#    India  Run 1 → 04:30 UTC = 10:00 AM IST  (Mon–Fri)
+#    India  Run 2 → 09:00 UTC = 02:30 PM IST  (Mon–Fri)
+#    USA    Run 1 → 23:30 UTC = 05:00 AM IST  (Mon–Fri IST = Sun–Thu UTC)
 #    Scans  Run 1 → 03:00 UTC = 08:30 AM IST
 #    Scans  Run 2 → 09:00 UTC = 02:30 PM IST
 #
@@ -29,12 +28,11 @@ name: Market Analysis
 on:
   schedule:
     # ── INDIA ──────────────────────────────────────────────────────────────
-    - cron: "30 1 * * 1-5"    # India Run 1 → 03:30 UTC = 09:00 AM IST
-    - cron: "0 4 * * 1-5"     # India Run 2 → 06:00 UTC = 11:30 AM IST
-    - cron: "30 9 * * 1-5"   # India Run 3 → 11:30 UTC = 05:00 PM IST
+    - cron: "30 4 * * 1-5"    # India Run 1 → 04:30 UTC = 10:00 AM IST
+    - cron: "0 9 * * 1-5"     # India Run 2 → 09:00 UTC = 02:30 PM IST
 
     # ── USA ────────────────────────────────────────────────────────────────
-    - cron: "30 23 * * 1-5"   # USA Run 1 → 11:30 PM UTC = 05:00 AM IST next day
+    - cron: "30 23 * * 0-4"   # USA Run 1 → 23:30 UTC Sun–Thu = 05:00 AM IST Mon–Fri
 
     # ── SCANS ──────────────────────────────────────────────────────────────
     - cron: "0 3 * * 1-5"     # Scans Run 1 → 03:00 UTC = 08:30 AM IST
@@ -58,9 +56,8 @@ jobs:
     timeout-minutes: 90
     if: |
       (github.event_name == 'schedule' && (
-        github.event.schedule == '30 3 * * 1-5'  ||
-        github.event.schedule == '0 6 * * 1-5'   ||
-        github.event.schedule == '30 11 * * 1-5'
+        github.event.schedule == '30 4 * * 1-5' ||
+        github.event.schedule == '0 9 * * 1-5'
       )) ||
       (github.event_name == 'workflow_dispatch' && (
         github.event.inputs.market == 'india' ||
@@ -121,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 23 * * 1-5') ||
+      (github.event_name == 'schedule' && github.event.schedule == '30 23 * * 0-4') ||
       (github.event_name == 'workflow_dispatch' && (
         github.event.inputs.market == 'usa' ||
         github.event.inputs.market == 'all'
@@ -182,7 +179,7 @@ jobs:
     timeout-minutes: 60
     if: |
       (github.event_name == 'schedule' && (
-        github.event.schedule == '0 3 * * 1-5'  ||
+        github.event.schedule == '0 3 * * 1-5' ||
         github.event.schedule == '0 9 * * 1-5'
       )) ||
       (github.event_name == 'workflow_dispatch' && (
