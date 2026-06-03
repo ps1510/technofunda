@@ -187,6 +187,14 @@ def gs_connect():
     print(f"  ✅ Connected: '{ss.title}'")
     return ss
 
+@tenacity.retry(
+    wait=tenacity.wait_exponential(multiplier=2, min=5, max=120)
+         + tenacity.wait_random(0, 3),
+    stop=tenacity.stop_after_attempt(7),
+    retry=tenacity.retry_if_exception_type(
+        (gspread.exceptions.APIError, ConnectionError)),
+    reraise=True,
+)
 def _get_ws(ss, title, rows=3000, cols=60):
     try:    return ss.worksheet(title)
     except: return ss.add_worksheet(title=title, rows=rows, cols=cols)
@@ -576,6 +584,24 @@ def main():
     dashboard_df   = build_dashboard_df(stock_df, sec_str_df, "CA", run_time,
                                         primary_rs=PRIMARY_RS_PERIOD)
 
+    print("\n🌐 Building Canada HTML report …")
+    try:
+        from market_html import build_html_report
+        html_path = os.path.join(SCRIPT_DIR, "Canada_Market_Analysis.html")
+        build_html_report(
+            market="CA", snapshot_df=snap_df, sector_str_df=sec_str_df,
+            sector_rot_df=sec_rot_df, industry_rot_df=ind_rot_df,
+            breadth_df=breadth_df, sector_perf_df=sec_perf_df, stock_str_df=stock_df,
+            top_buy_df=top_buy_df, top_sell_df=top_sell_df,
+            chart_pat_df=chart_df, trade_df=trade_df,
+            dashboard_df=dashboard_df, sleeve_df=sleeve_df,
+            country_etf_df=country_etf_df, commodity_df=commodity_df,
+            output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD)
+        print(f"  ✅ HTML: {html_path}")
+    except Exception as e:
+        print(f"  ❌ HTML generation failed: {e}")
+        import traceback; traceback.print_exc()
+    
     TAB_DELAY = 8
     print("\n📊 Writing to Google Sheets …")
     write_dashboard_tab(ss, dashboard_df, "CA");                  time.sleep(TAB_DELAY)
