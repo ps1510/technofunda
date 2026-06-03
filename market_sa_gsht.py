@@ -176,21 +176,24 @@ def load_sa_universe():
     csv_path = os.path.join(INDEX_DATA_DIR, "sa_tadawullist.csv")
     if not os.path.exists(csv_path):
         csv_path = STOCK_CSV
-    df = pd.read_csv(csv_path)
-    df.columns = [c.strip() for c in df.columns]
-    rename = {
-        "Company Name": "Company", "Symbol": "Yahoo",
-        "Industry": "Sector", "Series": "Series",
-    }
-    df = df.rename(columns={k:v for k,v in rename.items() if k in df.columns})
-    if "Yahoo" not in df.columns and "Symbol" in df.columns:
-        df["Yahoo"] = df["Symbol"]
-    if "Sector" not in df.columns and "Industry" in df.columns:
-        df["Sector"] = df["Industry"]
-    df["Sector"] = df["Sector"].map(SA_INDUSTRY_TO_SECTOR).fillna(df.get("Sector","General"))
-    df = df.dropna(subset=["Yahoo"]).head(MAX_STOCKS)
+    if not os.path.exists(csv_path):
+        print(f"  ❌ Universe CSV not found: {csv_path}"); return pd.DataFrame()
+    df = pd.read_csv(csv_path, dtype=str)
+    df.columns = df.columns.str.strip()
+    if "Symbol" not in df.columns:
+        print("  ❌ 'Symbol' column missing"); return pd.DataFrame()
+    if "Series" in df.columns:
+        df = df[df["Series"].astype(str).str.strip().str.upper().isin(["EQ", ""])]
+    df = df.head(MAX_STOCKS).copy()
+    df["Symbol"]   = df["Symbol"].astype(str).str.strip()
+    # CSV already carries the full Yahoo ticker (e.g. 2222.SR) in Symbol
+    df["Yahoo"]    = df["Symbol"]
+    df["Company"]  = df.get("Company Name", df["Symbol"])
+    df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
+    df["Sector"]   = df["Industry"].map(SA_INDUSTRY_TO_SECTOR).fillna("Other")
+    df = df.dropna(subset=["Yahoo"])
     print(f"  ✅ Universe: {len(df)} stocks loaded")
-    return df
+    return df.reset_index(drop=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
