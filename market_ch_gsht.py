@@ -61,7 +61,7 @@ from market_signals import build_dashboard_df
 from market_engine import (
     RS_PERIODS, SIGNAL_PERIODS, fetch_close_batch, fetch_ohlcv_batch,
     fetch_ohlcv_with_cache, _normalize, calc_rs, calc_rsi,
-    load_csv_constituents, build_market_snapshot, build_sector_strength,
+    load_csv_constituents, build_sector_strength,
     build_sector_rotation, build_industry_rotation, build_market_breadth,
     build_sector_performance, build_stock_strength, build_top_picks_buy,
     build_top_picks_sell, build_chart_patterns_df, build_trade_setups,
@@ -223,7 +223,36 @@ def fetch_ch_sector_prices():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_ch_snapshot():
-    return build_market_snapshot(CH_SNAPSHOT_TICKERS, PERIOD_DAYS)
+    from market_engine import pct_change_n, safe_download
+    syms = [t["ticker"] for t in CH_SNAPSHOT_TICKERS]
+    try:
+        raw = safe_download(syms, days=10, auto_adjust=True, progress=False)
+        cdf = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw[["Close"]]
+        if not isinstance(raw.columns, pd.MultiIndex) and len(syms)==1: cdf.columns=syms
+    except Exception: cdf = pd.DataFrame()
+    rows = []
+    for t in CH_SNAPSHOT_TICKERS:
+        sym = t["ticker"]; price=chg1=chg5=np.nan; trend="N/A"
+        try:
+            if sym in cdf.columns:
+                col=cdf[sym].dropna()
+                if len(col)>=2: price=round(float(col.iloc[-1]),2); chg1=round(pct_change_n(col,1),2)
+                if len(col)>=5: chg5=round(pct_change_n(col,4),2)
+                if not np.isnan(chg1) and not np.isnan(chg5):
+                    if   chg1>0 and chg5>0: trend="\u2191 Bullish"
+                    elif chg1<0 and chg5<0: trend="\u2193 Bearish"
+                    elif chg5>0:            trend="\u2192 Recovering"
+                    else:                   trend="\u2192 Pulling Back"
+        except Exception: pass
+        rows.append({{"Name":t["name"],"Type":t["type"],"Price":price,"Chg_1D%":chg1,"Chg_5D%":chg5,"Trend":trend}})
+    df     = pd.DataFrame(rows)
+    idxs   = df[df["Type"]=="Index"]["Chg_1D%"].dropna()
+    pct_up = (idxs>0).mean()*100 if len(idxs)>0 else 50
+    bias   = "BULLISH" if pct_up>=70 else ("BEARISH" if pct_up<40 else "MIXED")
+    return pd.concat([df, pd.DataFrame([{{
+        "Name":f"── MACRO BIAS: {{bias}} ({{len(idxs)}} indices, {{pct_up:.0f}}% green) ──",
+        "Type":"Summary","Price":np.nan,"Chg_1D%":np.nan,"Chg_5D%":np.nan,"Trend":bias
+    }}])], ignore_index=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
