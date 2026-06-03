@@ -174,9 +174,9 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     <div class="hero-stats animate-in delay-3">
       <div class="hs-item"><span class="hs-num gold">9</span><span class="hs-label">Markets</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num">1,316+</span><span class="hs-label">Stocks Tracked</span></div>
+      <div class="hs-item"><span class="hs-num">1,910+</span><span class="hs-label">Stocks Tracked</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num green">48</span><span class="hs-label">Prime Setups Today</span></div>
+      <div class="hs-item"><span class="hs-num green">53</span><span class="hs-label">Prime Setups Today</span></div>
       <div class="hs-sep"></div>
       <div class="hs-item"><span class="hs-num">Daily</span><span class="hs-label">Updated</span></div>
     </div>
@@ -192,7 +192,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
         <span class="sec-label">Live Reports</span>
         <h2 class="sec-title">Choose Your Market</h2>
       </div>
-      <span class="sec-updated">Generated: 03 Jun 2026 17:11 UTC</span>
+      <span class="sec-updated">Generated: 03 Jun 2026 17:22 UTC</span>
     </div>
     <div class="countries-grid" id="countries-grid"></div>
   </section>
@@ -323,16 +323,16 @@ const MARKETS = [
     name:       "Australia",
     exchange:   "Australian Securities Exchange",
     url:        "Australia_Market_Analysis.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bull",
+    updated:    "04 June 2026 · 03:14 AEST",
     index_name: "S&P/ASX 200",
-    index_price:"—",
-    index_chg:  "—",
-    universe:   0,
-    signals:    {prime:0,conf:0,rs:0,avoid:0},
+    index_price:"8,724",
+    index_chg:  "-0.06",
+    universe:   94,
+    signals:    {prime:5,conf:5,rs:18,avoid:44},
     top_sectors:[
-
+      {name:"Materials",pct:"-2.1",dir:"neg"}
     ]
   },
   {
@@ -395,13 +395,13 @@ const MARKETS = [
     name:       "Brazil",
     exchange:   "B3 - Bolsa Brasil",
     url:        "Brazil_Market_Analysis.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "03 Jun 2026",
     index_name: "Ibovespa",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
