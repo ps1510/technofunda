@@ -14,6 +14,7 @@ import os, sys, time, warnings
 import numpy as np, pandas as pd, yfinance as yf
 from datetime import datetime, timedelta, timezone
 import gspread
+import gspread.utils
 from gspread_dataframe import set_with_dataframe
 from google.oauth2.service_account import Credentials
 import tenacity
@@ -241,76 +242,185 @@ def _cell_bg(val, col_name):
         except: pass
     return None
 
+_LEFT_COLS_GS = {
+    'symbol','tv_symbol','company','company name','name','sector','industry',
+    'chart_pattern','notes','setup_desc','signal_type','strategy','trend',
+    'pattern','signal_label','enhanced','action','sec_signal','rs_signal',
+}
+
 def write_tab(ss, title, df, hdr_bg="navy", skip_cols=None):
-    if df is None or (hasattr(df, "empty") and df.empty):
+    if df is None or (hasattr(df,"empty") and df.empty):
         ws = _get_ws(ss, title); _api(ws.clear)
         _api(ws.update, "A1", [["No data available."]]); return
+
     display_cols = [c for c in df.columns if not c.startswith("_")]
-    if skip_cols:
-        display_cols = [c for c in display_cols if c not in skip_cols]
-    df_out = df[display_cols].copy().replace([float("inf"), float("-inf")], "").fillna("")
-    ws = _get_ws(ss, title, rows=max(3000, len(df_out)+10), cols=max(60, len(display_cols)+5))
-    _api(ws.clear)
-    _api(set_with_dataframe, ws, df_out, include_index=False, resize=True)
-    nrows, ncols = len(df_out)+1, len(display_cols)
-    bg_color = GS_COLORS.get(hdr_bg, GS_COLORS["navy"])
-    hdr_fmt  = {"backgroundColor": bg_color,
-                "textFormat": {"bold": True, "foregroundColor": GS_COLORS["white"]},
-                "horizontalAlignment": "CENTER"}
-    requests = [{"repeatCell": {
-        "range": {"sheetId": ws.id,"startRowIndex": 0,"endRowIndex": 1,
-                  "startColumnIndex": 0,"endColumnIndex": ncols},
-        "cell": {"userEnteredFormat": hdr_fmt},
-        "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)"
-    }}]
-    fmt_map = {}
-    for ri, row in df_out.iterrows():
-        for ci, col in enumerate(display_cols):
-            bg = _cell_bg(row[col], col)
-            if bg:
-                key = str(bg)
-                if key not in fmt_map: fmt_map[key] = {"bg": bg, "cells": []}
-                fmt_map[key]["cells"].append((ri+1, ci))
-    for key, info in fmt_map.items():
-        for r, c in info["cells"]:
-            requests.append({"repeatCell": {
-                "range": {"sheetId": ws.id,"startRowIndex": r,"endRowIndex": r+1,
-                          "startColumnIndex": c,"endColumnIndex": c+1},
-                "cell": {"userEnteredFormat": {"backgroundColor": info["bg"]}},
-                "fields": "userEnteredFormat.backgroundColor"
-            }})
-    if requests:
-        try:   _api(ss.batch_update, {"requests": requests})
-        except Exception as e: print(f"    ⚠ Formatting skipped: {e}")
-    print(f"  ✅ '{title}': {len(df_out)} rows × {ncols} cols")
+    if skip_cols: display_cols = [c for c in display_cols if c not in skip_cols]
+    df_out = df[display_cols].copy().replace([float("inf"),float("-inf")],"").fillna("")
 
-def write_dashboard_tab(ss, dashboard_df, market):
-    write_tab(ss, "📋 Dashboard", dashboard_df, hdr_bg="navy")
+    nr, nc = len(df_out)+1, len(df_out.columns)
+    ws = _get_ws(ss, title, rows=max(nr+50,500), cols=max(nc+5,30))
+    _api(ws.clear); time.sleep(1.5)
+    _api(set_with_dataframe, ws, df_out, resize=True); time.sleep(1.5)
 
-def write_sleeve_tab(ss, sleeve_df, market):
+    try:
+        col_end = gspread.utils.rowcol_to_a1(1,nc).replace("1","")
+        _api(ws.format, f"A1:{col_end}1", {
+            "backgroundColor": GS_COLORS.get(hdr_bg, GS_COLORS["navy"]),
+            "textFormat": {"foregroundColor":GS_COLORS["white"],"bold":True,"fontSize":10},
+            "horizontalAlignment":"CENTER","verticalAlignment":"MIDDLE",
+        })
+        time.sleep(1.0)
+        _api(ss.batch_update, {"requests":[{"updateSheetProperties":{
+            "properties":{"sheetId":ws.id,"gridProperties":{"frozenRowCount":1}},
+            "fields":"gridProperties.frozenRowCount"}}]})
+        time.sleep(0.8)
+
+        align_reqs = []
+        for ci, col in enumerate(df_out.columns, 1):
+            if col.lower() in _LEFT_COLS_GS:
+                ltr = gspread.utils.rowcol_to_a1(1,ci).replace("1","")
+                if nr > 1:
+                    align_reqs.append({
+                        "range": f"{ltr}2:{ltr}{nr+1}",
+                        "format": {"horizontalAlignment":"LEFT"},
+                    })
+        for i in range(0, len(align_reqs), 30):
+            try: _api(ws.batch_format, align_reqs[i:i+30]); time.sleep(0.8)
+            except: pass
+    except: pass
+
+    cell_fmts = []
+    for ci, col in enumerate(df_out.columns, 1):
+        ltr = gspread.utils.rowcol_to_a1(1,ci).replace("1","")
+        for ri, val in enumerate(df_out[col], start=2):
+            bg = _cell_bg(val, col)
+            if bg: cell_fmts.append({"range":f"{ltr}{ri}","format":{"backgroundColor":bg}})
+    for i in range(0, len(cell_fmts), 60):
+        try: _api(ws.batch_format, cell_fmts[i:i+60]); time.sleep(0.8)
+        except: pass
+
+    time.sleep(3.0)
+    print(f"    ✓ '{title}' — {len(df_out)} rows × {len(df_out.columns)} cols")
+
+
+def write_dashboard_tab(ss, dash_df, market):
+    title = "📋 Dashboard"
+    ws    = _get_ws(ss, title, rows=300, cols=2)
+    _api(ws.clear); time.sleep(0.4)
+    if dash_df is None or dash_df.empty:
+        _api(ws.update,"A1",[["No dashboard data."]]); return
+    clean = dash_df.copy().fillna("").astype(str)
+    _api(set_with_dataframe, ws, clean, resize=True); time.sleep(1.5)
+    try:
+        _api(ws.format,"A1:B1",{
+            "backgroundColor":{"red":0.039,"green":0.086,"blue":0.157},
+            "textFormat":{"foregroundColor":{"red":0,"green":0.898,"blue":1},
+                          "bold":True,"fontSize":13},
+        })
+        ws.columns_auto_resize(0,1)
+    except: pass
+    time.sleep(3.0)
+    print(f"    ✓ '{title}' — {len(dash_df)} rows")
+
+
+def write_sleeve_tab(ss, sleeve_df, market="AU"):
+    title = "📋 RS Sleeves"
     if sleeve_df is None or (hasattr(sleeve_df,"empty") and sleeve_df.empty):
-        ws = _get_ws(ss, "📋 RS Sleeves"); _api(ws.clear)
-        _api(ws.update, "A1", [["No sleeve data."]]); return
-    write_tab(ss, "📋 RS Sleeves", sleeve_df, hdr_bg="navy")
+        ws = _get_ws(ss,title); _api(ws.clear)
+        _api(ws.update,"A1",[["No sleeve data available."]]); return
+
+    display_cols = list(sleeve_df.columns)
+    df_out = sleeve_df[display_cols].copy().fillna("").astype(str)
+    nr, nc = len(df_out)+1, len(df_out.columns)
+    ws = _get_ws(ss, title, rows=max(nr+50,300), cols=max(nc+5,30))
+    _api(ws.clear); time.sleep(1.5)
+    _api(set_with_dataframe, ws, df_out, resize=True); time.sleep(1.5)
+
+    try:
+        col_end = gspread.utils.rowcol_to_a1(1,nc).replace("1","")
+        _api(ws.format, f"A1:{col_end}1", {
+            "backgroundColor":{"red":0.102,"green":0.227,"blue":0.361},
+            "textFormat":{"foregroundColor":{"red":0,"green":0.898,"blue":1},
+                          "bold":True,"fontSize":10},
+            "horizontalAlignment":"CENTER",
+        })
+        time.sleep(1.0)
+        _api(ss.batch_update, {"requests":[{"updateSheetProperties":{
+            "properties":{"sheetId":ws.id,"gridProperties":{"frozenRowCount":1}},
+            "fields":"gridProperties.frozenRowCount"}}]})
+    except: pass
+
+    _DARK_NAV  = {"red":0.102,"green":0.227,"blue":0.361}
+    _DARK_LEG  = {"red":0.149,"green":0.196,"blue":0.220}
+    _REGIME    = {"BULL":{"red":0.106,"green":0.365,"blue":0.165},
+                  "CAUTION":{"red":0.902,"green":0.396,"blue":0.000},
+                  "BEAR":{"red":0.718,"green":0.110,"blue":0.110}}
+    _TIER      = {"A":{"red":0.886,"green":0.945,"blue":0.992},
+                  "B":{"red":0.910,"green":0.961,"blue":0.914},
+                  "C":{"red":1.000,"green":0.973,"blue":0.882},
+                  "US_A":{"red":0.953,"green":0.898,"blue":0.969},
+                  "US_B":{"red":0.910,"green":0.961,"blue":0.914},
+                  "US_C":{"red":1.000,"green":0.973,"blue":0.882}}
+    cur_tier = "A"; row_fmts = []
+    for ri, (_, row) in enumerate(df_out.iterrows(), start=2):
+        rank_val  = str(row.get("Rank","") or "")
+        is_div    = rank_val.startswith("━━━")
+        is_blank  = all(str(v).strip()=="" for v in row.values)
+        is_regime = is_div and "MARKET REGIME" in rank_val.upper()
+        if is_blank: continue
+        if is_div:
+            for key in ["A","B","C","US_A","US_B","US_C"]:
+                if f"SLEEVE {key}" in rank_val: cur_tier=key; break
+            sym_val = str(row.get("Symbol","") or "")
+            if is_regime:
+                bg = _REGIME["BEAR"] if ("BEAR" in sym_val and "CAUTION" not in sym_val)                    else (_REGIME["CAUTION"] if "CAUTION" in sym_val else _REGIME["BULL"])
+            elif "METHOD" in rank_val.upper(): bg = _DARK_LEG
+            else: bg = _DARK_NAV
+            fg = {"red":0,"green":0.898,"blue":1}
+            end_cell = gspread.utils.rowcol_to_a1(ri,nc).replace(str(ri),"") + str(ri)
+            row_fmts.append({"range":f"A{ri}:{end_cell}",
+                             "format":{"backgroundColor":bg,
+                                       "textFormat":{"foregroundColor":fg,"bold":True}}})
+        else:
+            bg = _TIER.get(cur_tier, _TIER["A"])
+            end_cell = gspread.utils.rowcol_to_a1(ri,nc).replace(str(ri),"") + str(ri)
+            row_fmts.append({"range":f"A{ri}:{end_cell}","format":{"backgroundColor":bg}})
+    for i in range(0, len(row_fmts), 30):
+        try: _api(ws.batch_format, row_fmts[i:i+30]); time.sleep(1.0)
+        except: pass
+
+    cell_fmts = []
+    for ci, col in enumerate(df_out.columns, 1):
+        ltr = gspread.utils.rowcol_to_a1(1,ci).replace("1","")
+        for ri, val in enumerate(df_out[col], start=2):
+            bg = _cell_bg(val, col)
+            if bg: cell_fmts.append({"range":f"{ltr}{ri}","format":{"backgroundColor":bg}})
+    for i in range(0, len(cell_fmts), 60):
+        try: _api(ws.batch_format, cell_fmts[i:i+60]); time.sleep(0.8)
+        except: pass
+
+    time.sleep(3.0)
+    print(f"    ✓ '{title}' — {len(df_out)} rows × {len(df_out.columns)} cols")
+
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  UNIVERSE LOADER
+#  UNIVERSE + SECTOR
 # ─────────────────────────────────────────────────────────────────────────────
 
 def load_au_universe():
     if not os.path.exists(STOCK_CSV):
         print(f"  ❌ Universe CSV not found: {STOCK_CSV}"); return pd.DataFrame()
-    df = pd.read_csv(STOCK_CSV)
+    df = pd.read_csv(STOCK_CSV, dtype=str)
     df.columns = df.columns.str.strip()
     if "Symbol" not in df.columns:
         print("  ❌ 'Symbol' column missing"); return pd.DataFrame()
     if "Series" in df.columns:
-        df = df[df["Series"].str.strip().str.upper().isin(["EQ",""])]
+        df = df[df["Series"].astype(str).str.strip().str.upper().isin(["EQ",""])]
     df = df.head(MAX_STOCKS).copy()
-    df["Symbol"]   = df["Symbol"].str.strip()
+    df["Symbol"]   = df["Symbol"].astype(str).str.strip()
     df["Yahoo"]    = df["Symbol"] + ".AX"    # ASX tickers need .AX suffix
     df["Company"]  = df.get("Company Name", df["Symbol"])
-    df["Industry"] = df.get("Industry", "").fillna("").str.strip()
+    df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
     df["Sector"]   = df["Industry"].map(AU_INDUSTRY_TO_SECTOR).fillna("Other")
     print(f"  ✅ Australia Universe: {len(df)} stocks loaded")
     return df.reset_index(drop=True)
