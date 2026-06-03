@@ -245,15 +245,15 @@ def build_sa_snapshot():
                     elif chg5>0:            trend="\u2192 Recovering"
                     else:                   trend="\u2192 Pulling Back"
         except Exception: pass
-        rows.append({{"Name":t["name"],"Type":t["type"],"Price":price,"Chg_1D%":chg1,"Chg_5D%":chg5,"Trend":trend}})
+        rows.append({"Name":t["name"],"Type":t["type"],"Price":price,"Chg_1D%":chg1,"Chg_5D%":chg5,"Trend":trend})
     df     = pd.DataFrame(rows)
     idxs   = df[df["Type"]=="Index"]["Chg_1D%"].dropna()
     pct_up = (idxs>0).mean()*100 if len(idxs)>0 else 50
     bias   = "BULLISH" if pct_up>=70 else ("BEARISH" if pct_up<40 else "MIXED")
-    return pd.concat([df, pd.DataFrame([{{
-        "Name":f"── MACRO BIAS: {{bias}} ({{len(idxs)}} indices, {{pct_up:.0f}}% green) ──",
+    return pd.concat([df, pd.DataFrame([{
+        "Name":f"── MACRO BIAS: {bias} ({len(idxs)} indices, {pct_up:.0f}% green) ──",
         "Type":"Summary","Price":np.nan,"Chg_1D%":np.nan,"Chg_5D%":np.nan,"Trend":bias
-    }}])], ignore_index=True)
+    }])], ignore_index=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
