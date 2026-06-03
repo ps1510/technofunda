@@ -1,48 +1,85 @@
 # ============================================================================
-#  TechnoFunda Market Analysis - GitHub Actions v9.0
+#  TechnoFunda Market Analysis - GitHub Actions v10.0
 #
-#  v9.0 FIXES:
-#   - Rate limit (429): write functions now match India's proven throttling
-#     (per-call sleeps + batch_format chunks, not one giant batch_update).
-#   - Integer ticker crash: CSVs read with dtype=str (Japan symbols like 7203).
-#   - index.html merge conflict: push step regenerates index.html on conflict
-#     instead of trying to git-merge a generated file.
+#  v10.0 ADDITIONS:
+#   - 8 new countries: China, South Korea, Taiwan, Switzerland,
+#     Saudi Arabia, Netherlands, Spain, Sweden
+#   - Total: 17 markets + scans — zero schedule clashes guaranteed
+#   - Every job runs on its own unique cron slot (1 job per time slot)
 #
-#  GOLDEN RULE: cron string in schedule MUST match github.event.schedule ==
-#  exactly - character for character, including spaces.
+#  GOLDEN RULE: cron string in schedule MUST match github.event.schedule
+#  exactly — character for character, including spaces.
 #
-#  SCHEDULE (all times UTC):
-#    India      04:30, 09:00  Mon-Fri
-#    USA        23:30         Sun-Thu (= Mon-Fri IST)
-#    UK         17:00         Mon-Fri
-#    Canada     22:00         Mon-Fri
-#    Australia  07:00         Mon-Fri
-#    Germany    16:30         Mon-Fri
-#    Japan      07:30         Mon-Fri
-#    France     16:30         Mon-Fri
-#    Brazil     21:00         Mon-Fri
-#    Scans      03:00, 09:00  Mon-Fri
+#  FULL SCHEDULE (all times UTC, Mon–Fri):
+#  ─────────────────────────────────────────────────────
+#  03:00  Scans (morning)
+#  04:30  India          (IST 10:00 — post open)
+#  07:00  Australia      (AEST 17:00 — post close)
+#  07:30  Japan          (JST 16:30 — post close)
+#  08:00  China          (CST 16:00 — post close)
+#  08:30  South Korea    (KST 17:30 — post close)
+#  09:00  Scans (second) + India scan
+#  09:30  Taiwan         (CST 17:30 — post close)
+#  12:30  Saudi Arabia   (AST 15:30 — post close)
+#  17:00  UK             (BST 18:00 — post close)
+#  17:30  Switzerland    (CET 18:30 — post close)
+#  18:00  Germany        (CET 19:00 — post close)
+#  18:30  France         (CET 19:30 — post close)
+#  19:00  Netherlands    (CET 20:00 — post close)
+#  19:30  Spain          (CET 20:30 — post close)
+#  20:00  Sweden         (CET 21:00 — post close)
+#  21:00  Brazil         (BRT 18:00 — post close)
+#  22:00  Canada         (ET  18:00 — post close)
+#  23:30  USA            (ET  19:30 — post close)
+#  ─────────────────────────────────────────────────────
 #
 #  REQUIRED GITHUB SECRETS:
-#    GOOGLE_CREDENTIALS, GOOGLE_SHEET_URL (India), GOOGLE_SHEET_URL_USA,
-#    GOOGLE_SHEET_URL_UK, _CA, _AU, _DE, _JP, _FR, _BR, GOOGLE_SHEET_URL_SCANS
+#    GOOGLE_CREDENTIALS
+#    GOOGLE_SHEET_URL          (India)
+#    GOOGLE_SHEET_URL_USA
+#    GOOGLE_SHEET_URL_UK
+#    GOOGLE_SHEET_URL_CA
+#    GOOGLE_SHEET_URL_AU
+#    GOOGLE_SHEET_URL_DE
+#    GOOGLE_SHEET_URL_JP
+#    GOOGLE_SHEET_URL_FR
+#    GOOGLE_SHEET_URL_BR
+#    GOOGLE_SHEET_URL_CN       (China)
+#    GOOGLE_SHEET_URL_KR       (South Korea)
+#    GOOGLE_SHEET_URL_TW       (Taiwan)
+#    GOOGLE_SHEET_URL_CH       (Switzerland)
+#    GOOGLE_SHEET_URL_SA       (Saudi Arabia)
+#    GOOGLE_SHEET_URL_NL       (Netherlands)
+#    GOOGLE_SHEET_URL_ES       (Spain)
+#    GOOGLE_SHEET_URL_SE       (Sweden)
+#    GOOGLE_SHEET_URL_SCANS
 # ============================================================================
 
 name: Market Analysis
 
 on:
   schedule:
-    - cron: "30 4 * * 1-5"
-    - cron: "0 9 * * 1-5"
-    - cron: "30 23 * * 0-4"
-    - cron: "0 17 * * 1-5"
-    - cron: "0 22 * * 1-5"
-    - cron: "0 7 * * 1-5"
-    - cron: "0 18 * * 1-5"
-    - cron: "30 18 * * 1-5"
-    - cron: "30 7 * * 1-5"
-    - cron: "0 21 * * 1-5"
-    - cron: "0 3 * * 1-5"
+    # ── Original 9 ──────────────────────────────────────────
+    - cron: "30 4 * * 1-5"    # India morning
+    - cron: "0 9 * * 1-5"     # India scan / Scans second run
+    - cron: "30 23 * * 0-4"   # USA (Sun–Thu UTC = Mon–Fri ET)
+    - cron: "0 17 * * 1-5"    # UK
+    - cron: "0 22 * * 1-5"    # Canada
+    - cron: "0 7 * * 1-5"     # Australia
+    - cron: "0 18 * * 1-5"    # Germany
+    - cron: "30 18 * * 1-5"   # France
+    - cron: "30 7 * * 1-5"    # Japan
+    - cron: "0 21 * * 1-5"    # Brazil
+    - cron: "0 3 * * 1-5"     # Scans morning
+    # ── New 8 countries ─────────────────────────────────────
+    - cron: "0 8 * * 1-5"     # China
+    - cron: "30 8 * * 1-5"    # South Korea
+    - cron: "30 9 * * 1-5"    # Taiwan
+    - cron: "30 12 * * 0-4"   # Saudi Arabia (Sun–Thu, Tadawul trading days)
+    - cron: "30 17 * * 1-5"   # Switzerland
+    - cron: "0 19 * * 1-5"    # Netherlands
+    - cron: "30 19 * * 1-5"   # Spain
+    - cron: "0 20 * * 1-5"    # Sweden
 
   workflow_dispatch:
     inputs:
@@ -51,13 +88,41 @@ on:
         required: false
         default: "all"
         type: choice
-        options: [all, india, usa, uk, canada, australia, germany, japan, france, brazil, scans]
+        options:
+          - all
+          - india
+          - usa
+          - uk
+          - canada
+          - australia
+          - germany
+          - japan
+          - france
+          - brazil
+          - china
+          - southkorea
+          - taiwan
+          - switzerland
+          - saudiarabia
+          - netherlands
+          - spain
+          - sweden
+          - scans
 
+
+# ============================================================================
+#  REUSABLE PUSH HELPER — each job has its own copy (GHA doesn't share steps)
+#  Pattern: fetch → rebase → push × 5 attempts; on conflict regenerate index
+# ============================================================================
 
 jobs:
 
+  # ──────────────────────────────────────────────────────────────────────────
+  #  ORIGINAL 9 COUNTRIES
+  # ──────────────────────────────────────────────────────────────────────────
+
   run-india:
-    name: India Market Analysis
+    name: "🇮🇳 India  04:30 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -68,54 +133,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run India analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL: ${{ secrets.GOOGLE_SHEET_URL }}
         run: python market_india_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f India_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "India HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "India HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours India_Market_Analysis*.html 2>/dev/null || true
@@ -127,16 +174,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for India."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — India."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-usa:
-    name: USA Market Analysis
+    name: "🇺🇸 USA  23:30 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -147,54 +191,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run USA analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_US: ${{ secrets.GOOGLE_SHEET_URL_USA }}
         run: python market_usa_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f USA_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "USA HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "USA HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours USA_Market_Analysis*.html 2>/dev/null || true
@@ -206,16 +232,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for USA."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — USA."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-uk:
-    name: UK Market Analysis
+    name: "🇬🇧 UK  17:00 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -226,54 +249,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run UK analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_UK: ${{ secrets.GOOGLE_SHEET_URL_UK }}
         run: python market_uk_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f UK_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "UK HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "UK HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours UK_Market_Analysis*.html 2>/dev/null || true
@@ -285,16 +290,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for UK."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — UK."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-canada:
-    name: Canada Market Analysis
+    name: "🇨🇦 Canada  22:00 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -305,54 +307,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run Canada analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_CA: ${{ secrets.GOOGLE_SHEET_URL_CA }}
         run: python market_ca_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f Canada_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "Canada HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Canada HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours Canada_Market_Analysis*.html 2>/dev/null || true
@@ -364,16 +348,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for Canada."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Canada."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-australia:
-    name: Australia Market Analysis
+    name: "🇦🇺 Australia  07:00 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -384,54 +365,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run Australia analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_AU: ${{ secrets.GOOGLE_SHEET_URL_AU }}
         run: python market_au_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f Australia_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "Australia HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Australia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours Australia_Market_Analysis*.html 2>/dev/null || true
@@ -443,16 +406,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for Australia."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Australia."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-germany:
-    name: Germany Market Analysis
+    name: "🇩🇪 Germany  18:00 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -463,54 +423,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run Germany analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_DE: ${{ secrets.GOOGLE_SHEET_URL_DE }}
         run: python market_de_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f Germany_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "Germany HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Germany HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours Germany_Market_Analysis*.html 2>/dev/null || true
@@ -522,16 +464,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for Germany."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Germany."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-japan:
-    name: Japan Market Analysis
+    name: "🇯🇵 Japan  07:30 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -542,54 +481,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run Japan analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_JP: ${{ secrets.GOOGLE_SHEET_URL_JP }}
         run: python market_jp_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f Japan_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "Japan HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Japan HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours Japan_Market_Analysis*.html 2>/dev/null || true
@@ -601,16 +522,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for Japan."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Japan."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-france:
-    name: France Market Analysis
+    name: "🇫🇷 France  18:30 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -621,54 +539,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run France analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_FR: ${{ secrets.GOOGLE_SHEET_URL_FR }}
         run: python market_fr_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f France_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "France HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "France HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours France_Market_Analysis*.html 2>/dev/null || true
@@ -680,16 +580,13 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for France."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — France."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
   run-brazil:
-    name: Brazil Market Analysis
+    name: "🇧🇷 Brazil  21:00 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
@@ -700,54 +597,36 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run Brazil analysis
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_BR: ${{ secrets.GOOGLE_SHEET_URL_BR }}
         run: python market_br_gsht.py
-
-      - name: Rebuild homepage index.html
+      - name: Rebuild homepage
         run: python build_index.py
-
-      - name: Commit and push HTML to repo
+      - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f Brazil_Market_Analysis*.html index.html 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No HTML changes - nothing to commit."
-            exit 0
-          fi
-          git commit -m "Brazil HTML update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Brazil HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
           for attempt in 1 2 3 4 5; do
-            echo "Push attempt ${attempt}..."
-            if git push origin main 2>/dev/null; then
-              echo "Push succeeded."; PUSHED=1; break
-            fi
-            echo "Push rejected - syncing with remote..."
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
             git rebase --abort 2>/dev/null || true
             git fetch origin main
             if git rebase origin/main 2>/dev/null; then
-              echo "Rebased cleanly."
+              echo "Rebased."
             else
-              echo "Conflict on generated file - regenerating index.html..."
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
               git checkout --ours Brazil_Market_Analysis*.html 2>/dev/null || true
@@ -759,16 +638,485 @@ jobs:
             fi
             sleep 8
           done
-          if [ "$PUSHED" != "1" ]; then
-            echo "::warning::Push did not succeed after retries for Brazil."
-          fi
-
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Brazil."; fi
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
 
+  # ──────────────────────────────────────────────────────────────────────────
+  #  NEW 8 COUNTRIES
+  # ──────────────────────────────────────────────────────────────────────────
+
+  run-china:
+    name: "🇨🇳 China  08:00 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 8 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'china' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run China analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_CN: ${{ secrets.GOOGLE_SHEET_URL_CN }}
+        run: python market_cn_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f China_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "China HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours China_Market_Analysis*.html 2>/dev/null || true
+              git add China_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "China index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — China."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  run-southkorea:
+    name: "🇰🇷 South Korea  08:30 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '30 8 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'southkorea' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run South Korea analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_KR: ${{ secrets.GOOGLE_SHEET_URL_KR }}
+        run: python market_kr_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f SouthKorea_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "SouthKorea HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours SouthKorea_Market_Analysis*.html 2>/dev/null || true
+              git add SouthKorea_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "SouthKorea index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — South Korea."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  run-taiwan:
+    name: "🇹🇼 Taiwan  09:30 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '30 9 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'taiwan' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run Taiwan analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_TW: ${{ secrets.GOOGLE_SHEET_URL_TW }}
+        run: python market_tw_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f Taiwan_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Taiwan HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours Taiwan_Market_Analysis*.html 2>/dev/null || true
+              git add Taiwan_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "Taiwan index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Taiwan."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  run-switzerland:
+    name: "🇨🇭 Switzerland  17:30 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '30 17 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'switzerland' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run Switzerland analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_CH: ${{ secrets.GOOGLE_SHEET_URL_CH }}
+        run: python market_ch_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f Switzerland_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Switzerland HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours Switzerland_Market_Analysis*.html 2>/dev/null || true
+              git add Switzerland_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "Switzerland index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Switzerland."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  run-saudiarabia:
+    name: "🇸🇦 Saudi Arabia  12:30 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '30 12 * * 0-4') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'saudiarabia' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run Saudi Arabia analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_SA: ${{ secrets.GOOGLE_SHEET_URL_SA }}
+        run: python market_sa_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f SaudiArabia_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "SaudiArabia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours SaudiArabia_Market_Analysis*.html 2>/dev/null || true
+              git add SaudiArabia_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "SaudiArabia index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Saudi Arabia."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  run-netherlands:
+    name: "🇳🇱 Netherlands  19:00 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'netherlands' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run Netherlands analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_NL: ${{ secrets.GOOGLE_SHEET_URL_NL }}
+        run: python market_nl_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f Netherlands_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Netherlands HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours Netherlands_Market_Analysis*.html 2>/dev/null || true
+              git add Netherlands_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "Netherlands index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Netherlands."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  run-spain:
+    name: "🇪🇸 Spain  19:30 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '30 19 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'spain' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run Spain analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_ES: ${{ secrets.GOOGLE_SHEET_URL_ES }}
+        run: python market_es_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f Spain_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Spain HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours Spain_Market_Analysis*.html 2>/dev/null || true
+              git add Spain_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "Spain index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Spain."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  run-sweden:
+    name: "🇸🇪 Sweden  20:00 UTC"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 20 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.market == 'sweden' ||
+        github.event.inputs.market == 'all'
+      ))
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: "pip" }
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write Google credentials
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
+        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
+      - name: Run Sweden analysis
+        env:
+          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
+          GOOGLE_SHEET_URL_SE: ${{ secrets.GOOGLE_SHEET_URL_SE }}
+        run: python market_se_gsht.py
+      - name: Rebuild homepage
+        run: python build_index.py
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f Sweden_Market_Analysis*.html index.html 2>/dev/null || true
+          if git diff --staged --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Sweden HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
+          PUSHED=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin main 2>/dev/null; then PUSHED=1; break; fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main 2>/dev/null; then
+              echo "Rebased."
+            else
+              git checkout --theirs index.html 2>/dev/null || true
+              git add index.html 2>/dev/null || true
+              git checkout --ours Sweden_Market_Analysis*.html 2>/dev/null || true
+              git add Sweden_Market_Analysis*.html 2>/dev/null || true
+              git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
+              python build_index.py
+              git add -f index.html 2>/dev/null || true
+              git commit -m "Sweden index rebuild $(date -u '+%Y-%m-%d %H:%M UTC')" 2>/dev/null || true
+            fi
+            sleep 8
+          done
+          if [ "$PUSHED" != "1" ]; then echo "::warning::Push failed — Sweden."; fi
+      - name: Remove credentials
+        if: always()
+        run: rm -f /tmp/google_credentials.json
+
+  # ──────────────────────────────────────────────────────────────────────────
+  #  SCANS (India chartink + FnO)
+  # ──────────────────────────────────────────────────────────────────────────
+
   run-scans:
-    name: Chartink Scans
+    name: "📊 Chartink Scans  03:00 / 09:00 UTC"
     runs-on: ubuntu-latest
     timeout-minutes: 60
     if: |
@@ -782,34 +1130,24 @@ jobs:
       ))
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
+        with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Write Google credentials
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
         run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-
       - name: Run LongTerm scan
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_SCANS: ${{ secrets.GOOGLE_SHEET_URL_SCANS }}
         run: python LongTerm.py
-
       - name: Run FnO scan
         env:
           GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
           GOOGLE_SHEET_URL_SCANS: ${{ secrets.GOOGLE_SHEET_URL_SCANS }}
         run: python FnO.py
-
       - name: Remove credentials
         if: always()
         run: rm -f /tmp/google_credentials.json
