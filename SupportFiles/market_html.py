@@ -539,7 +539,7 @@ _GUIDE_ROWS = [
      "Weekly RS30>0, monthly RS12>0, daily RS55>0. Price > 20d swing high."),
     ("🌟 RS30 Leader","sl-prime",
      "Weekly RS(30)>0 + EMA10>EMA30 + within 10% of 52W High + Sales QoQ≥15% + PAT QoQ≥15%.",
-     "FundaTechno weekly momentum strategy. Breakout above 20-day swing high required."),
+     "TechnoFunda weekly momentum strategy. Breakout above 20-day swing high required."),
     ("🌟 Long Momentum","sl-prime",
      "LST Buy + strong fundamentals (fin_score≥5). Monthly trend bullish. 60-120 day swing.",
      "Monthly RS12>0, RSI12>50, Revenue+, PAT+. Weekly RS21>0 + ST + EMA200."),
@@ -672,6 +672,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .app-title{font-size:15px;font-weight:700;color:var(--accent);}
 .app-meta{font-size:11px;color:var(--text3);}
+.app-brand-row{display:flex;align-items:center;gap:10px;}
+.home-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
+  color:var(--text2);text-decoration:none;background:var(--bg3);border:1px solid var(--border);
+  padding:5px 10px;border-radius:8px;transition:all .15s;white-space:nowrap;}
+.home-link:hover{color:var(--accent);border-color:var(--accent);}
+.country-nav-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  font-size:12px;font-weight:600;padding:5px 8px;border-radius:8px;cursor:pointer;outline:none;}
+.country-nav-select:focus{border-color:var(--accent);}
+.disclaimer-footer{background:var(--bg2);border-top:2px solid var(--border);
+  padding:20px clamp(12px,3vw,40px);margin-top:30px;font-size:11.5px;line-height:1.7;color:var(--text3);}
+.disclaimer-footer h4{font-size:12px;font-weight:700;color:var(--text2);margin:0 0 8px;
+  text-transform:uppercase;letter-spacing:.5px;}
+.disclaimer-footer p{margin:0 0 8px;}
+.disclaimer-footer strong{color:var(--text2);}
+.disclaimer-footer .df-brand{color:var(--accent);font-weight:700;}
+.disclaimer-footer a{color:var(--text2);text-decoration:underline;}
 .regime-BULL{background:#166534;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
 .regime-CAUTION{background:#92400e;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
 .regime-BEAR{background:#7f1d1d;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
@@ -1429,7 +1445,7 @@ def build_html_report(
                  "Signal_Label","Sec_Gated","RS_22d_Idx%","RS_55d_Idx%",
                  "RSI_14","Trend","SMA_Score","Total_Score","Fin_Score",
                  "SL_Buy%","SL_Grade","SL_Buy_Price",
-                 "Sales_YoY%","PAT_YoY%","ROE%","D/E","EPS","Mkt_Cap_B","Chart_Pattern"]
+                 "Sales_YoY%","PAT_YoY%","ROE%","D/E","Mkt_Cap_B","Chart_Pattern"]
     if stock_str_df is not None and not stock_str_df.empty:
         stock_main = stock_str_df[[c for c in MAIN_COLS if c in stock_str_df.columns]]
     else:
@@ -1538,6 +1554,63 @@ def build_html_report(
         f'</div>'
     )
 
+    # ── Country navigation: home link + dropdown to switch markets ──────────
+    # Maps internal market code → (display name, flag, html filename)
+    _COUNTRY_MAP = {
+        "USA":       ("United States", "🇺🇸", "USA_Market_Analysis.html"),
+        "INDIA":     ("India",         "🇮🇳", "India_Market_Analysis.html"),
+        "UK":        ("United Kingdom","🇬🇧", "UK_Market_Analysis.html"),
+        "CA":        ("Canada",        "🇨🇦", "Canada_Market_Analysis.html"),
+        "AU":        ("Australia",     "🇦🇺", "Australia_Market_Analysis.html"),
+        "DE":        ("Germany",       "🇩🇪", "Germany_Market_Analysis.html"),
+        "JP":        ("Japan",         "🇯🇵", "Japan_Market_Analysis.html"),
+        "FR":        ("France",        "🇫🇷", "France_Market_Analysis.html"),
+        "BR":        ("Brazil",        "🇧🇷", "Brazil_Market_Analysis.html"),
+    }
+    _cur = str(market).upper()
+    _opts = ['<option value="" disabled selected>🌍 Switch market…</option>']
+    _opts.append('<option value="index.html">🏠 Home — All Markets</option>')
+    for _code, (_nm, _flag, _file) in _COUNTRY_MAP.items():
+        if _code == _cur:
+            continue
+        _opts.append(f'<option value="{_file}">{_flag} {_nm}</option>')
+    country_nav = (
+        f'<a href="index.html" class="home-link">🏠 All Markets</a>'
+        f'<select class="country-nav-select" '
+        f'onchange="if(this.value)window.location.href=this.value;">'
+        + "".join(_opts) +
+        f'</select>'
+    )
+
+    # ── SEBI-style investment disclaimer footer ─────────────────────────────
+    disclaimer_html = (
+        '<div class="disclaimer-footer">'
+        '<h4>⚠️ Important Disclaimer — Please Read</h4>'
+        '<p><span class="df-brand">TechnoFunda</span> is an automated, educational '
+        'market-analysis tool. All content on this page — including signals, scores, '
+        'rankings, "Prime/Confirmed/RS" labels, trade setups and portfolio ideas — is '
+        'provided for <strong>informational and educational purposes only</strong>, and '
+        'must <strong>not</strong> be construed as investment advice, a research report, '
+        'or a recommendation/solicitation to buy or sell any security.</p>'
+        '<p>We are <strong>not</strong> registered with SEBI as an Investment Adviser or '
+        'Research Analyst, nor with any other financial regulator. Nothing here is tailored '
+        'to your personal financial situation, objectives, or risk tolerance.</p>'
+        '<p><strong>Investments in securities markets are subject to market risks. '
+        'Read all the related documents carefully before investing.</strong> Past '
+        'performance is not indicative of future results. The data shown is sourced from '
+        'third parties, may be delayed, inaccurate, or incomplete, and is presented '
+        '"as is" without warranty of any kind.</p>'
+        '<p>You are solely responsible for your own investment decisions. Always do your '
+        'own research and consult a SEBI-registered investment adviser or a qualified, '
+        'licensed financial professional in your jurisdiction before making any investment '
+        'decision. <span class="df-brand">TechnoFunda</span> and its creators accept no '
+        'liability for any loss or damage arising from the use of this information.</p>'
+        f'<p style="margin-top:12px;color:var(--text3);">© 2026 TechnoFunda · '
+        f'[{market}] report generated {run_time} · Data delayed / end-of-day · '
+        f'Not financial advice.</p>'
+        '</div>'
+    )
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1545,14 +1618,17 @@ def build_html_report(
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0f1117">
-  <title>FundaTechno [{market}] — {run_time}</title>
+  <title>TechnoFunda [{market}] — {run_time}</title>
   <style>{CSS}</style>
 </head>
 <body>
 <header class="app-header">
-  <div>
-    <div class="app-title">FundaTechno [{market}]</div>
-    <div class="app-meta">{run_time} · RS{primary_rs}d</div>
+  <div class="app-brand-row">
+    <div>
+      <div class="app-title">TechnoFunda [{market}]</div>
+      <div class="app-meta">{run_time} · RS{primary_rs}d</div>
+    </div>
+    {country_nav}
   </div>
   <div class="hdr-controls">
     <div class="ctrl-group">
@@ -1573,6 +1649,7 @@ def build_html_report(
 {stats_bar}
 <nav class="tab-bar">{tab_btns}</nav>
 <main>{sections_html}</main>
+{disclaimer_html}
 <script>{JS}</script>
 </body>
 </html>"""
