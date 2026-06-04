@@ -103,6 +103,13 @@ def _cell_class(col, val):
             if f >= 40: return "bd-amber"
             return "bd-red"
         except: pass
+    # EPS: positive = green, negative = red (raw currency value, not %)
+    if col == "eps":
+        try:
+            f = float(val)
+            if f > 0:  return "pos"
+            if f < 0:  return "neg-strong"
+        except: pass
     pct_cols = {
         "chg_1d%","chg_5d%","rs_22d%","rs_55d%","rs_120d%","rs_252d%",
         "rs_22d_idx%","rs_55d_idx%","rs_120d_idx%","rs_252d_idx%",
@@ -579,6 +586,7 @@ def _build_guide():
     <div class="gt-row"><span class="gt-k">Total_Score</span><span>RS_Score×0.6 + Fin_Score×2 + SL_Bonus</span></div>
     <div class="gt-row"><span class="gt-k">RS_Score</span><span>RS_22d×35% + RS_55d×30% + RS_120d×20% + RS_252d×15%</span></div>
     <div class="gt-row"><span class="gt-k">Fin_Score</span><span>Sales_YoY≥15% +2 | PAT_YoY≥15% +2 | ROE≥15% +2 | Margin≥10% +1 | D/E&lt;1 +1</span></div>
+    <div class="gt-row"><span class="gt-k">EPS</span><span>Trailing twelve-month Earnings Per Share (currency). Green = profitable, Red = loss-making.</span></div>
     <div class="gt-row"><span class="gt-k">SL_Bonus</span><span>A +4 | B +3 | C +2 | D +1 | R:R≥3× +2 | ≥2× +1</span></div>
   </div>
   <h3>SL Grade</h3>
@@ -951,7 +959,7 @@ function setFont(delta){
   try{localStorage.setItem('fontZoom',String(z));}catch(e){}
 }
 function _initThemeFont(){
-  setTheme(localStorage.getItem('theme')||'dark');
+  setTheme(localStorage.getItem('theme')||'light');
   document.documentElement.style.zoom=parseFloat(localStorage.getItem('fontZoom')||'1');
 }
 
@@ -1445,7 +1453,7 @@ def build_html_report(
                  "Signal_Label","Sec_Gated","RS_22d_Idx%","RS_55d_Idx%",
                  "RSI_14","Trend","SMA_Score","Total_Score","Fin_Score",
                  "SL_Buy%","SL_Grade","SL_Buy_Price",
-                 "Sales_YoY%","PAT_YoY%","ROE%","D/E","Mkt_Cap_B","Chart_Pattern"]
+                 "Sales_YoY%","PAT_YoY%","ROE%","D/E","EPS","Mkt_Cap_B","Chart_Pattern"]
     if stock_str_df is not None and not stock_str_df.empty:
         stock_main = stock_str_df[[c for c in MAIN_COLS if c in stock_str_df.columns]]
     else:
@@ -1557,6 +1565,7 @@ def build_html_report(
     # ── Country navigation: home link + dropdown to switch markets ──────────
     # Maps internal market code → (display name, flag, html filename)
     _COUNTRY_MAP = {
+        # ── Original 9 (full-name HTML files) ──
         "USA":       ("United States", "🇺🇸", "USA_Market_Analysis.html"),
         "INDIA":     ("India",         "🇮🇳", "India_Market_Analysis.html"),
         "UK":        ("United Kingdom","🇬🇧", "UK_Market_Analysis.html"),
@@ -1566,6 +1575,7 @@ def build_html_report(
         "JP":        ("Japan",         "🇯🇵", "Japan_Market_Analysis.html"),
         "FR":        ("France",        "🇫🇷", "France_Market_Analysis.html"),
         "BR":        ("Brazil",        "🇧🇷", "Brazil_Market_Analysis.html"),
+        # ── Batch 1: 8 countries (full-name HTML files) ──
         "CN":        ("China",         "🇨🇳", "China_Market_Analysis.html"),
         "KR":        ("South Korea",   "🇰🇷", "SouthKorea_Market_Analysis.html"),
         "TW":        ("Taiwan",        "🇹🇼", "Taiwan_Market_Analysis.html"),
@@ -1574,6 +1584,18 @@ def build_html_report(
         "NL":        ("Netherlands",   "🇳🇱", "Netherlands_Market_Analysis.html"),
         "ES":        ("Spain",         "🇪🇸", "Spain_Market_Analysis.html"),
         "SE":        ("Sweden",        "🇸🇪", "Sweden_Market_Analysis.html"),
+        # ── Batch 2: 11 countries (SHORT-CODE HTML files) ──
+        "HK":        ("Hong Kong",     "🇭🇰", "HK.html"),
+        "IT":        ("Italy",         "🇮🇹", "IT.html"),
+        "SG":        ("Singapore",     "🇸🇬", "SG.html"),
+        "ID":        ("Indonesia",     "🇮🇩", "ID.html"),
+        "ZA":        ("South Africa",  "🇿🇦", "ZA.html"),
+        "MX":        ("Mexico",        "🇲🇽", "MX.html"),
+        "TH":        ("Thailand",      "🇹🇭", "TH.html"),
+        "MY":        ("Malaysia",      "🇲🇾", "MY.html"),
+        "AE":        ("UAE",           "🇦🇪", "UAE.html"),
+        "PL":        ("Poland",        "🇵🇱", "PL.html"),
+        "TR":        ("Turkey",        "🇹🇷", "TR.html"),
     }
     _cur = str(market).upper()
     _opts = ['<option value="" disabled selected>🌍 Switch market…</option>']
@@ -1590,7 +1612,7 @@ def build_html_report(
         f'</select>'
     )
 
-    # ── SEBI-style investment disclaimer footer ─────────────────────────────
+    # ── Investment disclaimer footer (regulator-neutral, global) ────────────
     disclaimer_html = (
         '<div class="disclaimer-footer">'
         '<h4>⚠️ Important Disclaimer — Please Read</h4>'
@@ -1600,17 +1622,19 @@ def build_html_report(
         'provided for <strong>informational and educational purposes only</strong>, and '
         'must <strong>not</strong> be construed as investment advice, a research report, '
         'or a recommendation/solicitation to buy or sell any security.</p>'
-        '<p>We are <strong>not</strong> registered with SEBI as an Investment Adviser or '
-        'Research Analyst, nor with any other financial regulator. Nothing here is tailored '
-        'to your personal financial situation, objectives, or risk tolerance.</p>'
+        '<p>We are <strong>not</strong> registered with any financial regulator as an '
+        'Investment Adviser or Research Analyst (including SEBI in India, the SEC/FINRA in '
+        'the US, the FCA in the UK, or any equivalent authority in other jurisdictions). '
+        'Nothing here is tailored to your personal financial situation, objectives, or '
+        'risk tolerance.</p>'
         '<p><strong>Investments in securities markets are subject to market risks. '
         'Read all the related documents carefully before investing.</strong> Past '
         'performance is not indicative of future results. The data shown is sourced from '
         'third parties, may be delayed, inaccurate, or incomplete, and is presented '
         '"as is" without warranty of any kind.</p>'
         '<p>You are solely responsible for your own investment decisions. Always do your '
-        'own research and consult a SEBI-registered investment adviser or a qualified, '
-        'licensed financial professional in your jurisdiction before making any investment '
+        'own research and consult a licensed, registered investment adviser or a qualified, '
+        'licensed financial professional regulated in your own jurisdiction before making any investment '
         'decision. <span class="df-brand">TechnoFunda</span> and its creators accept no '
         'liability for any loss or damage arising from the use of this information.</p>'
         f'<p style="margin-top:12px;color:var(--text3);">© 2026 TechnoFunda · '
