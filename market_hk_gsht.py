@@ -202,8 +202,11 @@ def main():
                           end=end_dt.strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
     if raw.empty: print(f"  \u274c Cannot fetch Hong Kong index"); return
     cl = raw["Close"]
-    if isinstance(cl, pd.DataFrame): cl = cl.squeeze()
-    index_prices = _normalize(cl.dropna())
+    # squeeze only columns (axis=1) — never rows — so a 1-row result stays a Series
+    if isinstance(cl, pd.DataFrame):
+        cl = cl.iloc[:, 0] if cl.shape[1] >= 1 else cl.squeeze()
+    cl = pd.Series(cl).dropna()
+    index_prices = _normalize(cl)
     print(f"  \u2705 Index: {len(index_prices)} days")
 
     print(f"\n\U0001F4E1 Hong Kong Sector ETFs …"); sector_prices = fetch_hk_sector_prices()

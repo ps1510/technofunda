@@ -66,8 +66,8 @@ except Exception:
 #  UAE MARKET CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
 
-AE_INDEX          = "^DFMGI"
-AE_INDEX_FALLBACK = "^ADI"
+AE_INDEX          = "DFMGI.AE"
+AE_INDEX_FALLBACK = "DFMGI.AE"
 
 AE_INDUSTRY_TO_SECTOR = {
     "Financials":"Financials","Banking":"Financials","Insurance":"Financials",
@@ -93,8 +93,8 @@ AE_BREADTH_INDICES = {
 }
 
 AE_SNAPSHOT_TICKERS = [
-    {"name": "DFM Index",               "ticker": "^DFMGI",        "type": "Index"},
-    {"name": "Abu Dhabi ADX",           "ticker": "^ADI",          "type": "Index"},
+    {"name": "DFM Index",               "ticker": "DFMGI.AE",        "type": "Index"},
+    {"name": "Abu Dhabi ADX",           "ticker": "ADSMI.AE",          "type": "Index"},
     {"name": "Tadawul TASI",            "ticker": "^TASI.SR",      "type": "Index"},
     {"name": "AED/USD",                 "ticker": "AED=X",         "type": "Forex"},
     {"name": "USD/AED",                 "ticker": "USDAED=X",      "type": "Forex"},
@@ -202,8 +202,11 @@ def main():
                           end=end_dt.strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
     if raw.empty: print(f"  \u274c Cannot fetch UAE index"); return
     cl = raw["Close"]
-    if isinstance(cl, pd.DataFrame): cl = cl.squeeze()
-    index_prices = _normalize(cl.dropna())
+    # squeeze only columns (axis=1) — never rows — so a 1-row result stays a Series
+    if isinstance(cl, pd.DataFrame):
+        cl = cl.iloc[:, 0] if cl.shape[1] >= 1 else cl.squeeze()
+    cl = pd.Series(cl).dropna()
+    index_prices = _normalize(cl)
     print(f"  \u2705 Index: {len(index_prices)} days")
 
     print(f"\n\U0001F4E1 UAE Sector ETFs …"); sector_prices = fetch_ae_sector_prices()
