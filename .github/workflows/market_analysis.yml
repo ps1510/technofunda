@@ -290,7 +290,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f UK_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f UK.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "UK HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -303,8 +303,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours UK_Market_Analysis*.html 2>/dev/null || true
-              git add UK_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours UK.html 2>/dev/null || true
+              git add UK.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -348,7 +348,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Canada_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f CA.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Canada HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -361,8 +361,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Canada_Market_Analysis*.html 2>/dev/null || true
-              git add Canada_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours CA.html 2>/dev/null || true
+              git add CA.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -406,7 +406,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Australia_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f AU.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Australia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -419,8 +419,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Australia_Market_Analysis*.html 2>/dev/null || true
-              git add Australia_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours AU.html 2>/dev/null || true
+              git add AU.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -464,7 +464,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Germany_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f DE.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Germany HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -477,8 +477,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Germany_Market_Analysis*.html 2>/dev/null || true
-              git add Germany_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours DE.html 2>/dev/null || true
+              git add DE.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -522,7 +522,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Japan_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f JP.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Japan HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -535,8 +535,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Japan_Market_Analysis*.html 2>/dev/null || true
-              git add Japan_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours JP.html 2>/dev/null || true
+              git add JP.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -580,7 +580,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f France_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f FR.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "France HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -593,8 +593,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours France_Market_Analysis*.html 2>/dev/null || true
-              git add France_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours FR.html 2>/dev/null || true
+              git add FR.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -638,7 +638,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Brazil_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f BR.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Brazil HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -651,8 +651,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Brazil_Market_Analysis*.html 2>/dev/null || true
-              git add Brazil_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours BR.html 2>/dev/null || true
+              git add BR.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -700,7 +700,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f China_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f CN.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "China HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -713,8 +713,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours China_Market_Analysis*.html 2>/dev/null || true
-              git add China_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours CN.html 2>/dev/null || true
+              git add CN.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -758,7 +758,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f SouthKorea_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f KR.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "SouthKorea HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -771,8 +771,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours SouthKorea_Market_Analysis*.html 2>/dev/null || true
-              git add SouthKorea_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours KR.html 2>/dev/null || true
+              git add KR.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -816,7 +816,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Taiwan_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f TW.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Taiwan HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -829,8 +829,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Taiwan_Market_Analysis*.html 2>/dev/null || true
-              git add Taiwan_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours TW.html 2>/dev/null || true
+              git add TW.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -874,7 +874,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Switzerland_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f CH.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Switzerland HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -887,8 +887,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Switzerland_Market_Analysis*.html 2>/dev/null || true
-              git add Switzerland_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours CH.html 2>/dev/null || true
+              git add CH.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -932,7 +932,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f SaudiArabia_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f SA.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "SaudiArabia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -945,8 +945,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours SaudiArabia_Market_Analysis*.html 2>/dev/null || true
-              git add SaudiArabia_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours SA.html 2>/dev/null || true
+              git add SA.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -990,7 +990,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Netherlands_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f NL.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Netherlands HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1003,8 +1003,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Netherlands_Market_Analysis*.html 2>/dev/null || true
-              git add Netherlands_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours NL.html 2>/dev/null || true
+              git add NL.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -1048,7 +1048,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Spain_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f ES.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Spain HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1061,8 +1061,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Spain_Market_Analysis*.html 2>/dev/null || true
-              git add Spain_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours ES.html 2>/dev/null || true
+              git add ES.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
@@ -1106,7 +1106,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f Sweden_Market_Analysis*.html index.html 2>/dev/null || true
+          git add -f SE.html index.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Sweden HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1119,8 +1119,8 @@ jobs:
             else
               git checkout --theirs index.html 2>/dev/null || true
               git add index.html 2>/dev/null || true
-              git checkout --ours Sweden_Market_Analysis*.html 2>/dev/null || true
-              git add Sweden_Market_Analysis*.html 2>/dev/null || true
+              git checkout --ours SE.html 2>/dev/null || true
+              git add SE.html 2>/dev/null || true
               git rebase --continue 2>/dev/null || git rebase --skip 2>/dev/null || true
               python build_index.py
               git add -f index.html 2>/dev/null || true
