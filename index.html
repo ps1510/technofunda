@@ -25,6 +25,25 @@
   --font-body:'DM Sans',system-ui,sans-serif;
   --font-mono:'JetBrains Mono',monospace;
 }
+html[data-theme="light"]{
+  --bg:#f7f8fc;--bg2:#ffffff;--bg3:#f1f4fa;
+  --border:rgba(15,23,42,.08);--border2:rgba(15,23,42,.14);
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --green-dim:rgba(16,185,129,.10);--green-glow:rgba(16,185,129,.20);
+  --red-dim:rgba(239,68,68,.10);--amber-dim:rgba(245,158,11,.10);
+  --shadow:0 4px 18px rgba(15,23,42,.08);--shadow-lg:0 12px 36px rgba(15,23,42,.12);
+}
+html[data-theme="light"] body::before,html[data-theme="light"] body::after{opacity:.5}
+html[data-theme="navy"]{
+  --bg:#08182e;--bg2:#0d2243;--bg3:#13335f;
+  --border:rgba(130,180,255,.14);--border2:rgba(130,180,255,.22);
+  --text:#eaf2ff;--text2:#9fb6d4;--text3:#5e7d9e;
+  --gold:#ffd24d;--gold2:#ffe27a;
+}
+.theme-switch{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:999px;padding:3px}
+.theme-switch button{background:transparent;border:0;color:var(--text2);cursor:pointer;padding:5px 9px;border-radius:999px;font:600 11px/1 var(--font-body);letter-spacing:.4px;text-transform:uppercase;transition:all .15s}
+.theme-switch button:hover{color:var(--text)}
+.theme-switch button.active{background:var(--bg);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.25)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
@@ -162,7 +181,14 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
       <span class="logo-text">Techno<span>Funda</span></span>
     </div>
     <span class="nav-tag">Global Market Intelligence</span>
-    <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="theme-switch" role="group" aria-label="Theme">
+        <button type="button" data-theme-btn="dark" title="Dark">Dark</button>
+        <button type="button" data-theme-btn="navy" title="Navy">Navy</button>
+        <button type="button" data-theme-btn="light" title="Light">Light</button>
+      </div>
+      <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
+    </div>
   </nav>
 </div>
 
@@ -174,7 +200,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     <div class="hero-stats animate-in delay-3">
       <div class="hs-item"><span class="hs-num gold">28</span><span class="hs-label">Markets</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num">2,610+</span><span class="hs-label">Stocks Tracked</span></div>
+      <div class="hs-item"><span class="hs-num">5,248+</span><span class="hs-label">Stocks Tracked</span></div>
       <div class="hs-sep"></div>
       <div class="hs-item"><span class="hs-num green">79</span><span class="hs-label">Prime Setups Today</span></div>
       <div class="hs-sep"></div>
@@ -192,7 +218,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
         <span class="sec-label">Live Reports</span>
         <h2 class="sec-title">Choose Your Market</h2>
       </div>
-      <span class="sec-updated">Generated: 04 Jun 2026 13:22 UTC</span>
+      <span class="sec-updated">Generated: 04 Jun 2026 13:03 UTC</span>
     </div>
     <div class="countries-grid" id="countries-grid"></div>
   </section>
@@ -228,8 +254,8 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
       </div>
       <div class="footer-links">
         <div class="footer-link-title">Markets</div>
-                <a href="USA_Market_Analysis.html">🇺🇸 United States Report</a>
-        <a href="India_Market_Analysis.html">🇮🇳 India Report</a>
+                <a href="US.html">🇺🇸 United States Report</a>
+        <a href="IN.html">🇮🇳 India Report</a>
         <a href="UK.html">🇬🇧 United Kingdom Report</a>
         <a href="CA.html">🇨🇦 Canada Report</a>
         <a href="AU.html">🇦🇺 Australia Report</a>
@@ -269,7 +295,7 @@ const MARKETS = [
     flag:       "🇺🇸",
     name:       "United States",
     exchange:   "NYSE / NASDAQ",
-    url:        "USA_Market_Analysis.html",
+    url:        "US.html",
     status:     "live",
     mood:       "bull",
     updated:    "04 Jun 2026 · 02:06 ET",
@@ -287,7 +313,7 @@ const MARKETS = [
     flag:       "🇮🇳",
     name:       "India",
     exchange:   "NSE / BSE",
-    url:        "India_Market_Analysis.html",
+    url:        "IN.html",
     status:     "live",
     mood:       "bull",
     updated:    "04 June 2026 · 10:45 IST",
@@ -541,13 +567,13 @@ const MARKETS = [
     exchange:   "Bolsas y Mercados Espanoles",
     url:        "ES.html",
     status:     "live",
-    mood:       "mixed",
-    updated:    "04 June 2026 · 14:04 CET",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "IBEX 35",
-    index_price:"18,312",
-    index_chg:  "+0.75",
-    universe:   51,
-    signals:    {prime:0,conf:4,rs:8,avoid:27},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   500,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
     ]
@@ -559,13 +585,13 @@ const MARKETS = [
     exchange:   "Nasdaq Stockholm",
     url:        "SE.html",
     status:     "live",
-    mood:       "bull",
-    updated:    "04 June 2026 · 14:06 CET",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "OMX Stockholm 30",
-    index_price:"3,141",
-    index_chg:  "+0.22",
-    universe:   55,
-    signals:    {prime:0,conf:7,rs:20,avoid:24},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   500,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
     ]
@@ -577,13 +603,13 @@ const MARKETS = [
     exchange:   "Hong Kong Stock Exchange",
     url:        "HK.html",
     status:     "live",
-    mood:       "bull",
-    updated:    "04 June 2026 · 21:08 HKT",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "Hang Seng",
-    index_price:"25,253",
-    index_chg:  "-1.48",
-    universe:   80,
-    signals:    {prime:0,conf:11,rs:25,avoid:40},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   500,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
     ]
@@ -595,13 +621,13 @@ const MARKETS = [
     exchange:   "Borsa Italiana",
     url:        "IT.html",
     status:     "live",
-    mood:       "bull",
-    updated:    "04 June 2026 · 14:12 CET",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "FTSE MIB",
-    index_price:"50,082",
-    index_chg:  "+0.09",
-    universe:   54,
-    signals:    {prime:0,conf:12,rs:14,avoid:22},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   500,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
     ]
@@ -649,13 +675,13 @@ const MARKETS = [
     exchange:   "Johannesburg Stock Exchange",
     url:        "ZA.html",
     status:     "live",
-    mood:       "bull",
-    updated:    "04 June 2026 · 15:14 SAST",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "JSE Top 40",
-    index_price:"105,163",
-    index_chg:  "-0.07",
-    universe:   76,
-    signals:    {prime:0,conf:21,rs:17,avoid:34},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   500,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
     ]
@@ -722,7 +748,7 @@ const MARKETS = [
     url:        "UAE.html",
     status:     "live",
     mood:       "bear",
-    updated:    "04 June 2026 · 17:17 GST",
+    updated:    "04 June 2026 · 16:40 GST",
     index_name: "DFM / ADX",
     index_price:"—",
     index_chg:  "—",
@@ -740,11 +766,11 @@ const MARKETS = [
     url:        "PL.html",
     status:     "live",
     mood:       "bear",
-    updated:    "04 June 2026 · 14:21 CET",
+    updated:    "04 Jun 2026",
     index_name: "WIG20",
     index_price:"—",
     index_chg:  "—",
-    universe:   46,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -831,6 +857,27 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('ticker').innerHTML=buildTicker();
   document.getElementById('countries-grid').innerHTML=buildCards();
 });
+
+(function(){
+  var KEY='tf_theme';
+  function apply(t){
+    document.documentElement.setAttribute('data-theme',t);
+    try{localStorage.setItem(KEY,t);}catch(e){}
+    document.querySelectorAll('[data-theme-btn]').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-theme-btn')===t);
+    });
+    var meta=document.querySelector('meta[name="theme-color"]');
+    var c=t==='light'?'#f7f8fc':(t==='navy'?'#08182e':'#080c14');
+    if(meta) meta.setAttribute('content',c);
+  }
+  var saved='dark';
+  try{saved=localStorage.getItem(KEY)||'dark';}catch(e){}
+  apply(saved);
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-theme-btn]');
+    if(b) apply(b.getAttribute('data-theme-btn'));
+  });
+})();
 </script>
 </body>
 </html>
