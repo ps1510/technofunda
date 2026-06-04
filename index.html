@@ -174,9 +174,9 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     <div class="hero-stats animate-in delay-3">
       <div class="hs-item"><span class="hs-num gold">28</span><span class="hs-label">Markets</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num">3,707+</span><span class="hs-label">Stocks Tracked</span></div>
+      <div class="hs-item"><span class="hs-num">10,847+</span><span class="hs-label">Stocks Tracked</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num green">56</span><span class="hs-label">Prime Setups Today</span></div>
+      <div class="hs-item"><span class="hs-num green">57</span><span class="hs-label">Prime Setups Today</span></div>
       <div class="hs-sep"></div>
       <div class="hs-item"><span class="hs-num">Daily</span><span class="hs-label">Updated</span></div>
     </div>
@@ -192,7 +192,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
         <span class="sec-label">Live Reports</span>
         <h2 class="sec-title">Choose Your Market</h2>
       </div>
-      <span class="sec-updated">Generated: 04 Jun 2026 09:05 UTC</span>
+      <span class="sec-updated">Generated: 04 Jun 2026 09:14 UTC</span>
     </div>
     <div class="countries-grid" id="countries-grid"></div>
   </section>
@@ -306,16 +306,16 @@ const MARKETS = [
     name:       "United Kingdom",
     exchange:   "London Stock Exchange",
     url:        "UK.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bull",
+    updated:    "04 June 2026 · 09:12 GMT",
     index_name: "FTSE 100",
-    index_price:"—",
-    index_chg:  "—",
-    universe:   0,
-    signals:    {prime:0,conf:0,rs:0,avoid:0},
+    index_price:"10,287",
+    index_chg:  "-0.44",
+    universe:   140,
+    signals:    {prime:1,conf:34,rs:32,avoid:62},
     top_sectors:[
-
+      {name:"Technology",pct:"-1.6",dir:"neg"}
     ]
   },
   {
@@ -324,13 +324,13 @@ const MARKETS = [
     name:       "Canada",
     exchange:   "Toronto Stock Exchange",
     url:        "CA.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "S&P/TSX",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -342,13 +342,13 @@ const MARKETS = [
     name:       "Australia",
     exchange:   "Australian Securities Exchange",
     url:        "AU.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "S&P/ASX 200",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -360,13 +360,13 @@ const MARKETS = [
     name:       "Germany",
     exchange:   "XETRA / Frankfurt",
     url:        "DE.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "DAX 40",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -378,13 +378,13 @@ const MARKETS = [
     name:       "Japan",
     exchange:   "Tokyo Stock Exchange",
     url:        "JP.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "Nikkei 225",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -396,13 +396,13 @@ const MARKETS = [
     name:       "France",
     exchange:   "Euronext Paris",
     url:        "FR.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "CAC 40",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -414,13 +414,13 @@ const MARKETS = [
     name:       "Brazil",
     exchange:   "B3 - Bolsa Brasil",
     url:        "BR.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "Ibovespa",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -432,13 +432,13 @@ const MARKETS = [
     name:       "China",
     exchange:   "Shanghai / Shenzhen",
     url:        "CN.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "CSI 300",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -450,13 +450,13 @@ const MARKETS = [
     name:       "South Korea",
     exchange:   "Korea Exchange (KRX)",
     url:        "KR.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "KOSPI",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -468,13 +468,13 @@ const MARKETS = [
     name:       "Taiwan",
     exchange:   "Taiwan Stock Exchange",
     url:        "TW.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "TAIEX",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -486,13 +486,13 @@ const MARKETS = [
     name:       "Switzerland",
     exchange:   "SIX Swiss Exchange",
     url:        "CH.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "SMI",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -504,13 +504,13 @@ const MARKETS = [
     name:       "Saudi Arabia",
     exchange:   "Tadawul (Saudi Exchange)",
     url:        "SA.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "TASI (Tadawul)",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -522,13 +522,13 @@ const MARKETS = [
     name:       "Netherlands",
     exchange:   "Euronext Amsterdam",
     url:        "NL.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "AEX",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -540,13 +540,13 @@ const MARKETS = [
     name:       "Spain",
     exchange:   "Bolsas y Mercados Espanoles",
     url:        "ES.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "IBEX 35",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -558,13 +558,13 @@ const MARKETS = [
     name:       "Sweden",
     exchange:   "Nasdaq Stockholm",
     url:        "SE.html",
-    status:     "coming",
-    mood:       "coming",
-    updated:    "Not yet configured",
+    status:     "live",
+    mood:       "bear",
+    updated:    "04 Jun 2026",
     index_name: "OMX Stockholm 30",
     index_price:"—",
     index_chg:  "—",
-    universe:   0,
+    universe:   500,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
