@@ -1650,7 +1650,7 @@ function _tvBuildSrc(tvSymbol){
     allow_symbol_change: '0',
     save_image:  '0',
     calendar:    '0',
-    hide_volume: '1',
+    hide_volume: '0',
   });
   return 'https://s.tradingview.com/widgetembed/?' + params.toString();
 }
