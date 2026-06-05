@@ -144,7 +144,7 @@ def load_ca_universe():
         df = df[df["Series"].astype(str).str.strip().str.upper().isin(["EQ",""])]
     df = df.head(MAX_STOCKS).copy()
     df["Symbol"]   = df["Symbol"].astype(str).str.strip()
-    df["Yahoo"]    = df["Symbol"] + ".TO"     # TSX tickers need .TO suffix
+    df["Yahoo"]    = df["Symbol"]  # + ".TO"     # TSX tickers need .TO suffix
     df["Company"]  = df.get("Company Name", df["Symbol"])
     df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
     df["Sector"]   = df["Industry"].map(CA_INDUSTRY_TO_SECTOR).fillna("Other")
