@@ -173,7 +173,7 @@ def load_uk_universe():
 
     df = df.head(MAX_STOCKS).copy()
     df["Symbol"]   = df["Symbol"].str.strip()
-    df["Yahoo"]    = df["Symbol"] + ".L"          # FTSE tickers need .L suffix
+    df["Yahoo"]    = df["Symbol"] # + ".L"          # FTSE tickers need .L suffix
     df["Company"]  = df.get("Company Name", df["Symbol"])
     df["Industry"] = df.get("Industry", "").fillna("").str.strip()
     df["Sector"]   = df["Industry"].map(UK_INDUSTRY_TO_SECTOR).fillna("Other")
