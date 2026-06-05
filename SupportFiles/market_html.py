@@ -149,7 +149,7 @@ def _is_breadth_col(col, pct_mode=None):
 
 
 def _cell_class(col, val, pct_mode=None, no_bg=False):
-    # Breadth / rotation 0-100 colouring takes priority for the columns it owns.
+    # Breadth / rotation 0-100 colouring — suppress entirely when no_bg
     if _is_breadth_col(col, pct_mode):
         if no_bg: return ""
         try:
@@ -158,31 +158,60 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
             if f >= 40: return "bd-amber"
             return "bd-red"
         except: pass
+
     col = str(col).lower().strip()
-    if col == "signal_label":  return _signal_class(val)
-    if col == "action_tier":   return _signal_class(val)
-    if col in ("signal","enhanced","sec_signal"):
-        # Map both original and remapped values to CSS classes
+
+    # ── Signal-label (sl-* classes have both BG + text colour) ────────────────
+    if col == "signal_label" or col == "action_tier":
+        cls = _signal_class(val)
+        if no_bg:
+            # Map sl-* → sl-*-text (text colour only, no background)
+            _sl_text = {
+                "sl-triple":    "sl-triple-text",
+                "sl-prime":     "sl-prime-text",
+                "sl-confirmed": "sl-confirmed-text",
+                "sl-rsbuy":     "sl-rsbuy-text",
+                "sl-watch":     "sl-watch-text",
+                "sl-neutral":   "sl-neutral-text",
+                "sl-avoid":     "sl-avoid-text",
+            }
+            return _sl_text.get(cls, cls)
+        return cls
+
+    # ── Signal / Enhanced / Sec_Signal (sig-* classes have BG colour) ─────────
+    if col in ("signal", "enhanced", "sec_signal"):
         raw = str(val)
-        # Map display names back to class logic
-        cls_map = {
-            # original engine values
-            "Strong Buy":"sig-strongbuy","Buy":"sig-buy",
-            "Sell":"sig-sell","Neutral":"sig-neutral",
-            # remapped display values
-            "Very Strong":"sig-strongbuy","Bullish":"sig-buy",
-            "Strong":"sig-buy","Bearish":"sig-sell","Weak":"sig-sell",
+        _sig_full = {
+            "Strong Buy": "sig-strongbuy", "Buy": "sig-buy",
+            "Sell": "sig-sell", "Neutral": "sig-neutral",
+            "Very Strong": "sig-strongbuy", "Bullish": "sig-buy",
+            "Strong": "sig-buy", "Bearish": "sig-sell", "Weak": "sig-sell",
         }
-        return cls_map.get(raw, "")
-    if col == "action":
-        return {"BUY":"sig-buy","SELL":"sig-sell","WAIT":"sig-neutral"}.get(str(val),"")
-    if col in ("mst_signal","lst_signal","rs30_signal"):
+        _sig_text = {
+            "Strong Buy": "sig-strongbuy-text", "Buy": "sig-buy-text",
+            "Sell": "sig-sell-text", "Neutral": "sig-neutral-text",
+            "Very Strong": "sig-strongbuy-text", "Bullish": "sig-buy-text",
+            "Strong": "sig-buy-text", "Bearish": "sig-sell-text", "Weak": "sig-sell-text",
+        }
+        return (_sig_text if no_bg else _sig_full).get(raw, "")
+
+    # ── MST / LST / RS30 sub-signals ──────────────────────────────────────────
+    if col in ("mst_signal", "lst_signal", "rs30_signal"):
         raw = str(val)
-        cls_map = {"Buy":"sig-buy","Active":"sig-buy",
-                   "Watch":"sig-neutral","Building":"sig-neutral","Neutral":""}
-        return cls_map.get(raw, "")
+        _sub_full = {
+            "Buy": "sig-buy", "Active": "sig-buy",
+            "Watch": "sig-neutral", "Building": "sig-neutral", "Neutral": "",
+        }
+        _sub_text = {
+            "Buy": "sig-buy-text", "Active": "sig-buy-text",
+            "Watch": "sig-neutral-text", "Building": "sig-neutral-text", "Neutral": "",
+        }
+        return (_sub_text if no_bg else _sub_full).get(raw, "")
+
+    if col == "action":
+        return {"BUY": "sig-buy", "SELL": "sig-sell", "WAIT": "sig-neutral"}.get(str(val), "")
     if col == "supertrend":
-        return {"Buy":"pos","Sell":"neg"}.get(str(val),"")
+        return {"Buy": "pos", "Sell": "neg"}.get(str(val), "")
     if col == "trend":
         v = str(val)
         if "Bullish" in v or "BULLISH" in v: return "pos-strong"
@@ -191,9 +220,9 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
     if col == "sec_gated":
         return "pos-strong" if str(val) == "✓" else "dim"
     if col == "sl_grade":
-        return {"A":"pos-strong","B":"pos","C":"pos-dim",
-                "D":"neg-dim","F":"neg"}.get(str(val),"")
-    if col in ("sl_buy%","sl%","sl_sell%"):
+        return {"A": "pos-strong", "B": "pos", "C": "pos-dim",
+                "D": "neg-dim", "F": "neg"}.get(str(val), "")
+    if col in ("sl_buy%", "sl%", "sl_sell%"):
         try:
             f = float(val)
             if f <= 3:  return "pos-strong"
@@ -208,14 +237,16 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
             if f > 0:  return "pos"
             if f < 0:  return "neg-strong"
         except: pass
+
+    # ── Percent columns — suppressed entirely in no-bg tabs ───────────────────
     if no_bg:
-        return ""   # skip background colouring for percent cols in no-bg tabs
+        return ""
     pct_cols = {
-        "chg_1d%","chg_5d%","rs_22d%","rs_55d%","rs_120d%","rs_252d%",
-        "rs_22d_idx%","rs_55d_idx%","rs_120d_idx%","rs_252d_idx%",
-        "1m%","3m%","6m%","12m%","ytd%","sales_yoy%","pat_yoy%",
-        "sales_qoq%","pat_qoq%","roe%","margin%","w_rs21%","w_rs30%",
-        "m_rs12%","sec_rs22d%","sec_rs55d%","sleeve_rs",
+        "chg_1d%", "chg_5d%", "rs_22d%", "rs_55d%", "rs_120d%", "rs_252d%",
+        "rs_22d_idx%", "rs_55d_idx%", "rs_120d_idx%", "rs_252d_idx%",
+        "1m%", "3m%", "6m%", "12m%", "ytd%", "sales_yoy%", "pat_yoy%",
+        "sales_qoq%", "pat_qoq%", "roe%", "margin%", "w_rs21%", "w_rs30%",
+        "m_rs12%", "sec_rs22d%", "sec_rs55d%", "sleeve_rs",
     }
     if col in pct_cols or col.endswith("%"):
         try:
@@ -988,6 +1019,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .sec-sig-badge{font-size:11px;font-weight:600;text-align:center;padding:2px 5px;border-radius:4px;}
 .sig-buy{background:#c8e6c9;color:#1b5e20;}.sig-sell{background:#ffcdd2;color:#b71c1c;}
 .sig-neutral{background:#fff9c4;color:#5d4037;}.sig-strongbuy{background:#006b3c;color:#fff;}
+/* Text-only variants for no-bg tabs (Opportunities/Stocks/Global/Patterns) */
+.sig-buy-text{color:#16a34a;font-weight:600;}
+.sig-sell-text{color:#dc2626;font-weight:600;}
+.sig-neutral-text{color:var(--text2);}
+.sig-strongbuy-text{color:#15803d;font-weight:700;}
+/* Signal-label text-only: map sl-* → colour without background */
+.data-tbl td.sl-triple-text{color:#4ade80!important;font-weight:700;}
+.data-tbl td.sl-prime-text{color:#86efac!important;font-weight:700;}
+.data-tbl td.sl-confirmed-text{color:#16a34a!important;font-weight:600;}
+.data-tbl td.sl-rsbuy-text{color:#22c55e!important;}
+.data-tbl td.sl-watch-text{color:#f59e0b!important;}
+.data-tbl td.sl-neutral-text{color:var(--text3)!important;}
+.data-tbl td.sl-avoid-text{color:#ef4444!important;font-weight:600;}
 /* Opportunity cards */
 .opp-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:16px;}
 .opp-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
