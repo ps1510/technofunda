@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About TechnoFunda — How It Works &amp; Our Methodology</title>
+<meta name="description" content="Learn how TechnoFunda works: our methodology, data sources, signal definitions, and what this site is (and isn't). Free global stock market analysis powered by Relative Strength momentum.">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c14;--bg2:#0d1220;--bg3:#111827;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --gold:#f0b429;--gold2:#ffd666;
+  --text:#f0f4ff;--text2:#8896b0;--text3:#4a5568;
+  --green:#10b981;--green-dim:rgba(16,185,129,.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.12);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,.12);
+  --blue:#3b82f6;
+  --radius:14px;--radius-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);--shadow-lg:0 12px 48px rgba(0,0,0,.6);
+  --font-head:'DM Serif Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(59,130,246,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(240,180,41,.04) 0%,transparent 60%),radial-gradient(ellipse 100% 60% at 50% 50%,rgba(16,185,129,.02) 0%,transparent 70%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+.pw{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 20px}
+/* NAV */
+.topnav{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--border)}
+.logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),#e07b00);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px rgba(240,180,41,.3)}
+.logo-text{font-family:var(--font-head);font-size:20px;color:var(--text)}
+.logo-text span{color:var(--gold)}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-link{font-size:13px;color:var(--text2);text-decoration:none;font-weight:500;transition:color .15s}
+.nav-link:hover,.nav-link.active{color:var(--gold)}
+.nav-live{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);font-family:var(--font-mono)}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse-green 2s ease-in-out infinite;box-shadow:0 0 6px var(--green)}
+@keyframes pulse-green{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+/* PAGE HERO */
+.page-hero{padding:64px 0 48px;text-align:center}
+.page-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold);background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.2);padding:6px 14px;border-radius:20px;margin-bottom:24px}
+.page-hero h1{font-family:var(--font-head);font-size:clamp(32px,5vw,60px);font-weight:400;line-height:1.12;letter-spacing:-1px;margin-bottom:16px;background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.7) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-hero p{font-size:17px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.7;font-weight:300}
+/* TOC */
+.toc-bar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 24px;margin-bottom:48px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center}
+.toc-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gold);white-space:nowrap;margin-right:8px}
+.toc-link{font-size:13px;color:var(--text2);text-decoration:none;padding:4px 10px;border-radius:20px;border:1px solid var(--border);transition:all .15s;white-space:nowrap}
+.toc-link:hover{color:var(--text);border-color:var(--border2);background:var(--bg3)}
+/* CONTENT SECTIONS */
+.content-section{margin-bottom:64px;scroll-margin-top:80px}
+.section-eyebrow{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.section-title{font-family:var(--font-head);font-size:32px;font-weight:400;letter-spacing:-.5px;color:var(--text);margin-bottom:20px;line-height:1.2}
+.prose{color:var(--text2);font-size:15px;line-height:1.75;max-width:720px}
+.prose p{margin-bottom:16px}
+.prose p:last-child{margin-bottom:0}
+.prose strong{color:var(--text);font-weight:600}
+.prose a{color:var(--gold);text-decoration:none}
+.prose a:hover{text-decoration:underline}
+/* CARD GRID */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:24px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.card-icon{font-size:28px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px}
+.card-body{font-size:13px;color:var(--text2);line-height:1.6}
+/* SIGNAL TABLE */
+.signal-table{width:100%;border-collapse:collapse;margin-top:24px;font-size:14px}
+.signal-table th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);padding:10px 14px;border-bottom:1px solid var(--border)}
+.signal-table td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.signal-table tr:last-child td{border-bottom:none}
+.signal-table tr:hover td{background:rgba(255,255,255,.02)}
+.sig-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:12px;white-space:nowrap}
+.sig-prime{background:rgba(240,180,41,.12);color:var(--gold);border:1px solid rgba(240,180,41,.25)}
+.sig-conf{background:var(--green-dim);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.sig-rs{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+/* STEP TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:24px;position:relative}
+.timeline::before{content:'';position:absolute;left:20px;top:28px;bottom:28px;width:1px;background:var(--border)}
+.tl-step{display:flex;gap:20px;position:relative;padding-bottom:32px}
+.tl-step:last-child{padding-bottom:0}
+.tl-num{width:40px;height:40px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0;position:relative;z-index:1}
+.tl-content{padding-top:8px}
+.tl-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px}
+.tl-body{font-size:13px;color:var(--text2);line-height:1.65;max-width:600px}
+/* HIGHLIGHT BOX */
+.highlight-box{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:18px 20px;margin-top:20px;font-size:14px;color:var(--text2);line-height:1.65}
+.highlight-box strong{color:var(--text)}
+/* DATA SOURCE TABLE */
+.source-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:24px}
+.source-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px}
+.source-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.source-desc{font-size:12px;color:var(--text2);line-height:1.5}
+/* FAQ */
+.faq{margin-top:24px;display:flex;flex-direction:column;gap:12px}
+.faq-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.faq-q{padding:16px 20px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;list-style:none}
+.faq-q::after{content:'＋';font-size:16px;color:var(--text3);transition:transform .2s}
+details[open] .faq-q::after{content:'－'}
+.faq-a{padding:0 20px 16px;font-size:13px;color:var(--text2);line-height:1.65;border-top:1px solid var(--border)}
+.faq-a p{margin-top:12px}
+/* DISCLAIMER BOX */
+.disclaimer-box{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius);padding:24px 28px;margin-top:24px}
+.disclaimer-box h3{font-size:15px;font-weight:700;color:var(--red);margin-bottom:10px}
+.disclaimer-box p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.disclaimer-box p:last-child{margin-bottom:0}
+/* FOOTER */
+.footer{border-top:1px solid var(--border);padding:32px 0 48px;margin-top:80px}
+.footer-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.footer-brand{display:flex;flex-direction:column;gap:10px;max-width:360px}
+.footer-logo{font-family:var(--font-head);font-size:18px;color:var(--text)}
+.footer-logo span{color:var(--gold)}
+.footer-disclaimer{font-size:12px;color:var(--text3);line-height:1.6}
+.footer-links{display:flex;flex-direction:column;gap:8px}
+.footer-link-title{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);margin-bottom:4px}
+.footer-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{text-align:center;font-size:12px;color:var(--text3);margin-top:32px;padding-top:24px;border-top:1px solid var(--border)}
+/* RESPONSIVE */
+@media(max-width:640px){
+  .nav-links{display:none}
+  .cards{grid-template-columns:1fr}
+  .source-grid{grid-template-columns:1fr}
+  .toc-bar{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div class="pw">
+
+  <!-- NAV -->
+  <nav class="topnav">
+    <a href="index.html" class="logo-wrap" style="text-decoration:none">
+      <div class="logo-icon">📊</div>
+      <div class="logo-text">Techno<span>Funda</span></div>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Markets</a>
+      <a href="about.html" class="nav-link active">About</a>
+    </div>
+    <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="page-hero">
+    <div class="page-eyebrow">ℹ️ About TechnoFunda</div>
+    <h1>What is TechnoFunda<br>and how does it work?</h1>
+    <p>A plain-English guide to our methodology, data sources, signals, and what this site can (and cannot) do for you.</p>
+  </section>
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc-bar">
+    <span class="toc-label">Jump to:</span>
+    <a href="#what-is" class="toc-link">What is it?</a>
+    <a href="#methodology" class="toc-link">Methodology</a>
+    <a href="#signals" class="toc-link">Signals explained</a>
+    <a href="#how-it-works" class="toc-link">How it works</a>
+    <a href="#data-sources" class="toc-link">Data sources</a>
+    <a href="#faq" class="toc-link">FAQ</a>
+    <a href="#disclaimer" class="toc-link">Disclaimer</a>
+  </div>
+
+  <!-- WHAT IS IT -->
+  <section class="content-section" id="what-is">
+    <div class="section-eyebrow">Overview</div>
+    <h2 class="section-title">What is TechnoFunda?</h2>
+    <div class="prose">
+      <p>TechnoFunda is a <strong>free, automated, daily stock market analysis website</strong> covering 16 global markets. Every day, after market close, our system fetches end-of-day price data and runs a set of momentum and technical analysis calculations across thousands of stocks in each country.</p>
+      <p>The results are published as static HTML pages — no login required, no subscription, no paywalls. Just clean, data-driven analysis you can read and act on.</p>
+      <p>The goal is simple: <strong>help everyday investors quickly identify which stocks are showing strong momentum, improving trends, and buy signals — across any market in the world.</strong></p>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🌍</div>
+        <div class="card-title">16 Global Markets</div>
+        <div class="card-body">Canada, USA, India, UK, Australia, Germany, Japan, Singapore, Hong Kong, New Zealand, France, Italy, Brazil, South Africa, Mexico, and UAE/Saudi Arabia.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Fully Automated</div>
+        <div class="card-body">Data is fetched and reports are generated automatically every trading day using GitHub Actions. No human picks stocks — the algorithm does.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🆓</div>
+        <div class="card-title">Always Free</div>
+        <div class="card-body">Every report, every country, every signal — completely free. No account, no email required to access the data.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHODOLOGY -->
+  <section class="content-section" id="methodology">
+    <div class="section-eyebrow">Methodology</div>
+    <h2 class="section-title">Our approach: Relative Strength Momentum</h2>
+    <div class="prose">
+      <p>The core of TechnoFunda is <strong>Relative Strength (RS) analysis</strong> — a well-established technique used by professional fund managers worldwide. RS measures how a stock is performing compared to a benchmark (usually the index ETF for that country's market).</p>
+      <p>A stock with high RS is outperforming the market — it's going up more than the index when markets rally, and falling less than the index during pullbacks. These are the stocks that tend to lead bull markets.</p>
+      <p>We combine RS with several supporting technical indicators to produce a composite view of each stock's momentum health.</p>
+    </div>
+
+    <div class="highlight-box">
+      <strong>Why Relative Strength?</strong> Research by William O'Neil (founder of IBD), Stan Weinstein, and many academic studies shows that stocks with the highest relative strength over 3–12 months tend to continue outperforming in subsequent months. We use this evidence as the foundation of our ranking system.
+    </div>
+
+    <div class="cards" style="margin-top:28px">
+      <div class="card">
+        <div class="card-icon">📈</div>
+        <div class="card-title">Relative Strength Score</div>
+        <div class="card-body">How much the stock has outperformed its benchmark over the past 1, 3, and 6 months. Scored and ranked against all other stocks in the same country.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <div class="card-title">Trend Analysis</div>
+        <div class="card-body">Whether the stock is trading above key moving averages (20-day, 50-day, 200-day). A stock in a healthy uptrend is above all three.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">SuperTrend Signal</div>
+        <div class="card-body">A dynamic trend-following indicator that switches between Buy and Sell based on price volatility. One of several signals we use to confirm momentum.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Sector Rotation</div>
+        <div class="card-body">Which sectors are gaining strength relative to others. Money often rotates from weak sectors to strong ones, and we track this across all 16 markets.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌡️</div>
+        <div class="card-title">Market Breadth</div>
+        <div class="card-body">What percentage of stocks in the market are above their 20, 50, and 200-day moving averages. Breadth shows whether a rally is broad or narrow.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🕯️</div>
+        <div class="card-title">Chart Patterns</div>
+        <div class="card-body">Automated detection of classic patterns like bullish engulfing, doji, and breakout setups. These can help time entries once a stock is already on your radar.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIGNALS -->
+  <section class="content-section" id="signals">
+    <div class="section-eyebrow">Signals Explained</div>
+    <h2 class="section-title">What do the signals mean?</h2>
+    <div class="prose">
+      <p>Every stock in our reports receives one or more signal labels based on how many technical conditions it meets. Here is what each signal means:</p>
+    </div>
+
+    <table class="signal-table">
+      <thead>
+        <tr>
+          <th>Signal</th>
+          <th>What it means</th>
+          <th>Conditions required</th>
+          <th>Strength</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="sig-badge sig-prime">🌟 Prime</span></td>
+          <td>The highest quality signal on the platform. A stock that is simultaneously showing top-tier relative strength, a healthy uptrend, and a confirmed buy signal.</td>
+          <td>High RS rank + uptrend (above 50/200-day MA) + SuperTrend Buy + additional confirmations</td>
+          <td>Strongest — look here first</td>
+        </tr>
+        <tr>
+          <td><span class="sig-badge sig-conf">✅ Confirmed</span></td>
+          <td>A strong signal — good relative strength with trend confirmation. Solid candidates for further research.</td>
+          <td>Good RS rank + trend above at least one key MA + SuperTrend Buy</td>
+          <td>Strong</td>
+        </tr>
+        <tr>
+          <td><span class="sig-badge sig-rs">📈 RS Buy</span></td>
+          <td>A stock that has recently made a new high in its RS line — meaning it's beginning to outperform the market. Often an early signal before a full breakout.</td>
+          <td>RS line made a new 52-week high recently</td>
+          <td>Early / watch list</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="highlight-box" style="margin-top:24px">
+      <strong>Important:</strong> These signals indicate <em>technical momentum</em> — they do not predict the future. A Prime signal means a stock currently has strong momentum across multiple timeframes. It does not mean the stock will go up. Always do your own fundamental research before making any investment decision.
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="content-section" id="how-it-works">
+    <div class="section-eyebrow">Process</div>
+    <h2 class="section-title">How the system works, step by step</h2>
+    <div class="prose">
+      <p>The entire pipeline runs automatically every day after market close. Here is what happens behind the scenes:</p>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-step">
+        <div class="tl-num">1</div>
+        <div class="tl-content">
+          <div class="tl-title">Market closes</div>
+          <div class="tl-body">After the last market session of the day closes (timing varies by country — New York closes at 16:00 ET, London at 16:30 GMT, etc.), our GitHub Actions workflow triggers automatically.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">2</div>
+        <div class="tl-content">
+          <div class="tl-title">Data fetched from Yahoo Finance</div>
+          <div class="tl-body">End-of-day price data (OHLCV — open, high, low, close, volume) is downloaded for every stock in our universe for that country — up to 500 stocks per market, plus index ETFs and sector ETFs. We use Yahoo Finance as our primary free data source.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">3</div>
+        <div class="tl-content">
+          <div class="tl-title">Calculations run</div>
+          <div class="tl-body">Our Python engine calculates RS scores, moving averages, SuperTrend signals, RSI, market breadth, sector rotation strength, chart patterns, and trade setups for every stock in the universe.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">4</div>
+        <div class="tl-content">
+          <div class="tl-title">Stocks are ranked and filtered</div>
+          <div class="tl-body">Stocks are ranked by their composite RS score within their country. The top-ranked stocks that also meet signal conditions are flagged as Prime, Confirmed, or RS Buy candidates.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">5</div>
+        <div class="tl-content">
+          <div class="tl-title">HTML reports are generated</div>
+          <div class="tl-body">Clean, self-contained HTML pages are generated for each country — including the Opportunities tab, Stocks tab, Sectors tab, Breadth tab, Patterns tab, and Snapshot. No database needed.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">6</div>
+        <div class="tl-content">
+          <div class="tl-title">Published to Cloudflare Pages</div>
+          <div class="tl-body">The generated HTML files are pushed to GitHub and automatically deployed to Cloudflare Pages — a fast global CDN. The site is live within minutes of market close.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA SOURCES -->
+  <section class="content-section" id="data-sources">
+    <div class="section-eyebrow">Data Sources</div>
+    <h2 class="section-title">Where does the data come from?</h2>
+    <div class="prose">
+      <p>We use free, publicly available data sources. All data is <strong>end-of-day (delayed)</strong> — we do not use real-time or intraday data.</p>
+    </div>
+
+    <div class="source-grid">
+      <div class="source-item">
+        <div class="source-name">Yahoo Finance</div>
+        <div class="source-desc">Primary source for all price data (OHLCV), index data, sector ETF data, and basic fundamental data like market cap and P/E ratios. Used via the yfinance Python library.</div>
+      </div>
+      <div class="source-item">
+        <div class="source-name">Stock Universe CSVs</div>
+        <div class="source-desc">Curated lists of stocks for each country's exchange (e.g. TSX for Canada, NSE for India). These define which stocks are analysed each day.</div>
+      </div>
+      <div class="source-item">
+        <div class="source-name">GitHub Actions</div>
+        <div class="source-desc">Free cloud compute that runs our Python scripts automatically every weekday. No servers to maintain — just a scheduled workflow.</div>
+      </div>
+      <div class="source-item">
+        <div class="source-name">Cloudflare Pages</div>
+        <div class="source-desc">Hosts the static HTML files on a fast global CDN. Free tier. Pages are rebuilt and redeployed automatically every day.</div>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:24px">
+      <strong>Data accuracy:</strong> Yahoo Finance data is generally reliable for daily price analysis, but it is not perfect. Occasionally, prices may be adjusted retroactively for splits or dividends. We apply data validation checks and flag or skip obviously corrupt values, but we cannot guarantee 100% accuracy. Always verify important data points against your broker or a primary source.
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="content-section" id="faq">
+    <div class="section-eyebrow">Common Questions</div>
+    <h2 class="section-title">Frequently asked questions</h2>
+
+    <div class="faq">
+
+      <details class="faq-item">
+        <summary class="faq-q">Is this financial advice?</summary>
+        <div class="faq-a">
+          <p>No. TechnoFunda is a <strong>data and analysis tool for educational purposes only</strong>. Nothing on this site is financial advice. We are not licensed investment advisers. The signals, rankings, and scores shown are the output of a technical algorithm — they indicate momentum, not future returns. Always consult a qualified financial professional before making investment decisions.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">How often is the data updated?</summary>
+        <div class="faq-a">
+          <p>Reports are updated <strong>once per day, after market close</strong>. The exact time depends on the country — data for US markets is typically ready a few hours after 16:00 ET. Weekends and public holidays are skipped. Data is always end-of-day; there is no intraday or real-time data.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">What is Relative Strength and why does it matter?</summary>
+        <div class="faq-a">
+          <p>Relative Strength (RS) measures how a stock's price change compares to a benchmark (usually the country's main index ETF) over a given time period. A stock with an RS score of 80 means it has outperformed 80% of all other stocks in that market over the measurement period.</p>
+          <p>RS matters because academic research and decades of practitioner experience show that stocks with high recent RS tend to continue outperforming in the near future — a phenomenon known as momentum. This is not guaranteed, but it is one of the most robust patterns in financial markets.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">What is SuperTrend?</summary>
+        <div class="faq-a">
+          <p>SuperTrend is a technical indicator that uses the Average True Range (ATR) to set a dynamic trailing stop. When price is above the SuperTrend line, the signal is Buy. When it falls below, the signal switches to Sell. It is particularly useful for identifying the <em>direction</em> of a trend, not just its strength.</p>
+          <p>We use it as one of several inputs to our signal logic — a stock needs strong RS <em>and</em> a SuperTrend Buy signal to qualify for our Confirmed or Prime signals.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">How many stocks are analysed per country?</summary>
+        <div class="faq-a">
+          <p>Up to 500 stocks per country, depending on how many liquid stocks are listed on that country's exchange. Smaller markets like New Zealand may have fewer stocks. The universe is defined by a curated stock list for each exchange that we maintain.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">Does this work for short selling or bear markets?</summary>
+        <div class="faq-a">
+          <p>The current version of TechnoFunda is primarily designed for identifying <strong>long-side momentum opportunities</strong> — stocks going up. The signals are bullish by design. In bear markets, most signals will be sparse or absent, which is itself useful information (it tells you the market is weak).</p>
+          <p>Short-side analysis and bear market tools are on the roadmap for future development.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">Why is some data missing or showing N/A?</summary>
+        <div class="faq-a">
+          <p>There are several reasons a value might be missing: the stock may not have enough price history for the calculation, Yahoo Finance may not have data for that field, the stock may have had a data issue (split, delisting, etc.), or the value is genuinely not applicable (e.g. P/E for a company with negative earnings).</p>
+          <p>We handle these gracefully by showing <strong>N/A</strong> rather than displaying incorrect data. If you see many N/A values for a specific stock, it may be worth checking whether Yahoo Finance has reliable data for it.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">Can I use this for fundamental analysis?</summary>
+        <div class="faq-a">
+          <p>Partially. We include some fundamental data (market cap, P/E, EPS growth, revenue growth, dividend yield, etc.) where Yahoo Finance makes it available. However, TechnoFunda is primarily a <strong>technical and momentum analysis tool</strong>. For deep fundamental analysis, we recommend combining our signals with a dedicated fundamental data source.</p>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <!-- DISCLAIMER -->
+  <section class="content-section" id="disclaimer">
+    <div class="section-eyebrow">Legal</div>
+    <h2 class="section-title">Disclaimer</h2>
+
+    <div class="disclaimer-box">
+      <h3>⚠️ Important: Read before using this site</h3>
+      <p><strong>Not financial advice.</strong> All content on TechnoFunda is for <strong>educational and informational purposes only</strong>. Nothing on this website constitutes financial advice, investment advice, trading advice, or any other type of advice. We are not registered investment advisers or brokers.</p>
+      <p><strong>Past performance is not a guarantee of future results.</strong> Technical signals and momentum rankings reflect historical price data. They do not predict the future. Any stock highlighted on this site could decline in value, including to zero.</p>
+      <p><strong>Do your own research.</strong> The signals on this site are starting points for your own research — not buy or sell recommendations. Before making any investment decision, carefully consider your financial situation, risk tolerance, investment goals, and consult a qualified financial professional.</p>
+      <p><strong>Data accuracy.</strong> We source data from Yahoo Finance and other publicly available sources. While we apply validation checks, we cannot guarantee the accuracy, completeness, or timeliness of any data displayed. Do not rely solely on our data for trading decisions.</p>
+      <p><strong>No liability.</strong> TechnoFunda and its creators accept no responsibility or liability for any investment decisions made based on content displayed on this website. You use this site at your own risk.</p>
+    </div>
+  </section>
+
+</div><!-- /pw -->
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="pw">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo">Techno<span>Funda</span></span>
+        <p class="footer-disclaimer">⚠️ <strong>Disclaimer:</strong> All content on this website is for educational and informational purposes only. This is not financial advice. We are not registered investment advisers. Always do your own research and consult a qualified financial professional before making investment decisions. Past performance does not guarantee future results.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-link-title">Markets</div>
+        <a href="US.html">🇺🇸 United States</a>
+        <a href="IN.html">🇮🇳 India</a>
+        <a href="GB.html">🇬🇧 United Kingdom</a>
+        <a href="CA.html">🇨🇦 Canada</a>
+        <a href="AU.html">🇦🇺 Australia</a>
+        <a href="DE.html">🇩🇪 Germany</a>
+        <a href="JP.html">🇯🇵 Japan</a>
+      </div>
+      <div class="footer-links">
+        <div class="footer-link-title">More Markets</div>
+        <a href="FR.html">🇫🇷 France</a>
+        <a href="BR.html">🇧🇷 Brazil</a>
+        <a href="SG.html">🇸🇬 Singapore</a>
+        <a href="HK.html">🇭🇰 Hong Kong</a>
+        <a href="NZ.html">🇳🇿 New Zealand</a>
+        <a href="ZA.html">🇿🇦 South Africa</a>
+        <a href="MX.html">🇲🇽 Mexico</a>
+      </div>
+      <div class="footer-links">
+        <div class="footer-link-title">Info</div>
+        <a href="index.html">🏠 Home</a>
+        <a href="about.html">ℹ️ About</a>
+      </div>
+    </div>
+    <p class="footer-copy">© 2026 TechnoFunda · Automated daily RS Momentum analysis · Data is delayed end-of-day · Not financial advice</p>
+  </div>
+</footer>
+
+</body>
+</html>

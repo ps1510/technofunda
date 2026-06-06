@@ -614,6 +614,24 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .legend-badge{{flex-shrink:0;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;letter-spacing:.3px;white-space:nowrap}}
 .legend-text{{font-size:13px;color:var(--text2);line-height:1.5}}
 .legend-text strong{{color:var(--text);font-size:14px}}
+.feedback-section-home{{border-top:1px solid var(--border);padding:64px 0}}
+.fh-sub{{font-size:14px;color:var(--text2);margin:0 0 20px;}}
+.feedback-form-home{{display:flex;flex-direction:column;gap:12px;max-width:640px}}
+.fb-row-home{{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
+.fb-input-home,.fb-textarea-home{{background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;
+  font-family:inherit;outline:none;transition:border-color .15s;}}
+.fb-input-home:focus,.fb-textarea-home:focus{{border-color:var(--gold);}}
+.fb-textarea-home{{min-height:100px;resize:vertical;}}
+.fb-btn-home{{align-self:flex-start;background:var(--gold);color:#000;border:none;
+  border-radius:var(--radius-sm);padding:10px 22px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:opacity .15s;}}
+.fb-btn-home:hover{{opacity:.85;}}
+.fb-float-home{{position:fixed;bottom:24px;right:20px;z-index:200;background:var(--gold);
+  color:#000;border-radius:20px;padding:9px 18px;font-size:12px;font-weight:700;
+  text-decoration:none;box-shadow:0 3px 12px rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:5px;transition:opacity .15s;}}
+.fb-float-home:hover{{opacity:.85;}}
 .footer{{border-top:1px solid var(--border);padding:32px 0 48px}}
 .footer-inner{{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}}
 .footer-brand{{display:flex;flex-direction:column;gap:10px;max-width:360px}}
@@ -704,6 +722,19 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
   </section>
 
+  <section class="feedback-section-home animate-in" id="feedback">
+    <div class="sec-head"><div class="sec-title-wrap"><span class="sec-label">We want to hear from you</span><h2 class="sec-title">💬 Share Your Feedback</h2></div></div>
+    <p class="fh-sub">Found a bug? Have a suggestion? Tell us what would make TechnoFunda more useful.</p>
+    <form class="feedback-form-home" action="https://formspree.io/f/xpqeqokw" method="POST">
+      <div class="fb-row-home">
+        <input type="text" name="name" placeholder="Your name (optional)" class="fb-input-home">
+        <input type="email" name="email" placeholder="Email (optional — for reply)" class="fb-input-home">
+      </div>
+      <textarea name="message" placeholder="Your feedback, idea, or question…" class="fb-textarea-home" required></textarea>
+      <button type="submit" class="fb-btn-home">Send Feedback →</button>
+    </form>
+  </section>
+
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
@@ -718,6 +749,8 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <p class="footer-copy">© 2026 TechnoFunda · Automated daily RS Momentum analysis · Data is delayed end-of-day · Not financial advice</p>
   </footer>
 </div>
+
+<a href="#feedback" class="fb-float-home" title="Share feedback or suggestions">💬 Feedback</a>
 
 <script>
 const MARKETS = {markets_js};
@@ -761,7 +794,6 @@ function buildSignals(s){{
   if(s.prime>0)p.push(`<div class="sig-pill sig-prime">🌟 ${{s.prime}} Prime</div>`);
   if(s.conf>0) p.push(`<div class="sig-pill sig-conf">✅ ${{s.conf}} Confirmed</div>`);
   if(s.rs>0)   p.push(`<div class="sig-pill sig-rs">📈 ${{s.rs}} RS Buy</div>`);
-  if(s.avoid>0)p.push(`<div class="sig-pill sig-avoid">🔴 ${{s.avoid}} Avoid</div>`);
   return p.join('');
 }}
 function buildCards(){{
