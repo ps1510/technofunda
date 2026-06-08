@@ -159,9 +159,8 @@ details[open] .faq-q::after{content:'－'}
     <span class="toc-label">Jump to:</span>
     <a href="#what-is" class="toc-link">What is it?</a>
     <a href="#methodology" class="toc-link">Methodology</a>
+    <a href="#philosophy" class="toc-link">Why it works</a>
     <a href="#signals" class="toc-link">Signals explained</a>
-    <a href="#how-it-works" class="toc-link">How it works</a>
-    <a href="#data-sources" class="toc-link">Data sources</a>
     <a href="#faq" class="toc-link">FAQ</a>
     <a href="#disclaimer" class="toc-link">Disclaimer</a>
   </div>
@@ -185,7 +184,7 @@ details[open] .faq-q::after{content:'－'}
       <div class="card">
         <div class="card-icon">⚡</div>
         <div class="card-title">Fully Automated</div>
-        <div class="card-body">Data is fetched and reports are generated automatically every trading day using GitHub Actions. No human picks stocks — the algorithm does.</div>
+        <div class="card-body">Data is fetched and reports are generated automatically every trading day after market close. No human picks stocks — the algorithm does.</div>
       </div>
       <div class="card">
         <div class="card-icon">🆓</div>
@@ -287,89 +286,53 @@ details[open] .faq-q::after{content:'－'}
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section class="content-section" id="how-it-works">
-    <div class="section-eyebrow">Process</div>
-    <h2 class="section-title">How the system works, step by step</h2>
+ 
+
+
+  <!-- PHILOSOPHY -->
+  <section class="content-section" id="philosophy">
+    <div class="section-eyebrow">Investment Philosophy</div>
+    <h2 class="section-title">Why we rank stocks — and why it works</h2>
     <div class="prose">
-      <p>The entire pipeline runs automatically every day after market close. Here is what happens behind the scenes:</p>
+      <p>Markets reward strength. Stocks that are already outperforming tend to keep outperforming — not forever, but long enough to matter. TechnoFunda is built on this principle.</p>
+      <p>Rather than forecasting earnings or predicting macro events, we measure what the market is already <em>doing</em>: which stocks are rising faster than the index, which sectors are attracting capital, and whether individual trends are healthy or deteriorating. This is the foundation of <strong>top-down, momentum-driven investing</strong>.</p>
     </div>
 
-    <div class="timeline">
-      <div class="tl-step">
-        <div class="tl-num">1</div>
-        <div class="tl-content">
-          <div class="tl-title">Market closes</div>
-          <div class="tl-body">After the last market session of the day closes (timing varies by country — New York closes at 16:00 ET, London at 16:30 GMT, etc.), our GitHub Actions workflow triggers automatically.</div>
-        </div>
+    <div class="cards" style="margin-top:24px">
+      <div class="card">
+        <div class="card-icon">📐</div>
+        <div class="card-title">Relative Strength</div>
+        <div class="card-body">RS compares a stock's return to its benchmark. Stocks with high RS are outperforming the market — they attract institutional buying and tend to lead rallies. O'Neil, Weinstein, and academic momentum research all point to the same conclusion: buy strength, not weakness.</div>
       </div>
-      <div class="tl-step">
-        <div class="tl-num">2</div>
-        <div class="tl-content">
-          <div class="tl-title">Data fetched from Yahoo Finance</div>
-          <div class="tl-body">End-of-day price data (OHLCV — open, high, low, close, volume) is downloaded for every stock in our universe for that country — up to 500 stocks per market, plus index ETFs and sector ETFs. We use Yahoo Finance as our primary free data source.</div>
-        </div>
+      <div class="card">
+        <div class="card-icon">🌊</div>
+        <div class="card-title">Momentum Investing</div>
+        <div class="card-body">Momentum is one of the most persistent factors in financial markets. Stocks that have risen over 3–12 months tend to continue rising over the next 3–12 months. We measure momentum across multiple timeframes to find stocks with durable, not just recent, strength.</div>
       </div>
-      <div class="tl-step">
-        <div class="tl-num">3</div>
-        <div class="tl-content">
-          <div class="tl-title">Calculations run</div>
-          <div class="tl-body">Our Python engine calculates RS scores, moving averages, SuperTrend signals, RSI, market breadth, sector rotation strength, chart patterns, and trade setups for every stock in the universe.</div>
-        </div>
+      <div class="card">
+        <div class="card-icon">📉</div>
+        <div class="card-title">Trend Following</div>
+        <div class="card-body">Price tells the truth. A stock above its 20, 50, and 200-day moving averages is in a healthy uptrend — institutions are buying and holding. Below those levels, the trend is broken. We use trend filters to avoid buying falling stocks with high short-term RS.</div>
       </div>
-      <div class="tl-step">
-        <div class="tl-num">4</div>
-        <div class="tl-content">
-          <div class="tl-title">Stocks are ranked and filtered</div>
-          <div class="tl-body">Stocks are ranked by their composite RS score within their country. The top-ranked stocks that also meet signal conditions are flagged as Prime, Confirmed, or RS Buy candidates.</div>
-        </div>
+      <div class="card">
+        <div class="card-icon">🔭</div>
+        <div class="card-title">Top-Down Investing</div>
+        <div class="card-body">Start with the market, then the sector, then the stock. If the market is weak, even great stocks struggle. If a sector is in rotation, most stocks in it benefit. We rank at every level — global, country, sector, industry — so you can align your picks with the flow of capital.</div>
       </div>
-      <div class="tl-step">
-        <div class="tl-num">5</div>
-        <div class="tl-content">
-          <div class="tl-title">HTML reports are generated</div>
-          <div class="tl-body">Clean, self-contained HTML pages are generated for each country — including the Opportunities tab, Stocks tab, Sectors tab, Breadth tab, Patterns tab, and Snapshot. No database needed.</div>
-        </div>
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">Sector Rotation</div>
+        <div class="card-body">Capital constantly moves between sectors as economic conditions shift. Energy leads in one cycle, technology in another. Tracking sector RS reveals where institutional money is flowing — and which sectors to focus on for stock selection.</div>
       </div>
-      <div class="tl-step">
-        <div class="tl-num">6</div>
-        <div class="tl-content">
-          <div class="tl-title">Published to Cloudflare Pages</div>
-          <div class="tl-body">The generated HTML files are pushed to GitHub and automatically deployed to Cloudflare Pages — a fast global CDN. The site is live within minutes of market close.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- DATA SOURCES -->
-  <section class="content-section" id="data-sources">
-    <div class="section-eyebrow">Data Sources</div>
-    <h2 class="section-title">Where does the data come from?</h2>
-    <div class="prose">
-      <p>We use free, publicly available data sources. All data is <strong>end-of-day (delayed)</strong> — we do not use real-time or intraday data.</p>
-    </div>
-
-    <div class="source-grid">
-      <div class="source-item">
-        <div class="source-name">Yahoo Finance</div>
-        <div class="source-desc">Primary source for all price data (OHLCV), index data, sector ETF data, and basic fundamental data like market cap and P/E ratios. Used via the yfinance Python library.</div>
-      </div>
-      <div class="source-item">
-        <div class="source-name">Stock Universe CSVs</div>
-        <div class="source-desc">Curated lists of stocks for each country's exchange (e.g. TSX for Canada, NSE for India). These define which stocks are analysed each day.</div>
-      </div>
-      <div class="source-item">
-        <div class="source-name">GitHub Actions</div>
-        <div class="source-desc">Free cloud compute that runs our Python scripts automatically every weekday. No servers to maintain — just a scheduled workflow.</div>
-      </div>
-      <div class="source-item">
-        <div class="source-name">Cloudflare Pages</div>
-        <div class="source-desc">Hosts the static HTML files on a fast global CDN. Free tier. Pages are rebuilt and redeployed automatically every day.</div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <div class="card-title">Market Breadth</div>
+        <div class="card-body">A healthy rally is broad — many stocks participating, not just a few large-caps. Breadth indicators measure the percentage of stocks above key moving averages. Narrow breadth is an early warning sign; broad breadth confirms a strong underlying market.</div>
       </div>
     </div>
 
-    <div class="highlight-box" style="margin-top:24px">
-      <strong>Data accuracy:</strong> Yahoo Finance data is generally reliable for daily price analysis, but it is not perfect. Occasionally, prices may be adjusted retroactively for splits or dividends. We apply data validation checks and flag or skip obviously corrupt values, but we cannot guarantee 100% accuracy. Always verify important data points against your broker or a primary source.
+    <div class="highlight-box" style="margin-top:32px">
+      <strong>Our proprietary layer:</strong> TechnoFunda combines these well-established concepts into a multi-factor ranking system. Relative strength analysis is integrated across multiple timeframes and evaluated alongside trend confirmation and pattern quality. The goal is to surface the highest-probability setups — stocks where strength, trend, and momentum are all aligned — while reducing noise from isolated signals. We do not publish the exact formulas, but the underlying principles are those used by professional momentum managers worldwide.
     </div>
   </section>
 
@@ -428,15 +391,15 @@ details[open] .faq-q::after{content:'－'}
       <details class="faq-item">
         <summary class="faq-q">Why is some data missing or showing N/A?</summary>
         <div class="faq-a">
-          <p>There are several reasons a value might be missing: the stock may not have enough price history for the calculation, Yahoo Finance may not have data for that field, the stock may have had a data issue (split, delisting, etc.), or the value is genuinely not applicable (e.g. P/E for a company with negative earnings).</p>
-          <p>We handle these gracefully by showing <strong>N/A</strong> rather than displaying incorrect data. If you see many N/A values for a specific stock, it may be worth checking whether Yahoo Finance has reliable data for it.</p>
+          <p>There are several reasons a value might be missing: the stock may not have enough price history for the calculation, the data provider may not carry data for that field, the stock may have had a corporate event (split, delisting, etc.), or the value is genuinely not applicable (e.g. P/E for a company with negative earnings).</p>
+          <p>We handle these gracefully by showing <strong>N/A</strong> rather than displaying incorrect data. If you see many N/A values for a specific stock, the stock may be too recently listed or too thinly traded for reliable data coverage.</p>
         </div>
       </details>
 
       <details class="faq-item">
         <summary class="faq-q">Can I use this for fundamental analysis?</summary>
         <div class="faq-a">
-          <p>Partially. We include some fundamental data (market cap, P/E, EPS growth, revenue growth, dividend yield, etc.) where Yahoo Finance makes it available. However, TechnoFunda is primarily a <strong>technical and momentum analysis tool</strong>. For deep fundamental analysis, we recommend combining our signals with a dedicated fundamental data source.</p>
+          <p>Partially. We include key fundamental data (market cap, P/E, EPS growth, revenue growth, dividend yield, etc.) alongside our technical signals. However, TechnoFunda is primarily a <strong>technical and momentum analysis tool</strong>. For deep fundamental analysis, we recommend combining our signals with a dedicated fundamental research source.</p>
         </div>
       </details>
 
@@ -453,7 +416,7 @@ details[open] .faq-q::after{content:'－'}
       <p><strong>Not financial advice.</strong> All content on TechnoFunda is for <strong>educational and informational purposes only</strong>. Nothing on this website constitutes financial advice, investment advice, trading advice, or any other type of advice. We are not registered investment advisers or brokers.</p>
       <p><strong>Past performance is not a guarantee of future results.</strong> Technical signals and momentum rankings reflect historical price data. They do not predict the future. Any stock highlighted on this site could decline in value, including to zero.</p>
       <p><strong>Do your own research.</strong> The signals on this site are starting points for your own research — not buy or sell recommendations. Before making any investment decision, carefully consider your financial situation, risk tolerance, investment goals, and consult a qualified financial professional.</p>
-      <p><strong>Data accuracy.</strong> We source data from Yahoo Finance and other publicly available sources. While we apply validation checks, we cannot guarantee the accuracy, completeness, or timeliness of any data displayed. Do not rely solely on our data for trading decisions.</p>
+      <p><strong>Data accuracy.</strong> We source end-of-day price and fundamental data from publicly available market data providers. While we apply validation and quality checks, we cannot guarantee the accuracy, completeness, or timeliness of any data displayed. Do not rely solely on our data for trading decisions.</p>
       <p><strong>No liability.</strong> TechnoFunda and its creators accept no responsibility or liability for any investment decisions made based on content displayed on this website. You use this site at your own risk.</p>
     </div>
   </section>

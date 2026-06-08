@@ -1,0 +1,37 @@
+Company Name,Industry,Symbol,Reason
+Toshiba Corporation,Industrials,6502.T,Delisted - taken private via buyout (Dec 2023)
+NTT Docomo Inc.,Communication Services,9437.T,Delisted - absorbed by NTT (Dec 2020)
+FamilyMart Co. Ltd.,Consumer Staples,8028.T,Delisted - absorbed by ITOCHU (Nov 2020)
+Nisshin Steel Co. Ltd.,Materials,5413.T,Delisted - merged into Nippon Steel (Jan 2019)
+Lawson Inc.,Consumer Staples,2651.T,Delisted - taken private by KDDI (Jul 2024)
+Daihatsu Motor Co. Ltd.,Consumer Discretionary,7262.T,Delisted - already fully owned by Toyota
+Alpine Electronics Inc.,Consumer Discretionary,6816.T,Delisted - merged into Alps Alpine (Jan 2019)
+Dwango Co. Ltd.,Communication Services,3715.T,Delisted - taken private by Kadokawa (Oct 2014)
+Adecco Group AG,Industrials,ADO.T,"Invalid - Swiss company, not listed on TSE"
+JTAG Technologies,Technology,5966.T,"Invalid - company name wrong, 5966 is Lobtex Co. Ltd."
+Nippon Sheet Glass Co. Ltd.,Materials,5202.T,Removed - no longer in Nikkei 225
+Hitachi Global Life Solutions,Consumer Discretionary,6625.T,Invalid - not a publicly listed entity
+JVC Kenwood Corporation,Consumer Discretionary,6632.T,Ticker is valid but not in major indices
+Fujitsu General Ltd.,Consumer Discretionary,6755.T,Delisted - taken private (Mar 2024)
+Yahoo Japan Corporation,Technology,4689.T,Renamed - now LY Corporation (Oct 2023)
+Z Holdings,Technology,4689.T,Renamed - now LY Corporation (Oct 2023)
+Miraca Group Inc.,Health Care,4544.T,Renamed - now H.U. Group Holdings (Jul 2019)
+Matsumotokiyoshi Holdings Co. Ltd.,Consumer Staples,3088.T,Renamed - now MatsukiyoCocokara & Co. (Oct 2021)
+Sony Financial Holdings,Financials,8729.T,Delisted - absorbed by Sony Group (Apr 2020)
+Mitsubishi Tanabe Pharma,Health Care,4508.T,Delisted - taken private by Otsuka (Oct 2024)
+Sagawa Express Co. Ltd.,Industrials,9065.T,Renamed/restructured - parent is SG Holdings (9143.T)
+Pasona Group Inc.,Industrials,2168.T,Valid but not in major indices
+FC Tokyo Co. Ltd. (listed as 4290.T),Consumer Discretionary,4290.T,Invalid - 4290 was Tokyo Dome Corp. (delisted 2021)
+NTT Urban Development Corp.,Real Estate,8933.T,Delisted - absorbed by NTT (Jan 2022)
+Pan Pacific Retail (8251),Consumer Discretionary,8251.T,Renamed - now Pan Pacific International Holdings (7532.T)
+Leopalace21 Corporation,Real Estate,8848.T,"Valid but not in major indices, removed from files"
+Kenedix Inc.,Real Estate,4321.T,Delisted - taken private (2021)
+Pixela Corporation,Technology,6731.T,Delisted - bankrupt (Nov 2023)
+Outsourcing Inc.,Industrials,2427.T,Delisted - taken private (Dec 2023)
+Visa Consulting & Analytics (listed as 6088.T),Financials,6088.T,"Invalid - 6088 is SMS Co. Ltd., not Visa"
+Secure Assets Management (listed as 8732.T),Financials,8732.T,Invalid - likely wrong name assignment
+Benesse Holdings Inc.,Consumer Discretionary,9783.T,Delisted - taken private (Nov 2024)
+Gakken Holdings Co. Ltd.,Consumer Discretionary,9470.T,Valid but not in major indices
+CAC Holdings Corporation,Technology,4725.T,Valid but not in major indices
+LIFULL Co. Ltd.,Technology,2120.T,Valid but not in major indices
+Cyberdyne Inc.,Health Care,7779.T,Valid but not in major indices

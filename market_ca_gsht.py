@@ -26,13 +26,13 @@ else:
 
 STOCK_CSV = os.path.join(INDEX_DATA_DIR, "ca_tsxlist.csv")
 
-MAX_STOCKS        = 500
-PERIOD_DAYS       = 420
+MAX_STOCKS        = 1500
+PERIOD_DAYS       = 600
 ENABLE_PATTERNS   = True
-PATTERN_MAX       = 300
+PATTERN_MAX       = 200
 FETCH_FINANCIALS  = True
 ENABLE_SIGNALS    = True
-SIGNAL_MAX_STOCKS = 300
+SIGNAL_MAX_STOCKS = 1500
 PRIMARY_RS_PERIOD = 22
 
 
@@ -67,40 +67,178 @@ except Exception:
 CA_INDEX          = "XIU.TO"      # iShares S&P/TSX 60 ETF — clean, liquid
 CA_INDEX_FALLBACK = "^GSPTSE"     # S&P/TSX Composite fallback
 
-# iShares TSX sector ETFs
+# iShares TSX sector ETFs — keys MUST match values produced by CA_INDUSTRY_TO_SECTOR below.
+# Using full GICS sector names for consistency.
 CA_SECTORS = {
-    "Financials":       {"yahoo": "XFN.TO",  "csv": None},
-    "Energy":           {"yahoo": "XEG.TO",  "csv": None},
-    "Materials":        {"yahoo": "XMA.TO",  "csv": None},
-    "Technology":       {"yahoo": "XIT.TO",  "csv": None},
-    "Healthcare":       {"yahoo": "XHC.TO",  "csv": None},
-    "Industrials":      {"yahoo": "XIN.TO",  "csv": None},
-    "ConsumerDisc":     {"yahoo": "XCD.TO",  "csv": None},
-    "Consumer Staples": {"yahoo": "XST.TO",  "csv": None},
-    "Utilities":        {"yahoo": "XUT.TO",  "csv": None},
-    "CommServices":     {"yahoo": "XCO.TO",  "csv": None},
-    "RealEstate":       {"yahoo": "XRE.TO",  "csv": None},
+    "Financials":             {"yahoo": "XFN.TO",  "csv": None},
+    "Energy":                 {"yahoo": "XEG.TO",  "csv": None},
+    "Materials":              {"yahoo": "XMA.TO",  "csv": None},
+    "Technology":             {"yahoo": "XIT.TO",  "csv": None},
+    "Health Care":            {"yahoo": "XHC.TO",  "csv": None},
+    "Industrials":            {"yahoo": "XIN.TO",  "csv": None},
+    "Consumer Discretionary": {"yahoo": "XCD.TO",  "csv": None},
+    "Consumer Staples":       {"yahoo": "XST.TO",  "csv": None},
+    "Utilities":              {"yahoo": "XUT.TO",  "csv": None},
+    "Communication Services": {"yahoo": "XCO.TO",  "csv": None},
+    "Real Estate":            {"yahoo": "XRE.TO",  "csv": None},
 }
 
+# Maps every Industry label that may appear in ca_tsxlist.csv → CA_SECTORS key.
+# Covers: GICS exact names, Yahoo Finance names, S&P/TSX classifications,
+#         common abbreviations, and alternative spellings.
 CA_INDUSTRY_TO_SECTOR = {
-    "Financials": "Financials", "Banking": "Financials",
-    "Insurance": "Financials", "Asset Management": "Financials",
-    "Energy": "Energy", "Oil & Gas": "Energy",
-    "Materials": "Materials", "Mining": "Materials",
-    "Gold": "Materials", "Metals": "Materials",
-    "Technology": "Technology", "Software": "Technology",
-    "IT Services": "Technology",
-    "Healthcare": "Healthcare", "Pharmaceuticals": "Healthcare",
-    "Biotechnology": "Healthcare",
-    "Industrials": "Industrials", "Railways": "Industrials",
-    "Aerospace": "Industrials", "Engineering": "Industrials",
-    "ConsumerDisc": "ConsumerDisc", "Retail": "ConsumerDisc",
-    "Automotive": "ConsumerDisc",
-    "Consumer Staples": "Consumer Staples", "Food & Beverage": "Consumer Staples",
-    "Utilities": "Utilities", "Power": "Utilities",
-    "CommServices": "CommServices", "Telecoms": "CommServices",
-    "Media": "CommServices",
-    "RealEstate": "RealEstate", "REITs": "RealEstate",
+    # ── Financials ────────────────────────────────────────────────────────────
+    "Financials":                      "Financials",
+    "Financial Services":              "Financials",
+    "Banking":                         "Financials",
+    "Banks":                           "Financials",
+    "Insurance":                       "Financials",
+    "Life & Health Insurance":         "Financials",
+    "Property & Casualty Insurance":   "Financials",
+    "Asset Management":                "Financials",
+    "Capital Markets":                 "Financials",
+    "Diversified Financials":          "Financials",
+    "Investment Management":           "Financials",
+    "Mortgage Finance":                "Financials",
+    "Consumer Finance":                "Financials",
+    "Diversified Banks":               "Financials",
+    "Financial":                       "Financials",
+    # ── Energy ───────────────────────────────────────────────────────────────
+    "Energy":                          "Energy",
+    "Oil & Gas":                       "Energy",
+    "Oil, Gas & Consumable Fuels":     "Energy",
+    "Oil Gas & Consumable Fuels":      "Energy",
+    "Integrated Oil & Gas":            "Energy",
+    "Exploration & Production":        "Energy",
+    "Oil & Gas E&P":                   "Energy",
+    "Oil & Gas Refining & Marketing":  "Energy",
+    "Coal & Consumable Fuels":         "Energy",
+    "Natural Gas":                     "Energy",
+    # ── Materials ────────────────────────────────────────────────────────────
+    "Materials":                       "Materials",
+    "Basic Materials":                 "Materials",
+    "Mining":                          "Materials",
+    "Metals & Mining":                 "Materials",
+    "Gold":                            "Materials",
+    "Gold Mining":                     "Materials",
+    "Silver":                          "Materials",
+    "Silver Mining":                   "Materials",
+    "Uranium":                         "Materials",
+    "Uranium Mining":                  "Materials",
+    "Copper":                          "Materials",
+    "Metals":                          "Materials",
+    "Diversified Metals":              "Materials",
+    "Steel":                           "Materials",
+    "Iron & Steel":                    "Materials",
+    "Chemicals":                       "Materials",
+    "Specialty Chemicals":             "Materials",
+    "Fertilizers":                     "Materials",
+    "Paper & Forest Products":         "Materials",
+    "Lumber & Wood Products":          "Materials",
+    "Potash":                          "Materials",
+    # ── Technology ───────────────────────────────────────────────────────────
+    "Technology":                      "Technology",
+    "Information Technology":          "Technology",
+    "Software":                        "Technology",
+    "IT Services":                     "Technology",
+    "Semiconductors":                  "Technology",
+    "Electronic Equipment":            "Technology",
+    "Computer Hardware":               "Technology",
+    "Tech Hardware & Equipment":       "Technology",
+    "Technology Hardware":             "Technology",
+    "Internet Software & Services":    "Technology",
+    "Application Software":            "Technology",
+    "Systems Software":                "Technology",
+    # ── Health Care ──────────────────────────────────────────────────────────
+    "Health Care":                     "Health Care",
+    "Healthcare":                      "Health Care",
+    "Pharmaceuticals":                 "Health Care",
+    "Biotechnology":                   "Health Care",
+    "Medical Devices":                 "Health Care",
+    "Life Sciences Tools":             "Health Care",
+    "Managed Health Care":             "Health Care",
+    "Health Care Equipment":           "Health Care",
+    "Pharma":                          "Health Care",
+    "Cannabis":                        "Health Care",
+    # ── Industrials ──────────────────────────────────────────────────────────
+    "Industrials":                     "Industrials",
+    "Railways":                        "Industrials",
+    "Railroads":                       "Industrials",
+    "Aerospace":                       "Industrials",
+    "Aerospace & Defense":             "Industrials",
+    "Engineering":                     "Industrials",
+    "Industrial Machinery":            "Industrials",
+    "Machinery":                       "Industrials",
+    "Construction & Engineering":      "Industrials",
+    "Building Products":               "Industrials",
+    "Commercial Services":             "Industrials",
+    "Business Services":               "Industrials",
+    "Transportation":                  "Industrials",
+    "Air Freight":                     "Industrials",
+    "Trucking":                        "Industrials",
+    "Marine":                          "Industrials",
+    "Waste Management":                "Industrials",
+    "Environmental Services":          "Industrials",
+    "Human Resource Services":         "Industrials",
+    # ── Consumer Discretionary ───────────────────────────────────────────────
+    "Consumer Discretionary":          "Consumer Discretionary",
+    "ConsumerDisc":                    "Consumer Discretionary",
+    "Consumer Cyclical":               "Consumer Discretionary",
+    "Retail":                          "Consumer Discretionary",
+    "Specialty Retail":                "Consumer Discretionary",
+    "Multiline Retail":                "Consumer Discretionary",
+    "Internet Retail":                 "Consumer Discretionary",
+    "Automotive":                      "Consumer Discretionary",
+    "Auto Parts":                      "Consumer Discretionary",
+    "Hotels, Restaurants & Leisure":   "Consumer Discretionary",
+    "Leisure":                         "Consumer Discretionary",
+    "Restaurants":                     "Consumer Discretionary",
+    "Textiles, Apparel & Luxury":      "Consumer Discretionary",
+    "Homebuilding":                    "Consumer Discretionary",
+    "Home Furnishings":                "Consumer Discretionary",
+    # ── Consumer Staples ─────────────────────────────────────────────────────
+    "Consumer Staples":                "Consumer Staples",
+    "Consumer Defensive":              "Consumer Staples",
+    "Food & Beverage":                 "Consumer Staples",
+    "Food & Staples Retailing":        "Consumer Staples",
+    "Beverages":                       "Consumer Staples",
+    "Food Products":                   "Consumer Staples",
+    "Tobacco":                         "Consumer Staples",
+    "Household Products":              "Consumer Staples",
+    "Personal Products":               "Consumer Staples",
+    "Agriculture":                     "Consumer Staples",
+    # ── Utilities ────────────────────────────────────────────────────────────
+    "Utilities":                       "Utilities",
+    "Electric Utilities":              "Utilities",
+    "Power":                           "Utilities",
+    "Gas Utilities":                   "Utilities",
+    "Multi-Utilities":                 "Utilities",
+    "Water Utilities":                 "Utilities",
+    "Renewable Energy":                "Utilities",
+    "Independent Power":               "Utilities",
+    # ── Communication Services ───────────────────────────────────────────────
+    "Communication Services":          "Communication Services",
+    "CommServices":                    "Communication Services",
+    "Telecoms":                        "Communication Services",
+    "Telecommunications":              "Communication Services",
+    "Wireless Telecom Services":       "Communication Services",
+    "Telecom Services":                "Communication Services",
+    "Media":                           "Communication Services",
+    "Entertainment":                   "Communication Services",
+    "Broadcasting":                    "Communication Services",
+    "Interactive Media":               "Communication Services",
+    # ── Real Estate ──────────────────────────────────────────────────────────
+    "Real Estate":                     "Real Estate",
+    "RealEstate":                      "Real Estate",
+    "REITs":                           "Real Estate",
+    "Diversified REITs":               "Real Estate",
+    "Retail REITs":                    "Real Estate",
+    "Office REITs":                    "Real Estate",
+    "Industrial REITs":                "Real Estate",
+    "Residential REITs":               "Real Estate",
+    "Mortgage REITs":                  "Real Estate",
+    "Real Estate Management":          "Real Estate",
+    "Property":                        "Real Estate",
 }
 
 CA_BREADTH_INDICES = {
@@ -134,6 +272,11 @@ CA_SNAPSHOT_TICKERS = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 def load_ca_universe():
+    """
+    Load Canada universe from ca_tsxlist.csv.
+    Industry column is mapped → CA_SECTORS key via CA_INDUSTRY_TO_SECTOR.
+    Unmapped industries fall to 'Other' (add them to CA_INDUSTRY_TO_SECTOR if seen).
+    """
     if not os.path.exists(STOCK_CSV):
         print(f"  ❌ Universe CSV not found: {STOCK_CSV}"); return pd.DataFrame()
     df = pd.read_csv(STOCK_CSV, dtype=str)
@@ -141,17 +284,26 @@ def load_ca_universe():
     if "Symbol" not in df.columns:
         print("  ❌ 'Symbol' column missing"); return pd.DataFrame()
     if "Series" in df.columns:
-        df = df[df["Series"].astype(str).str.strip().str.upper().isin(["EQ",""])]
+        df = df[df["Series"].astype(str).str.strip().str.upper().isin(["EQ", ""])]
     df = df.head(MAX_STOCKS).copy()
-    df["Symbol"]   = df["Symbol"].astype(str).str.strip()
-    # ✅ REPLACE with these two lines:
+    df["Symbol"]  = df["Symbol"].astype(str).str.strip()
+    df["Company"] = df.get("Company Name", df["Symbol"]).fillna(df["Symbol"])
     from ticker_fixer import ensure_yahoo_suffix
-    df["Yahoo"] = df["Symbol"].apply(lambda s: ensure_yahoo_suffix(s, "CA"))
-    df["Company"]  = df.get("Company Name", df["Symbol"])
-    df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
+    df["Yahoo"]   = df["Symbol"].apply(lambda s: ensure_yahoo_suffix(s, "CA"))
+    df["Industry"] = df["Industry"].astype(str).str.strip() if "Industry" in df.columns else ""
     df["Sector"]   = df["Industry"].map(CA_INDUSTRY_TO_SECTOR).fillna("Other")
-    print(f"  ✅ Canada Universe: {len(df)} stocks loaded")
-    return df.reset_index(drop=True)
+    df = df[df["Yahoo"].astype(str).str.len() >= 2].copy().reset_index(drop=True)
+
+    sectors = df["Sector"].value_counts()
+    unmapped = df[df["Sector"] == "Other"]["Industry"].value_counts()
+    print(f"  ✅ CA Universe: {len(df)} stocks | {len(sectors)} sectors")
+    for sec, cnt in sectors.items():
+        print(f"      {cnt:3d}  {sec}")
+    if not unmapped.empty:
+        print(f"  ⚠️  Unmapped industries ({len(unmapped)} types) → add to CA_INDUSTRY_TO_SECTOR:")
+        for ind, cnt in unmapped.items():
+            print(f"      {cnt:3d}  {ind}")
+    return df
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SECTOR PRICE FETCHER
@@ -163,6 +315,7 @@ def fetch_ca_sector_prices():
     start = end - timedelta(days=PERIOD_DAYS + 5)
     for sec_name, cfg in CA_SECTORS.items():
         ticker = cfg.get("yahoo")
+        if not ticker: continue
         if not ticker: continue
         try:
             raw = yf.download(ticker, start=start.strftime("%Y-%m-%d"),
@@ -176,6 +329,29 @@ def fetch_ca_sector_prices():
         except Exception: pass
     print(f"  ✅ Canada Sector prices: {len(result)}/{len(CA_SECTORS)}")
     return result
+
+
+def fill_missing_sector_prices(universe, price_data, sector_prices, sectors_cfg):
+    """
+    For every sector in sectors_cfg that is missing from sector_prices,
+    build a synthetic equal-weight composite from constituent stocks.
+    """
+    added = []
+    for sector in sectors_cfg:
+        if sector in sector_prices:
+            continue
+        syms = universe[universe["Sector"] == sector]["Yahoo"].tolist()
+        valid = [s for s in syms if s in price_data.columns
+                 and len(price_data[s].dropna()) >= 22]
+        if len(valid) < 2:
+            continue
+        composite = price_data[valid].dropna(how="all").mean(axis=1).dropna()
+        if len(composite) >= 22:
+            sector_prices[sector] = _normalize(composite)
+            added.append(sector)
+    if added:
+        print(f"  ✅ Synthetic sector prices built for: {added}")
+    return sector_prices
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SNAPSHOT
@@ -252,6 +428,10 @@ def main():
     print(f"\n📡 Fetching {len(stock_syms)} stock closes …")
     price_data = fetch_close_batch(stock_syms, PERIOD_DAYS)
     print(f"  ✅ Stocks: {len(price_data.columns)} loaded")
+
+    # Fill any sector missing an ETF with equal-weight stock composite
+    print("📡 Filling missing sector prices from stock composites …")
+    sector_prices = fill_missing_sector_prices(universe, price_data, sector_prices, CA_SECTORS)
 
     ohlcv_dict={}
     max_ohlcv=max(PATTERN_MAX, SIGNAL_MAX_STOCKS if ENABLE_SIGNALS else 0)

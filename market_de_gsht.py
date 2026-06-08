@@ -26,13 +26,13 @@ else:
 
 STOCK_CSV = os.path.join(INDEX_DATA_DIR, "de_daxlist.csv")
 
-MAX_STOCKS        = 200
-PERIOD_DAYS       = 420
+MAX_STOCKS        = 1500
+PERIOD_DAYS       = 600
 ENABLE_PATTERNS   = True
-PATTERN_MAX       = 150
+PATTERN_MAX       = 200
 FETCH_FINANCIALS  = True
 ENABLE_SIGNALS    = True
-SIGNAL_MAX_STOCKS = 150
+SIGNAL_MAX_STOCKS = 1500
 PRIMARY_RS_PERIOD = 22
 
 
@@ -67,44 +67,73 @@ except Exception:
 DE_INDEX          = "EXS1.DE"      # Country benchmark ETF (USD-denominated where applicable)
 DE_INDEX_FALLBACK = "^GDAXI"     # Local index fallback
 
-# Germany sector ETFs
+# Germany sector ETFs — iShares STOXX Europe 600 sector ETFs (.DE suffix on XETRA)
+# Keys use GICS standard names matching DE_INDUSTRY_TO_SECTOR values.
 DE_SECTORS = {
-    "Financials":       {"yahoo": None, "csv": None},
-    "Energy":           {"yahoo": None, "csv": None},
-    "Materials":        {"yahoo": None, "csv": None},
-    "Technology":       {"yahoo": None, "csv": None},
-    "Healthcare":       {"yahoo": None, "csv": None},
-    "Industrials":      {"yahoo": None, "csv": None},
-    "ConsumerDisc":     {"yahoo": None, "csv": None},
-    "Consumer Staples": {"yahoo": None, "csv": None},
-    "Utilities":        {"yahoo": None, "csv": None},
-    "CommServices":     {"yahoo": None, "csv": None},
-    "RealEstate":       {"yahoo": None, "csv": None},
+    "Financials":             {"yahoo": "EXH8.DE",  "csv": None},
+    "Energy":                 {"yahoo": "EXH1.DE",  "csv": None},
+    "Materials":              {"yahoo": "EXV6.DE",  "csv": None},
+    "Technology":             {"yahoo": "EXV4.DE",  "csv": None},
+    "Health Care":            {"yahoo": "EXV3.DE",  "csv": None},
+    "Industrials":            {"yahoo": "EXH2.DE",  "csv": None},
+    "Consumer Discretionary": {"yahoo": "EXH5.DE",  "csv": None},
+    "Consumer Staples":       {"yahoo": "EXH3.DE",  "csv": None},
+    "Utilities":              {"yahoo": "EXH7.DE",  "csv": None},
+    "Communication Services": {"yahoo": "EXV5.DE",  "csv": None},
+    "Real Estate":            {"yahoo": None,        "csv": None},  # no liquid DE ETF — synthetic fallback
 }
 
 DE_INDUSTRY_TO_SECTOR = {
+    # ── Financials ────────────────────────────────────────────────────────────
     "Financials": "Financials", "Banking": "Financials",
     "Insurance": "Financials", "Asset Management": "Financials",
+    "Capital Markets": "Financials", "Diversified Financials": "Financials",
+    # ── Energy ───────────────────────────────────────────────────────────────
     "Energy": "Energy", "Oil & Gas": "Energy",
-    "Materials": "Materials", "Mining": "Materials",
-    "Gold": "Materials", "Metals": "Materials", "Chemicals": "Materials",
+    "Oil, Gas & Consumable Fuels": "Energy",
+    # ── Materials ────────────────────────────────────────────────────────────
+    "Materials": "Materials", "Basic Materials": "Materials",
+    "Mining": "Materials", "Gold": "Materials", "Metals": "Materials",
+    "Chemicals": "Materials", "Steel": "Materials",
+    "Specialty Chemicals": "Materials",
+    # ── Technology ───────────────────────────────────────────────────────────
     "Technology": "Technology", "Software": "Technology",
     "IT Services": "Technology", "Electronics": "Technology",
-    "Semiconductors": "Technology",
-    "Healthcare": "Healthcare", "Pharmaceuticals": "Healthcare",
-    "Biotechnology": "Healthcare", "Medical Devices": "Healthcare",
+    "Semiconductors": "Technology", "Information Technology": "Technology",
+    "Electronic Equipment": "Technology", "Fintech": "Technology",
+    # ── Health Care ──────────────────────────────────────────────────────────
+    "Health Care": "Health Care", "Healthcare": "Health Care",
+    "Pharmaceuticals": "Health Care", "Biotechnology": "Health Care",
+    "Medical Devices": "Health Care", "Life Sciences Tools": "Health Care",
+    # ── Industrials ──────────────────────────────────────────────────────────
     "Industrials": "Industrials", "Railways": "Industrials",
     "Aerospace": "Industrials", "Engineering": "Industrials",
     "Machinery": "Industrials", "Logistics": "Industrials",
-    "ConsumerDisc": "ConsumerDisc", "Retail": "ConsumerDisc",
-    "Automotive": "ConsumerDisc", "Luxury": "ConsumerDisc",
-    "Consumer Staples": "Consumer Staples", "Food & Beverage": "Consumer Staples",
-    "Cosmetics": "Consumer Staples",
+    "Aerospace & Defense": "Industrials", "Transportation": "Industrials",
+    "Construction & Engineering": "Industrials", "Commercial Services": "Industrials",
+    # ── Consumer Discretionary ───────────────────────────────────────────────
+    "Consumer Discretionary": "Consumer Discretionary",
+    "ConsumerDisc": "Consumer Discretionary",
+    "Consumer Cyclical": "Consumer Discretionary",
+    "Retail": "Consumer Discretionary", "Automotive": "Consumer Discretionary",
+    "Luxury": "Consumer Discretionary", "Hotels, Restaurants & Leisure": "Consumer Discretionary",
+    "Leisure": "Consumer Discretionary",
+    # ── Consumer Staples ─────────────────────────────────────────────────────
+    "Consumer Staples": "Consumer Staples", "Consumer Defensive": "Consumer Staples",
+    "Food & Beverage": "Consumer Staples", "Cosmetics": "Consumer Staples",
+    "Beverages": "Consumer Staples", "Tobacco": "Consumer Staples",
+    "Household Products": "Consumer Staples",
+    # ── Utilities ────────────────────────────────────────────────────────────
     "Utilities": "Utilities", "Power": "Utilities", "Electric": "Utilities",
-    "CommServices": "CommServices", "Telecoms": "CommServices",
-    "Media": "CommServices",
-    "RealEstate": "RealEstate", "REITs": "RealEstate",
-    "Fintech": "Technology", "Steel": "Materials", "Property": "RealEstate",
+    "Electric Utilities": "Utilities", "Multi-Utilities": "Utilities",
+    # ── Communication Services ───────────────────────────────────────────────
+    "Communication Services": "Communication Services",
+    "CommServices": "Communication Services",
+    "Telecoms": "Communication Services", "Media": "Communication Services",
+    "Telecommunications": "Communication Services",
+    # ── Real Estate ──────────────────────────────────────────────────────────
+    "Real Estate": "Real Estate", "RealEstate": "Real Estate",
+    "REITs": "Real Estate", "Property": "Real Estate",
 }
 
 DE_BREADTH_INDICES = {
@@ -180,6 +209,31 @@ def fetch_de_sector_prices():
         except Exception: pass
     print(f"  ✅ Germany Sector prices: {len(result)}/{len(DE_SECTORS)}")
     return result
+
+
+def fill_missing_sector_prices(universe, price_data, sector_prices, sectors_cfg):
+    """
+    For every sector in sectors_cfg that is missing from sector_prices,
+    build a synthetic equal-weight composite from constituent stocks.
+    Called after price_data is available so all sectors always appear in
+    Sector Strength and Sector Performance tables.
+    """
+    added = []
+    for sector in sectors_cfg:
+        if sector in sector_prices:
+            continue
+        syms = universe[universe["Sector"] == sector]["Yahoo"].tolist()
+        valid = [s for s in syms if s in price_data.columns
+                 and len(price_data[s].dropna()) >= 22]
+        if len(valid) < 2:
+            continue
+        composite = price_data[valid].dropna(how="all").mean(axis=1).dropna()
+        if len(composite) >= 22:
+            sector_prices[sector] = _normalize(composite)
+            added.append(sector)
+    if added:
+        print(f"  ✅ Synthetic sector prices built for: {added}")
+    return sector_prices
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SNAPSHOT
@@ -257,10 +311,15 @@ def main():
     price_data = fetch_close_batch(stock_syms, PERIOD_DAYS)
     print(f"  ✅ Stocks: {len(price_data.columns)} loaded")
 
+    # Fill any sector missing an ETF with equal-weight stock composite
+    print("📡 Filling missing sector prices from stock composites …")
+    sector_prices = fill_missing_sector_prices(universe, price_data, sector_prices, DE_SECTORS)
+
     ohlcv_dict={}
     max_ohlcv=max(PATTERN_MAX, SIGNAL_MAX_STOCKS if ENABLE_SIGNALS else 0)
     if max_ohlcv>0:
         print(f"\n📡 Fetching OHLCV for {max_ohlcv} stocks …")
+        cands=[s for s in stock_syms if s in price_data.columns and len(price_data[s].dropna())>=60][:max_ohlcv]
         cands=[s for s in stock_syms if s in price_data.columns and len(price_data[s].dropna())>=60][:max_ohlcv]
         try:    ohlcv_dict=fetch_ohlcv_with_cache(cands, days=PERIOD_DAYS)
         except: ohlcv_dict=fetch_ohlcv_batch(cands, days=PERIOD_DAYS)

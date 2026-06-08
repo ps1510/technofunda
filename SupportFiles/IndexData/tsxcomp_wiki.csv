@@ -1,0 +1,221 @@
+Ticker,Company,Sector [10],Industry [10]
+VNP,5N Plus Inc.,Materials,Chemicals
+ABRA,AbraSilver Resource Corp.,Materials,Metals & Mining
+AAV,Advantage Energy Ltd.,Energy,Oil & Gas Exploration and Production
+ARE,Aecon Group Inc.,Industrials,Construction & Engineering
+AEM,Agnico Eagle Mines Limited,Materials,Metals & Mining
+AC,Air Canada,Industrials,Transportation
+AGI,Alamos Gold Inc.,Materials,Metals & Mining
+AQN,Algonquin Power & Utilities Corp.,Utilities,Regulated Utilities
+ATD,Alimentation Couche-Tard Inc.,Consumer Discretionary,Specialty Retail
+AAUC,Allied Gold Corporation,Materials,Metals & Mining
+AP.UN,Allied Properties Real Estate Investment Trust,Real Estate,REITs
+ALA,AltaGas Ltd.,Energy,Oil & Gas Storage/Transport
+AIF,Altus Group Limited,Real Estate,Real Estate
+USA,Americas Gold And Silver Corporation,Materials,Metals & Mining
+ARX,ARC Resources Ltd.,Energy,Oil & Gas Exploration and Production
+ARIS,Aris Mining Corporation,Materials,Metals & Mining
+ATZ,Aritzia Inc.,Consumer Discretionary,Specialty Retail
+ACO.X,ATCO Ltd.,Utilities,Regulated Utilities
+ATH,Athabasca Oil Corporation,Energy,Oil & Gas Exploration and Production
+ATRL,AtkinsRéalis Group Inc.,Industrials,Construction & Engineering
+ATS,ATS Corporation,Industrials,Industrial Products
+ASM,Avino Silver & Gold Mines Ltd.,Materials,Metals & Mining
+AYA,Aya Gold & Silver Inc.,Materials,Metals & Mining
+BTO,B2Gold Corp.,Materials,Metals & Mining
+BDGI,Badger Infrastructure Solutions Ltd.,Industrials,Construction & Engineering
+BMO,Bank of Montreal,Financials,Banks
+BNS,Bank of Nova Scotia,Financials,Banks
+ABX,Barrick Gold Corporation,Materials,Metals & Mining
+BHC,Bausch Health Companies Inc.,Healthcare,Pharmaceuticals
+BTE,Baytex Energy Corp.,Energy,Oil & Gas Exploration and Production
+BCE,BCE Inc.,Communication Services,Telecommunication Services
+BIR,Birchcliff Energy Ltd.,Energy,Oil & Gas Exploration and Production
+BDT,Bird Construction Inc.,Industrials,Construction & Engineering
+BB,BlackBerry Limited,Information Technology,Software
+BEI.UN,Boardwalk Real Estate Investment Trust,Real Estate,REITs
+BBD.B,Bombardier Inc.,Industrials,Aerospace & Defense
+BLX,Boralex Inc.,Energy,Renewable Energy Producers
+BYD,Boyd Group Services Inc.,Consumer Discretionary,Personal Services
+BAM,Brookfield Asset Management Ltd.,Financials,Asset Management
+BBUC,Brookfield Business Corporation,Industrials,Conglomerates
+BN,Brookfield Corporation,Financials,Asset Management
+BIP.UN,Brookfield Infrastructure Partners L.P.,Utilities,Regulated Utilities
+BEP.UN,Brookfield Renewable Partners L.P.,Energy,Renewable Energy Producers
+DOO,BRP Inc.,Consumer Discretionary,Vehicles & Parts
+CAE,CAE Inc.,Industrials,Aerospace & Defense
+CCO,Cameco Corporation,Energy,Other Energy Sources
+CAR.UN,Canadian Apartment Properties Real Estate Investment Trust,Real Estate,REITs
+CM,Canadian Imperial Bank of Commerce,Financials,Banks
+CNR,Canadian National Railway Company,Industrials,Transportation
+CNQ,Canadian Natural Resources Limited,Energy,Oil & Gas Exploration and Production
+CP,Canadian Pacific Kansas City Limited,Industrials,Transportation
+CTC.A,Canadian Tire Corporation Limited,Consumer Discretionary,Specialty Retail
+CU,Canadian Utilities Limited,Utilities,Regulated Utilities
+CPX,Capital Power Corporation,Utilities,Independent Power Producers
+CS,Capstone Copper Corp.,Materials,Metals & Mining
+CJT,Cargojet Inc.,Industrials,Transportation
+CCL.B,CCL Industries Inc.,Consumer Discretionary,Containers & Packaging
+CLS,Celestica Inc.,Information Technology,Hardware & Equipment
+CVE,Cenovus Energy Inc.,Energy,Integrated Oil & Gas
+CG,Centerra Gold Inc.,Materials,Metals & Mining
+CEU,CES Energy Solutions Corp.,Energy,Oil & Gas Equipment & Services
+GIB.A,CGI Inc.,Information Technology,Software
+CSH.UN,Chartwell Retirement Residences,Real Estate,Real Estate
+CHP.UN,Choice Properties Real Estate Investment Trust,Real Estate,REITs
+CCA,Cogeco Communications Inc.,Communication Services,Telecommunication Services
+CIGI,Colliers International Group Inc.,Real Estate,Real Estate
+CSU,Constellation Software Inc.,Information Technology,Software
+CRR.UN,Crombie Real Estate Investment Trust,Real Estate,REITs
+CRT.UN,CT Real Estate Investment Trust,Real Estate,REITs
+CURA,"Curaleaf Holdings, Inc.",Healthcare,Pharmaceuticals
+DFY,Definity Financial Corporation,Financials,Insurance
+DML,Denison Mines Corp.,Energy,Other Energy Sources
+DSG,Descartes Systems Group Inc.,Information Technology,Software
+DSV,Discovery Silver Corp.,Materials,Metals & Mining
+DOL,Dollarama Inc.,Consumer Staples,Retailers - Staples
+DIR.UN,Dream Industrial Real Estate Investment Trust,Real Estate,REITs
+DPM,Dundee Precious Metals Inc.,Materials,Metals & Mining
+ELD,Eldorado Gold Corporation,Materials,Metals & Mining
+EFN,Element Fleet Management Corp.,Industrials,Business Services
+EMA,Emera Incorporated,Utilities,Regulated Utilities
+EMP.A,Empire Company Limited,Consumer Staples,Retailers - Staples
+ENB,Enbridge Inc.,Energy,Oil & Gas Storage/Transport
+EDR,Endeavour Silver Corp.,Materials,Metals & Mining
+EFR,Energy Fuels Inc.,Energy,Other Energy Sources
+EQB,EQB Inc.,Financials,Banks
+EFX,Equifax Inc.,Industrials,Consulting Services
+EQX,Equinox Gold Corp.,Materials,Metals & Mining
+ERO,Ero Copper Corp.,Materials,Metals & Mining
+EIF,Exchange Income Corporation,Industrials,Transportation
+FFH,Fairfax Financial Holdings Limited,Financials,Insurance
+FTT,Finning International Inc.,Industrials,Industrial Distribution
+FCR.UN,First Capital Real Estate Investment Trust,Real Estate,REITs
+AG,First Majestic Silver Corp.,Materials,Metals & Mining
+FM,First Quantum Minerals Ltd.,Materials,Metals & Mining
+FSV,FirstService Corporation,Real Estate,Real Estate
+FTS,Fortis Inc.,Utilities,Regulated Utilities
+FVI,Fortuna Mining Corp.,Materials,Metals & Mining
+FNV,Franco-Nevada Corporation,Materials,Metals & Mining
+FRU,Freehold Royalties Ltd.,Energy,Oil & Gas Exploration and Production
+GMIN,G Mining Ventures Corp.,Materials,Metals & Mining
+WN,George Weston Limited,Consumer Staples,Retailers - Staples
+GFL,GFL Environmental Inc.,Industrials,Waste Management
+GEI,Gibson Energy Inc.,Energy,Oil & Gas Storage/Transport
+GIL,Gildan Activewear Inc.,Consumer Discretionary,Apparel & Accessories
+GSY,goeasy Ltd.,Financials,Consumer Finance
+GRT.UN,Granite Real Estate Investment Trust,Real Estate,REITs
+GWO,Great-West Lifeco Inc.,Financials,Insurance
+HR.UN,H&R Real Estate Investment Trust,Real Estate,REITs
+HWX,Headwater Exploration Inc.,Energy,Oil & Gas Exploration and Production
+HBM,Hudbay Minerals Inc.,Materials,Metals & Mining
+H,Hydro One Limited,Utilities,Regulated Utilities
+IAU,I-80 Gold Corp.,Materials,Metals & Mining
+IAG,iA Financial Corporation Inc.,Financials,Insurance
+IMG,Iamgold Corporation,Materials,Metals & Mining
+IGM,IGM Financial Inc.,Financials,Asset Management
+IMO,Imperial Oil Limited,Energy,Integrated Oil & Gas
+IFC,Intact Financial Corporation,Financials,Insurance
+IPCO,International Petroleum Corporation,Energy,Oil & Gas Exploration and Production
+IIP.UN,InterRent Real Estate Investment Trust,Real Estate,REITs
+IVN,Ivanhoe Mines Ltd.,Materials,Metals & Mining
+JWEL,Jamieson Wellness Inc.,Consumer Staples,Consumer Packaged Goods
+KNT,K92 Mining Inc.,Materials,Metals & Mining
+KEL,Kelt Exploration Ltd.,Energy,Oil & Gas Exploration and Production
+KEY,Keyera Corp.,Energy,Oil & Gas Storage/Transport
+KMP.UN,Killam Apartment Real Estate Investment Trust,Real Estate,REITs
+KXS,Kinaxis Inc.,Information Technology,Software
+K,Kinross Gold Corporation,Materials,Metals & Mining
+LIF,Labrador Iron Ore Royalty Corporation,Materials,Steel
+LB,Laurentian Bank of Canada,Financials,Banks
+LSPD,Lightspeed Commerce Inc.,Information Technology,Software
+LNR,Linamar Corporation,Consumer Discretionary,Vehicles & Parts
+LAC,Lithium Americas Corp.,Materials,Metals & Mining
+L,Loblaw Companies Limited,Consumer Staples,Retailers - Staples
+LUG,Lundin Gold Inc.,Materials,Metals & Mining
+LUN,Lundin Mining Corporation,Materials,Metals & Mining
+MG,Magna International Inc.,Consumer Discretionary,Vehicles & Parts
+MFC,Manulife Financial Corporation,Financials,Insurance
+MFI,Maple Leaf Foods Inc.,Consumer Staples,Consumer Packaged Goods
+MDA,MDA Space Ltd.,Industrials,Aerospace & Defense
+MX,Methanex Corporation,Materials,Chemicals
+MRU,Metro Inc.,Consumer Staples,Retailers - Staples
+MAU,Montage Gold Corp.,Materials,Metals & Mining
+MTL,Mullen Group Ltd.,Industrials,Transportation
+,National Bank of Canada,Financials,Banks
+NXE,NexGen Energy Ltd.,Energy,Other Energy Sources
+NFI,NFI Group Inc.,Consumer Discretionary,Vehicles & Parts
+NGEX,NGEx Minerals Ltd.,Materials,Metals & Mining
+NWC,North West Company Inc.,Consumer Staples,Retailers - Staples
+NPI,Northland Power Inc.,Energy,Renewable Energy Producers
+NG,NovaGold Resources Inc.,Materials,Metals & Mining
+NTR,Nutrien Ltd.,Materials,Agriculture
+OGC,OceanaGold Corporation,Materials,Metals & Mining
+ONEX,Onex Corporation,Financials,Asset Management
+OTEX,Open Text Corporation,Information Technology,Software
+OLA,Orla Mining Ltd.,Materials,Metals & Mining
+OR,Osisko Gold Royalties Ltd.,Materials,Metals & Mining
+PAAS,Pan American Silver Corp.,Materials,Metals & Mining
+POU,Paramount Resources Ltd.,Energy,Oil & Gas Exploration and Production
+PXT,Parex Resources Inc.,Energy,Oil & Gas Exploration and Production
+PPL,Pembina Pipeline Corporation,Energy,Oil & Gas Storage/Transport
+PPTA,Perpetua Resources Corp.,Materials,Metals & Mining
+PET,Pet Valu Holdings Ltd.,Consumer Discretionary,Specialty Retail
+PEY,Peyto Exploration & Development Corp.,Energy,Oil & Gas Exploration and Production
+POW,Power Corporation of Canada,Financials,Insurance
+PSK,PrairieSky Royalty Ltd.,Energy,Oil & Gas Exploration and Production
+PBH,Premium Brands Holdings Corporation,Consumer Staples,Consumer Packaged Goods
+PMZ.UN,Primaris Real Estate Investment Trust,Real Estate,REITs
+QBR.B,Quebecor Inc.,Communication Services,Telecommunication Services
+RBA,"RB Global, Inc.",Industrials,Specialty Business Services
+QSR,Restaurant Brands International Inc.,Consumer Discretionary,Restaurants
+RCH,Richelieu Hardware Ltd.,Consumer Discretionary,Home and Homeware
+REI.UN,RioCan Real Estate Investment Trust,Real Estate,REITs
+RCI.B,Rogers Communications Inc.,Communication Services,Telecommunication Services
+RY,Royal Bank of Canada,Financials,Banks
+RUS,Russel Metals Inc.,Industrials,Industrial Distribution
+SAP,Saputo Inc.,Consumer Staples,Consumer Packaged Goods
+SEA,Seabridge Gold Inc.,Materials,Metals & Mining
+SES,Secure Energy Services Inc.,Industrials,Waste Management
+SHOP,Shopify Inc.,Information Technology,Software
+SIA,Sienna Senior Living Inc.,Healthcare,Healthcare Providers & Services
+SVM,Silvercorp Metals Inc.,Materials,Metals & Mining
+SKE,Skeena Resources Limited,Materials,Metals & Mining
+SRU.UN,SmartCentres Real Estate Investment Trust,Real Estate,REITs
+SOBO,South Bow Corporation,Energy,Oil & Gas Storage/Transport
+SII,Sprott Inc.,Financials,Asset Management
+SSRM,SSR Mining Inc.,Materials,Metals & Mining
+STN,Stantec Inc.,Industrials,Construction & Engineering
+SJ,Stella-Jones Inc.,Materials,Forest Products
+SCR,Strathcona Resources Ltd.,Energy,Oil & Gas Exploration and Production
+SLF,Sun Life Financial Inc.,Financials,Insurance
+SU,Suncor Energy Inc.,Energy,Integrated Oil & Gas
+SPB,Superior Plus Corp.,Utilities,Regulated Utilities
+TVE,Tamarack Valley Energy Ltd.,Energy,Oil & Gas Exploration and Production
+TKO,Taseko Mines Limited,Materials,Metals & Mining
+TRP,TC Energy Corporation,Energy,Oil & Gas Storage/Transport
+TECK.B,Teck Resources Limited,Materials,Metals & Mining
+T,Telus Corporation,Communication Services,Telecommunication Services
+TVK,TerraVest Industries Inc.,Energy,Oil & Gas Equipment & Services
+TFII,TFI International Inc.,Industrials,Transportation
+TRI,Thomson Reuters Corporation,Industrials,Business Services
+X,TMX Group Limited,Financials,Capital Markets
+TPZ,Topaz Energy Corp.,Energy,Oil & Gas Storage/Transport
+TXG,Torex Gold Resources Inc.,Materials,Metals & Mining
+TIH,Toromont Industries Ltd.,Industrials,Industrial Distribution
+TD,Toronto-Dominion Bank,Financials,Banks
+TOU,Tourmaline Oil Corp.,Energy,Oil & Gas Exploration and Production
+TA,TransAlta Corporation,Utilities,Independent Power Producers
+TCL.A,Transcontinental Inc.,Consumer Discretionary,Containers & Packaging
+TFPM,Triple Flag Precious Metals Corp.,Materials,Metals & Mining
+TSU,Trisura Group Ltd.,Financials,Insurance
+VET,Vermilion Energy Inc.,Energy,Oil & Gas Exploration and Production
+VITL.UN,Vital Infrastructure Property Trust.,Real Estate,REITs
+VZLA,Vizsla Silver Corp.,Materials,Metals & Mining
+WCN,Waste Connections Inc.,Industrials,Waste Management
+WDO,Wesdome Gold Mines Ltd.,Materials,Metals & Mining
+WFG,West Fraser Timber Co. Ltd.,Materials,Forestry
+WPM,Wheaton Precious Metals Corp.,Materials,Metals & Mining
+WCP,Whitecap Resources Inc.,Energy,Oil & Gas Exploration and Production
+WPK,Winpak Ltd.,Consumer Discretionary,Containers & Packaging
+WSP,WSP Global Inc.,Industrials,Construction & Engineering

@@ -1,0 +1,22 @@
+Symbol,Company,GICS sector,GICS sector,Headquarters
+Symbol,Company,Code,Name,Headquarters
+ALL,Aristocrat Leisure,25,Consumer Discretionary,Sydney
+ANZ,ANZ Bank,40,Financials,Melbourne
+BHP,BHP,15,Materials,Melbourne
+CBA,Commonwealth Bank,40,Financials,Sydney
+COL,Coles Group,30,Consumer Staples,Melbourne
+CSL,CSL,35,Health Care,Melbourne
+FMG,Fortescue,15,Materials,Perth
+GMG,Goodman Group,60,Real Estate,Sydney
+MQG,Macquarie Group,40,Financials,Sydney
+NAB,National Australia Bank,40,Financials,Melbourne
+NCM,Newcrest,15,Materials,Melbourne
+RIO,Rio Tinto,15,Materials,Melbourne / London
+S32,South32,15,Materials,Perth
+STO,Santos,10,Energy,Adelaide
+TCL,Transurban,20,Industrials,Melbourne
+TLS,Telstra,50,Telecommunication Services,Melbourne
+WBC,Westpac,40,Financials,Sydney
+WDS,Woodside Energy,10,Energy,Perth
+WES,Wesfarmers,30,Consumer Staples,Perth
+WOW,Woolworths,30,Consumer Staples,Sydney

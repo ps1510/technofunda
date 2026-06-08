@@ -325,7 +325,7 @@ def parse_country_html(html_path: str, country: dict) -> dict:
         "index_price":  "—",
         "index_chg":    "—",
         "universe":     0,
-        "signals":      {"prime": 0, "conf": 0, "rs": 0, "avoid": 0},
+        "signals":      {"prime": 0, "conf": 0, "rs": 0, "watch": 0, "avoid": 0},
         "top_sectors":  [],
     }
 
@@ -359,16 +359,18 @@ def parse_country_html(html_path: str, country: dict) -> dict:
         # Fallback: count table rows in stocks tab
         result["universe"] = len(re.findall(r'<tr><td', html)) // 10 or 500
 
-    # ── Signal counts from stats-bar ─────────────────────────────
-    # Pattern: <span class="sl-badge sl-triple">🌟 Prime 28</span>
-    prime_m = re.search(r'sl-triple[^>]*>.*?Prime\s+(\d+)', html, re.DOTALL)
-    conf_m  = re.search(r'sl-confirmed[^>]*>.*?Conf\s+(\d+)', html, re.DOTALL)
-    rs_m    = re.search(r'sl-rsbuy[^>]*>.*?RS\s+(\d+)', html, re.DOTALL)
-    avoid_m = re.search(r'sl-avoid[^>]*>.*?Avoid\s+(\d+)', html, re.DOTALL)
+    # ── Signal counts from health-card inline badges ─────────────
+    # Actual HTML: <div class="hc-value sl-triple-inline">6</div>
+    prime_m = re.search(r'sl-triple-inline[^>]*>(\d+)', html)
+    conf_m  = re.search(r'sl-confirmed-inline[^>]*>(\d+)', html)
+    rs_m    = re.search(r'sl-rsbuy-inline[^>]*>(\d+)', html)
+    watch_m = re.search(r'sl-watch-inline[^>]*>(\d+)', html)
+    avoid_m = re.search(r'sl-avoid-inline[^>]*>(\d+)', html)
 
     result["signals"]["prime"] = int(prime_m.group(1)) if prime_m else 0
     result["signals"]["conf"]  = int(conf_m.group(1))  if conf_m  else 0
     result["signals"]["rs"]    = int(rs_m.group(1))    if rs_m    else 0
+    result["signals"]["watch"] = int(watch_m.group(1)) if watch_m else 0
     result["signals"]["avoid"] = int(avoid_m.group(1)) if avoid_m else 0
 
     # ── Index price & change from snap-card ──────────────────────
@@ -663,7 +665,10 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="logo-icon">📊</div>
       <span class="logo-text">Techno<span>Funda</span></span>
     </div>
-    <span class="nav-tag">Global Market Intelligence</span>
+    <div style="display:flex;align-items:center;gap:20px">
+      <a href="about.html" style="font-size:13px;color:var(--text2);text-decoration:none;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">About</a>
+      <span class="nav-tag">Global Market Intelligence</span>
+    </div>
     <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
   </nav>
 </div>
@@ -704,7 +709,7 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="how-grid">
       <div class="how-item"><div class="how-icon">📡</div><div class="how-title">Daily Data Collection</div><div class="how-desc">Every day after market close, our engine automatically downloads end-of-day price data for every stock in each country.</div></div>
       <div class="how-item"><div class="how-icon">⚙️</div><div class="how-title">RS Momentum Scoring</div><div class="how-desc">Each stock is scored on Relative Strength — how well it performs compared to its own sector and the overall market index.</div></div>
-      <div class="how-item"><div class="how-icon">🏆</div><div class="how-title">Signal Classification</div><div class="how-desc">Stocks are ranked from 🌟 Prime (strongest momentum + fundamentals) down to 🔴 Avoid (breaking down vs market).</div></div>
+      <div class="how-item"><div class="how-icon">🏆</div><div class="how-title">Signal Classification</div><div class="how-desc">Stocks are classified from 🌟 Prime (Very Strong Bullish) through Confirmed and RS Bullish signals, down to 🔴 Bearish (breaking down vs market).</div></div>
       <div class="how-item"><div class="how-icon">📊</div><div class="how-title">Report Generation</div><div class="how-desc">Full interactive reports are built with sector rankings, top opportunities, chart patterns, and trade setups — all in one place.</div></div>
       <div class="how-item"><div class="how-icon">🌐</div><div class="how-title">Published Here</div><div class="how-desc">This page and all country reports are automatically published to the web every trading day — free, with no signup needed.</div></div>
     </div>
@@ -713,12 +718,12 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
   <section class="legend-section animate-in">
     <div class="sec-head"><div class="sec-title-wrap"><span class="sec-label">Understanding the Labels</span><h2 class="sec-title">What do the signals mean?</h2></div></div>
     <div class="legend-grid">
-      <div class="legend-item"><span class="legend-badge sig-prime">🌟 Prime</span><div class="legend-text"><strong>Triple Confirmed / Long Momentum</strong><br>Strongest signal. Stock is outperforming on multiple timeframes with strong fundamentals. The best setups.</div></div>
-      <div class="legend-item"><span class="legend-badge sig-conf">✅ Confirmed</span><div class="legend-text"><strong>Strong RS / Long Momentum</strong><br>Stock is outperforming the market and sector consistently. Good momentum, consider for watchlist.</div></div>
-      <div class="legend-item"><span class="legend-badge sig-rs">📈 RS Leader</span><div class="legend-text"><strong>Relative Strength Buy</strong><br>Stock is showing positive RS vs market and sector. Early stage momentum — watch for breakout.</div></div>
-      <div class="legend-item"><span class="legend-badge" style="background:rgba(156,163,175,.1);color:#9ca3af;border:1px solid rgba(156,163,175,.15)">👁 Watch</span><div class="legend-text"><strong>Setup Building</strong><br>Pre-conditions met but not yet confirmed. Stock is setting up — check back daily for progression.</div></div>
-      <div class="legend-item"><span class="legend-badge" style="background:rgba(107,114,128,.1);color:#6b7280;border:1px solid rgba(107,114,128,.15)">⬜ Neutral</span><div class="legend-text"><strong>No Signal</strong><br>Mixed signals — stock is neither a clear leader nor laggard vs the market right now.</div></div>
-      <div class="legend-item"><span class="legend-badge sig-avoid">🔴 RS Breakdown</span><div class="legend-text"><strong>Relative Strength Sell</strong><br>Stock is significantly underperforming both its sector and the market. Caution advised.</div></div>
+      <div class="legend-item"><span class="legend-badge sig-prime">🌟 Prime</span><div class="legend-text"><strong>Very Strong Bullish</strong><br>Strongest signal. Stock is outperforming on multiple timeframes with strong fundamentals. The best setups.</div></div>
+      <div class="legend-item"><span class="legend-badge sig-conf">✅ Confirmed</span><div class="legend-text"><strong>Strong Bullish</strong><br>Stock is outperforming the market and sector consistently. Good momentum, consider for watchlist.</div></div>
+      <div class="legend-item"><span class="legend-badge sig-rs">📈 RS Leader</span><div class="legend-text"><strong>Bullish Relative Strength</strong><br>Stock is showing positive RS vs market and sector. Early stage bullish momentum — watch for breakout.</div></div>
+      <div class="legend-item"><span class="legend-badge" style="background:rgba(156,163,175,.1);color:#9ca3af;border:1px solid rgba(156,163,175,.15)">👁 Watch</span><div class="legend-text"><strong>Neutral — Setup Building</strong><br>Pre-conditions met but not yet confirmed. Stock is setting up — check back daily for progression.</div></div>
+      <div class="legend-item"><span class="legend-badge" style="background:rgba(107,114,128,.1);color:#6b7280;border:1px solid rgba(107,114,128,.15)">⬜ Neutral</span><div class="legend-text"><strong>Neutral — No Signal</strong><br>Mixed signals — stock is neither a clear leader nor laggard vs the market right now.</div></div>
+      <div class="legend-item"><span class="legend-badge sig-avoid">🔴 RS Breakdown</span><div class="legend-text"><strong>Bearish Relative Strength</strong><br>Stock is significantly underperforming both its sector and the market. Caution advised.</div></div>
     </div>
   </section>
 
@@ -744,6 +749,11 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="footer-links">
         <div class="footer-link-title">Markets</div>
         {footer_links}
+      </div>
+      <div class="footer-links">
+        <div class="footer-link-title">Info</div>
+        <a href="about.html">ℹ️ About</a>
+        <a href="#feedback">💬 Feedback</a>
       </div>
     </div>
     <p class="footer-copy">© 2026 TechnoFunda · Automated daily RS Momentum analysis · Data is delayed end-of-day · Not financial advice</p>
@@ -793,7 +803,7 @@ function buildSignals(s){{
   const p=[];
   if(s.prime>0)p.push(`<div class="sig-pill sig-prime">🌟 ${{s.prime}} Prime</div>`);
   if(s.conf>0) p.push(`<div class="sig-pill sig-conf">✅ ${{s.conf}} Confirmed</div>`);
-  if(s.rs>0)   p.push(`<div class="sig-pill sig-rs">📈 ${{s.rs}} RS Buy</div>`);
+  if(s.rs>0)   p.push(`<div class="sig-pill sig-rs">📈 ${{s.rs}} RS Bullish</div>`);
   return p.join('');
 }}
 function buildCards(){{

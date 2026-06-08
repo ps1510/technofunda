@@ -26,15 +26,15 @@ if os.path.exists(os.path.join(SCRIPT_DIR, "IndexData")):
 else:
     INDEX_DATA_DIR = os.path.join(SCRIPT_DIR, "SupportFiles", "IndexData")
 
-STOCK_CSV = os.path.join(INDEX_DATA_DIR, "it_ftsemiblist.csv")
+STOCK_CSV = os.path.join(INDEX_DATA_DIR, "it_all_stocks_master.csv")
 
-MAX_STOCKS        = 150
-PERIOD_DAYS       = 420
+MAX_STOCKS        = 1500
+PERIOD_DAYS       = 600
 ENABLE_PATTERNS   = True
-PATTERN_MAX       = 100
+PATTERN_MAX       = 200
 FETCH_FINANCIALS  = True
 ENABLE_SIGNALS    = True
-SIGNAL_MAX_STOCKS = 100
+SIGNAL_MAX_STOCKS = 1500
 PRIMARY_RS_PERIOD = 22
 
 sys.path.insert(0, SCRIPT_DIR)
@@ -75,17 +75,17 @@ IT_INDUSTRY_TO_SECTOR = {
     "Materials":"Materials","Mining":"Materials","Gold":"Materials",
     "Metals":"Materials","Chemicals":"Materials","Technology":"Technology",
     "Software":"Technology","IT Services":"Technology","Electronics":"Technology",
-    "Semiconductors":"Technology","Healthcare":"Healthcare",
-    "Pharmaceuticals":"Healthcare","Biotechnology":"Healthcare",
-    "Medical Devices":"Healthcare","Industrials":"Industrials",
+    "Semiconductors":"Technology","Healthcare":"Health Care",
+    "Pharmaceuticals":"Health Care","Biotechnology":"Health Care",
+    "Medical Devices":"Health Care","Industrials":"Industrials",
     "Railways":"Industrials","Aerospace":"Industrials","Engineering":"Industrials",
     "Machinery":"Industrials","Shipbuilding":"Industrials",
-    "ConsumerDisc":"ConsumerDisc","Retail":"ConsumerDisc",
-    "Automotive":"ConsumerDisc","Luxury":"ConsumerDisc",
+    "ConsumerDisc":"Consumer Discretionary","Retail":"Consumer Discretionary",
+    "Automotive":"Consumer Discretionary","Luxury":"Consumer Discretionary",
     "Consumer Staples":"Consumer Staples","Food & Beverage":"Consumer Staples",
-    "Utilities":"Utilities","Power":"Utilities","CommServices":"CommServices",
-    "Telecoms":"CommServices","Media":"CommServices","RealEstate":"RealEstate",
-    "REITs":"RealEstate",
+    "Utilities":"Utilities","Power":"Utilities","CommServices":"Communication Services",
+    "Telecoms":"Communication Services","Media":"Communication Services","RealEstate":"Real Estate",
+    "REITs":"Real Estate",
 }
 
 IT_BREADTH_INDICES = {
@@ -131,9 +131,66 @@ def load_it_universe():
     return df.reset_index(drop=True)
 
 
+# Italy sector ETFs — no liquid Yahoo-accessible ETFs; synthetic composites via fill_missing_sector_prices
+IT_SECTORS = {
+    "Financials":             {"yahoo": None, "csv": None},
+    "Energy":                 {"yahoo": None, "csv": None},
+    "Materials":              {"yahoo": None, "csv": None},
+    "Technology":             {"yahoo": None, "csv": None},
+    "Health Care":            {"yahoo": None, "csv": None},
+    "Industrials":            {"yahoo": None, "csv": None},
+    "Consumer Discretionary": {"yahoo": None, "csv": None},
+    "Consumer Staples":       {"yahoo": None, "csv": None},
+    "Utilities":              {"yahoo": None, "csv": None},
+    "Communication Services": {"yahoo": None, "csv": None},
+    "Real Estate":            {"yahoo": None, "csv": None},
+}
+
 def fetch_it_sector_prices():
-    """No local sector ETFs — sector strength derived from constituents."""
-    return {}
+    """No liquid sector ETFs for Italy on Yahoo — all sectors built via synthetic composites."""
+    result = {}
+    end   = datetime.today() + timedelta(days=1)
+    start = end - timedelta(days=PERIOD_DAYS + 5)
+    for sec_name, cfg in IT_SECTORS.items():
+        ticker = cfg.get("yahoo")
+        if not ticker: continue
+        try:
+            raw = yf.download(ticker, start=start.strftime("%Y-%m-%d"),
+                              end=end.strftime("%Y-%m-%d"),
+                              auto_adjust=True, progress=False)
+            if raw.empty: continue
+            cl = raw["Close"]
+            if isinstance(cl, pd.DataFrame): cl = cl.squeeze()
+            s = _normalize(cl.dropna())
+            if len(s) >= 22: result[sec_name] = s
+        except Exception: pass
+    print(f"  ✅ Italy Sector prices: {len(result)}/{len(IT_SECTORS)}")
+    return result
+
+
+def fill_missing_sector_prices(universe, price_data, sector_prices, sectors_cfg):
+    """
+    For every sector in sectors_cfg that is missing from sector_prices,
+    build a synthetic equal-weight composite from constituent stocks.
+    Called after price_data is available so all sectors always appear in
+    Sector Strength and Sector Performance tables.
+    """
+    added = []
+    for sector in sectors_cfg:
+        if sector in sector_prices:
+            continue
+        syms = universe[universe["Sector"] == sector]["Yahoo"].tolist()
+        valid = [s for s in syms if s in price_data.columns
+                 and len(price_data[s].dropna()) >= 22]
+        if len(valid) < 2:
+            continue
+        composite = price_data[valid].dropna(how="all").mean(axis=1).dropna()
+        if len(composite) >= 22:
+            sector_prices[sector] = _normalize(composite)
+            added.append(sector)
+    if added:
+        print(f"  ✅ Synthetic sector prices built for: {added}")
+    return sector_prices
 
 
 def build_it_snapshot():
@@ -215,6 +272,9 @@ def main():
     print(f"\n\U0001F4E1 Fetching {len(stock_syms)} stock closes …")
     price_data = fetch_close_batch(stock_syms, PERIOD_DAYS)
     print(f"  \u2705 Stocks: {len(price_data.columns)} loaded")
+    # Fill any sector missing an ETF with equal-weight stock composite
+    print("📡 Filling missing sector prices from stock composites …")
+    sector_prices = fill_missing_sector_prices(universe, price_data, sector_prices, IT_SECTORS)
 
     ohlcv_dict = {}
     max_ohlcv  = max(PATTERN_MAX, SIGNAL_MAX_STOCKS if ENABLE_SIGNALS else 0)
@@ -260,25 +320,24 @@ def main():
         patterns_list, stock_df, market="it")
     print("\U0001F3AF Trade Setups …");       trade_df    = build_trade_setups(
         stock_df, sec_str_df, market="it", primary_rs=PRIMARY_RS_PERIOD)
-    print("\U0001F4CB RS Sleeve Lists …");    sleeve_df   = build_rs_sleeve_list(
-        stock_df, universe, INDEX_DATA_DIR, market="it", run_time=run_time,
+    print("📋 RS Sleeve Lists …");    sleeve_df   = build_rs_sleeve_list(
+        stock_df, universe, INDEX_DATA_DIR, market="IT", run_time=run_time,
         index_prices=index_prices, price_data=price_data,
         ohlcv_dict=ohlcv_dict, primary_rs=PRIMARY_RS_PERIOD)
-    print("\U0001F30D Country ETF Strength …")
+    print("🌍 Country ETF Strength …")
     country_etf_df = build_country_etf_df(index_prices, period_days=PERIOD_DAYS,
                                            primary_rs=PRIMARY_RS_PERIOD)
-    print("\U0001F3C5 Commodity Strength …")
+    print("🏅 Commodity Strength …")
     commodity_df   = build_commodity_df(period_days=PERIOD_DAYS, primary_rs=PRIMARY_RS_PERIOD)
-    dashboard_df   = build_dashboard_df(stock_df, sec_str_df, "it", run_time,
+    dashboard_df   = build_dashboard_df(stock_df, sec_str_df, "IT", run_time,
                                         primary_rs=PRIMARY_RS_PERIOD)
 
-    # ── BUILD HTML (the only output) ──────────────────────────────────────
-    print("\n\U0001F310 Building Italy HTML report …")
+    print("\n🌐 Building Italy HTML report …")
     try:
         from market_html import build_html_report
         html_path = os.path.join(SCRIPT_DIR, "IT.html")
         build_html_report(
-            market="it", snapshot_df=snap_df, sector_str_df=sec_str_df,
+            market="IT", snapshot_df=snap_df, sector_str_df=sec_str_df,
             sector_rot_df=sec_rot_df, industry_rot_df=ind_rot_df,
             breadth_df=breadth_df, sector_perf_df=sec_perf_df, stock_str_df=stock_df,
             top_buy_df=top_buy_df, top_sell_df=top_sell_df,
@@ -286,25 +345,71 @@ def main():
             dashboard_df=dashboard_df, sleeve_df=sleeve_df,
             country_etf_df=country_etf_df, commodity_df=commodity_df,
             output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD)
-        print(f"  \u2705 HTML: {html_path}")
-    except Exception as e:
-        print(f"  \u274c HTML generation failed: {e}")
-        import traceback; traceback.print_exc()
+        print(f"  ✅ HTML: {html_path}")
+    except Exception as e: print(f"  ⚠ HTML skipped: {e}")
 
     elapsed = time.time() - t0
-    print(f"\n{'='*68}")
-    print(f"  \u2705  COMPLETE!  |  \u23f1 {elapsed:.0f}s  |  \U0001F4C4 IT.html")
+    print(f"\n{'═'*68}")
+    print(f"  ✅  COMPLETE!  |  ⏱ {elapsed:.0f}s  |  📄 IT.html")
     if not stock_df.empty:
         sl_col = "Signal_Label" if "Signal_Label" in stock_df.columns else None
         if sl_col:
-            prime = int(stock_df[sl_col].astype(str).str.startswith("\U0001F31F").sum())
-            conf  = int(stock_df[sl_col].astype(str).str.startswith("\u2705").sum())
-            rsbuy = int(stock_df[sl_col].astype(str).str.startswith("\U0001F4C8").sum())
-            watch = int(stock_df[sl_col].astype(str).str.startswith("\U0001F441").sum())
-            avoid = int(stock_df[sl_col].astype(str).str.startswith("\U0001F534").sum())
-            print(f"  Prime:{prime} | Conf:{conf} | RS Buy:{rsbuy} | Watch:{watch} | Avoid:{avoid}")
-    print("="*68)
+            prime = int(stock_df[sl_col].astype(str).str.startswith("🌟").sum())
+            conf  = int(stock_df[sl_col].astype(str).str.startswith("✅").sum())
+            rsbuy = int(stock_df[sl_col].astype(str).str.startswith("📈").sum())
+            watch = int(stock_df[sl_col].astype(str).str.startswith("👁").sum())
+            avoid = int(stock_df[sl_col].astype(str).str.startswith("🔴").sum())
+            print(f"  🌟 Prime:{prime} | ✅ Conf:{conf} | 📈 RS Buy:{rsbuy} | 👁 Watch:{watch} | 🔴 Avoid:{avoid}")
+    if not trade_df.empty:
+        buys  = (trade_df["Action"] == "BUY").sum()
+        sells = (trade_df["Action"] == "SELL").sum()
+        print(f"  🎯 Trade Setups: {buys} BUY | {sells} SELL | {len(trade_df)-buys-sells} WAIT")
+    print("═"*68)
 
+if __name__ == "__main__":
+    main()
+ime=run_time,index_prices=index_prices, price_data=price_data,ohlcv_dict=ohlcv_dict, primary_rs=PRIMARY_RS_PERIOD)
+    print("🌍 Country ETF Strength …")
+    country_etf_df = build_country_etf_df(index_prices, period_days=PERIOD_DAYS,
+                                           primary_rs=PRIMARY_RS_PERIOD)
+    print("🏅 Commodity Strength …")
+    commodity_df   = build_commodity_df(period_days=PERIOD_DAYS, primary_rs=PRIMARY_RS_PERIOD)
+    dashboard_df   = build_dashboard_df(stock_df, sec_str_df, "IT", run_time,
+                                        primary_rs=PRIMARY_RS_PERIOD)
+
+    print("\n🌐 Building Italy HTML report …")
+    try:
+        from market_html import build_html_report
+        html_path = os.path.join(SCRIPT_DIR, "IT.html")
+        build_html_report(
+            market="IT", snapshot_df=snap_df, sector_str_df=sec_str_df,
+            sector_rot_df=sec_rot_df, industry_rot_df=ind_rot_df,
+            breadth_df=breadth_df, sector_perf_df=sec_perf_df, stock_str_df=stock_df,
+            top_buy_df=top_buy_df, top_sell_df=top_sell_df,
+            chart_pat_df=chart_df, trade_df=trade_df,
+            dashboard_df=dashboard_df, sleeve_df=sleeve_df,
+            country_etf_df=country_etf_df, commodity_df=commodity_df,
+            output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD)
+        print(f"  ✅ HTML: {html_path}")
+    except Exception as e: print(f"  ⚠ HTML skipped: {e}")
+
+    elapsed = time.time() - t0
+    print(f"\n{'═'*68}")
+    print(f"  ✅  COMPLETE!  |  ⏱ {elapsed:.0f}s  |  📄 IT.html")
+    if not stock_df.empty:
+        sl_col = "Signal_Label" if "Signal_Label" in stock_df.columns else None
+        if sl_col:
+            prime = int(stock_df[sl_col].astype(str).str.startswith("🌟").sum())
+            conf  = int(stock_df[sl_col].astype(str).str.startswith("✅").sum())
+            rsbuy = int(stock_df[sl_col].astype(str).str.startswith("📈").sum())
+            watch = int(stock_df[sl_col].astype(str).str.startswith("👁").sum())
+            avoid = int(stock_df[sl_col].astype(str).str.startswith("🔴").sum())
+            print(f"  🌟 Prime:{prime} | ✅ Conf:{conf} | 📈 RS Buy:{rsbuy} | 👁 Watch:{watch} | 🔴 Avoid:{avoid}")
+    if not trade_df.empty:
+        buys  = (trade_df["Action"] == "BUY").sum()
+        sells = (trade_df["Action"] == "SELL").sum()
+        print(f"  🎯 Trade Setups: {buys} BUY | {sells} SELL | {len(trade_df)-buys-sells} WAIT")
+    print("═"*68)
 
 if __name__ == "__main__":
     main()

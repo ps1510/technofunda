@@ -26,13 +26,13 @@ else:
 
 STOCK_CSV = os.path.join(INDEX_DATA_DIR, "kr_kospilist.csv")
 
-MAX_STOCKS        = 150
-PERIOD_DAYS       = 420
+MAX_STOCKS        = 1500
+PERIOD_DAYS       = 600
 ENABLE_PATTERNS   = True
-PATTERN_MAX       = 100
+PATTERN_MAX       = 200
 FETCH_FINANCIALS  = True
 ENABLE_SIGNALS    = True
-SIGNAL_MAX_STOCKS = 100
+SIGNAL_MAX_STOCKS = 1500
 PRIMARY_RS_PERIOD = 22
 
 sys.path.insert(0, SCRIPT_DIR)
@@ -75,18 +75,18 @@ KR_INDUSTRY_TO_SECTOR = {
     "Technology": "Technology", "Software": "Technology",
     "IT Services": "Technology", "Electronics": "Technology",
     "Semiconductors": "Technology",
-    "Healthcare": "Healthcare", "Pharmaceuticals": "Healthcare",
-    "Biotechnology": "Healthcare", "Medical Devices": "Healthcare",
+    "Healthcare": "Health Care", "Pharmaceuticals": "Health Care",
+    "Biotechnology": "Health Care", "Medical Devices": "Health Care",
     "Industrials": "Industrials", "Railways": "Industrials",
     "Aerospace": "Industrials", "Engineering": "Industrials",
     "Machinery": "Industrials", "Shipbuilding": "Industrials",
-    "ConsumerDisc": "ConsumerDisc", "Retail": "ConsumerDisc",
-    "Automotive": "ConsumerDisc", "Luxury": "ConsumerDisc",
+    "ConsumerDisc": "Consumer Discretionary", "Retail": "Consumer Discretionary",
+    "Automotive": "Consumer Discretionary", "Luxury": "Consumer Discretionary",
     "Consumer Staples": "Consumer Staples", "Food & Beverage": "Consumer Staples",
     "Utilities": "Utilities", "Power": "Utilities",
-    "CommServices": "CommServices", "Telecoms": "CommServices",
-    "Media": "CommServices",
-    "RealEstate": "RealEstate", "REITs": "RealEstate",
+    "CommServices": "Communication Services", "Telecoms": "Communication Services",
+    "Media": "Communication Services",
+    "RealEstate": "Real Estate", "REITs": "Real Estate",
 }
 
 KR_BREADTH_INDICES = {
@@ -133,8 +133,63 @@ def load_kr_universe():
     return df.reset_index(drop=True)
 
 
+# South Korea sector ETFs — no liquid Yahoo-accessible ETFs; synthetic composites via fill_missing_sector_prices
+KR_SECTORS = {
+    "Financials":             {"yahoo": None, "csv": None},
+    "Energy":                 {"yahoo": None, "csv": None},
+    "Materials":              {"yahoo": None, "csv": None},
+    "Technology":             {"yahoo": None, "csv": None},
+    "Health Care":            {"yahoo": None, "csv": None},
+    "Industrials":            {"yahoo": None, "csv": None},
+    "Consumer Discretionary": {"yahoo": None, "csv": None},
+    "Consumer Staples":       {"yahoo": None, "csv": None},
+    "Utilities":              {"yahoo": None, "csv": None},
+    "Communication Services": {"yahoo": None, "csv": None},
+    "Real Estate":            {"yahoo": None, "csv": None},
+}
+
 def fetch_kr_sector_prices():
-    return {}
+    result = {}
+    end   = datetime.today() + timedelta(days=1)
+    start = end - timedelta(days=PERIOD_DAYS + 5)
+    for sec_name, cfg in KR_SECTORS.items():
+        ticker = cfg.get("yahoo")
+        if not ticker: continue
+        try:
+            raw = yf.download(ticker, start=start.strftime("%Y-%m-%d"),
+                              end=end.strftime("%Y-%m-%d"),
+                              auto_adjust=True, progress=False)
+            if raw.empty: continue
+            cl = raw["Close"]
+            if isinstance(cl, pd.DataFrame): cl = cl.squeeze()
+            s = _normalize(cl.dropna())
+            if len(s) >= 22: result[sec_name] = s
+        except Exception: pass
+    print(f"  ✅ South Korea Sector prices: {len(result)}/{len(KR_SECTORS)}")
+    return result
+
+def fill_missing_sector_prices(universe, price_data, sector_prices, sectors_cfg):
+    """
+    For every sector in sectors_cfg that is missing from sector_prices,
+    build a synthetic equal-weight composite from constituent stocks.
+    """
+    added = []
+    for sector in sectors_cfg:
+        if sector in sector_prices:
+            continue
+        syms = universe[universe["Sector"] == sector]["Yahoo"].tolist()
+        valid = [s for s in syms if s in price_data.columns
+                 and len(price_data[s].dropna()) >= 22]
+        if len(valid) < 2:
+            continue
+        composite = price_data[valid].dropna(how="all").mean(axis=1).dropna()
+        if len(composite) >= 22:
+            sector_prices[sector] = _normalize(composite)
+            added.append(sector)
+    if added:
+        print(f"  ✅ Synthetic sector prices built for: {added}")
+    return sector_prices
+
 
 
 def build_kr_snapshot():
@@ -214,6 +269,9 @@ def main():
     print(f"Fetching {len(stock_syms)} stock closes ...")
     price_data = fetch_close_batch(stock_syms, PERIOD_DAYS)
     print(f"  Stocks: {len(price_data.columns)} loaded")
+    # Fill any sector missing an ETF with equal-weight stock composite
+    print("📡 Filling missing sector prices from stock composites …")
+    sector_prices = fill_missing_sector_prices(universe, price_data, sector_prices, KR_SECTORS)
 
     ohlcv_dict = {}
     max_ohlcv  = max(PATTERN_MAX, SIGNAL_MAX_STOCKS if ENABLE_SIGNALS else 0)

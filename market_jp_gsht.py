@@ -26,13 +26,13 @@ else:
 
 STOCK_CSV = os.path.join(INDEX_DATA_DIR, "jp_jpx400list.csv")
 
-MAX_STOCKS        = 1200
-PERIOD_DAYS       = 1420
+MAX_STOCKS        = 1500
+PERIOD_DAYS       = 600
 ENABLE_PATTERNS   = True
-PATTERN_MAX       = 150
+PATTERN_MAX       = 200
 FETCH_FINANCIALS  = True
 ENABLE_SIGNALS    = True
-SIGNAL_MAX_STOCKS = 1150
+SIGNAL_MAX_STOCKS = 1500
 PRIMARY_RS_PERIOD = 22
 
 
@@ -67,43 +67,166 @@ except Exception:
 JP_INDEX          = "EWJ"      # Country benchmark ETF (USD-denominated where applicable)
 JP_INDEX_FALLBACK = "^N225"     # Local index fallback
 
-# Japan sector ETFs
+# Japan sector ETFs — no reliable Japanese sector ETFs available on Yahoo Finance.
+# All yahoo=None; market_engine falls back to stock-average RS for each sector.
+# Keys MUST match values produced by JP_INDUSTRY_TO_SECTOR below.
+# Using full GICS sector names for consistency.
 JP_SECTORS = {
-    "Financials":       {"yahoo": None, "csv": None},
-    "Energy":           {"yahoo": None, "csv": None},
-    "Materials":        {"yahoo": None, "csv": None},
-    "Technology":       {"yahoo": None, "csv": None},
-    "Healthcare":       {"yahoo": None, "csv": None},
-    "Industrials":      {"yahoo": None, "csv": None},
-    "ConsumerDisc":     {"yahoo": None, "csv": None},
-    "Consumer Staples": {"yahoo": None, "csv": None},
-    "Utilities":        {"yahoo": None, "csv": None},
-    "CommServices":     {"yahoo": None, "csv": None},
-    "RealEstate":       {"yahoo": None, "csv": None},
+    "Financials":             {"yahoo": None, "csv": None},
+    "Energy":                 {"yahoo": None, "csv": None},
+    "Materials":              {"yahoo": None, "csv": None},
+    "Technology":             {"yahoo": None, "csv": None},
+    "Health Care":            {"yahoo": None, "csv": None},
+    "Industrials":            {"yahoo": None, "csv": None},
+    "Consumer Discretionary": {"yahoo": None, "csv": None},
+    "Consumer Staples":       {"yahoo": None, "csv": None},
+    "Utilities":              {"yahoo": None, "csv": None},
+    "Communication Services": {"yahoo": None, "csv": None},
+    "Real Estate":            {"yahoo": None, "csv": None},
 }
 
+# Maps every Industry label that may appear in jp_tselist.csv → JP_SECTORS key.
+# Covers: TSE 33-industry classification (English), GICS exact names,
+#         Yahoo Finance Japan names, and common alternative spellings.
 JP_INDUSTRY_TO_SECTOR = {
-    "Financials": "Financials", "Banking": "Financials",
-    "Insurance": "Financials", "Asset Management": "Financials",
-    "Energy": "Energy", "Oil & Gas": "Energy",
-    "Materials": "Materials", "Mining": "Materials",
-    "Gold": "Materials", "Metals": "Materials", "Chemicals": "Materials",
-    "Steel": "Materials",
-    "Technology": "Technology", "Software": "Technology",
-    "IT Services": "Technology", "Electronics": "Technology",
-    "Semiconductors": "Technology",
-    "Healthcare": "Healthcare", "Pharmaceuticals": "Healthcare",
-    "Biotechnology": "Healthcare", "Medical Devices": "Healthcare",
-    "Industrials": "Industrials", "Railways": "Industrials",
-    "Aerospace": "Industrials", "Engineering": "Industrials",
-    "Machinery": "Industrials",
-    "ConsumerDisc": "ConsumerDisc", "Retail": "ConsumerDisc",
-    "Automotive": "ConsumerDisc",
-    "Consumer Staples": "Consumer Staples", "Food & Beverage": "Consumer Staples",
-    "Utilities": "Utilities", "Power": "Utilities",
-    "CommServices": "CommServices", "Telecoms": "CommServices",
-    "Media": "CommServices",
-    "RealEstate": "RealEstate", "REITs": "RealEstate",
+    # ── Financials ────────────────────────────────────────────────────────────
+    "Financials":                      "Financials",
+    "Financial Services":              "Financials",
+    "Banking":                         "Financials",
+    "Banks":                           "Financials",
+    "Bank":                            "Financials",
+    "Insurance":                       "Financials",
+    "Life Insurance":                  "Financials",
+    "Non-life Insurance":              "Financials",
+    "Securities":                      "Financials",
+    "Securities & Commodity Futures":  "Financials",
+    "Other Financing Business":        "Financials",
+    "Asset Management":                "Financials",
+    "Capital Markets":                 "Financials",
+    "Diversified Financials":          "Financials",
+    # ── Energy ───────────────────────────────────────────────────────────────
+    "Energy":                          "Energy",
+    "Oil & Gas":                       "Energy",
+    "Oil & Coal Products":             "Energy",
+    "Oil Gas & Consumable Fuels":      "Energy",
+    "Petroleum":                       "Energy",
+    "Mining":                          "Energy",
+    # ── Materials ────────────────────────────────────────────────────────────
+    "Materials":                       "Materials",
+    "Basic Materials":                 "Materials",
+    "Chemicals":                       "Materials",
+    "Specialty Chemicals":             "Materials",
+    "Iron & Steel":                    "Materials",
+    "Steel":                           "Materials",
+    "Nonferrous Metals":               "Materials",
+    "Metals":                          "Materials",
+    "Metals & Mining":                 "Materials",
+    "Metal Products":                  "Materials",
+    "Glass & Ceramics":                "Materials",
+    "Glass & Ceramics Products":       "Materials",
+    "Pulp & Paper":                    "Materials",
+    "Textiles & Apparels":             "Materials",
+    "Rubber Products":                 "Materials",
+    "Other Products":                  "Materials",
+    # ── Technology ───────────────────────────────────────────────────────────
+    "Technology":                      "Technology",
+    "Information Technology":          "Technology",
+    "Electric Appliances":             "Technology",
+    "Electronics":                     "Technology",
+    "Semiconductors":                  "Technology",
+    "Electronic Equipment":            "Technology",
+    "Semiconductor Equipment":         "Technology",
+    "Software":                        "Technology",
+    "IT Services":                     "Technology",
+    "Information & Communication":     "Technology",
+    "Precision Instruments":           "Technology",
+    "Precision Equipment":             "Technology",
+    "Technology Hardware":             "Technology",
+    "Internet Software & Services":    "Technology",
+    "Application Software":            "Technology",
+    # ── Health Care ──────────────────────────────────────────────────────────
+    "Health Care":                     "Health Care",
+    "Healthcare":                      "Health Care",
+    "Pharmaceutical":                  "Health Care",
+    "Pharmaceuticals":                 "Health Care",
+    "Drugs":                           "Health Care",
+    "Biotechnology":                   "Health Care",
+    "Medical Devices":                 "Health Care",
+    "Medical Instruments":             "Health Care",
+    "Health Care Equipment":           "Health Care",
+    # ── Industrials ──────────────────────────────────────────────────────────
+    "Industrials":                     "Industrials",
+    "Machinery":                       "Industrials",
+    "Industrial Machinery":            "Industrials",
+    "Transportation Equipment":        "Industrials",
+    "Aircraft":                        "Industrials",
+    "Shipbuilding":                    "Industrials",
+    "Construction":                    "Industrials",
+    "Engineering":                     "Industrials",
+    "Aerospace & Defense":             "Industrials",
+    "Railway & Bus":                   "Industrials",
+    "Railways":                        "Industrials",
+    "Land Transportation":             "Industrials",
+    "Marine Transportation":           "Industrials",
+    "Air Transportation":              "Industrials",
+    "Warehousing & Harbor":            "Industrials",
+    "Warehousing":                     "Industrials",
+    "Services":                        "Industrials",
+    "Business Services":               "Industrials",
+    "Commercial Services":             "Industrials",
+    # ── Consumer Discretionary ───────────────────────────────────────────────
+    "Consumer Discretionary":          "Consumer Discretionary",
+    "ConsumerDisc":                    "Consumer Discretionary",
+    "Consumer Cyclical":               "Consumer Discretionary",
+    "Retail Trade":                    "Consumer Discretionary",
+    "Retail":                          "Consumer Discretionary",
+    "Commerce":                        "Consumer Discretionary",
+    "Wholesale Trade":                 "Consumer Discretionary",
+    "Wholesale":                       "Consumer Discretionary",
+    "Automotive":                      "Consumer Discretionary",
+    "Automobiles":                     "Consumer Discretionary",
+    "Auto Parts":                      "Consumer Discretionary",
+    "Motor Vehicles":                  "Consumer Discretionary",
+    "Leisure":                         "Consumer Discretionary",
+    "Hotels & Restaurants":            "Consumer Discretionary",
+    "Specialty Retail":                "Consumer Discretionary",
+    "Apparel":                         "Consumer Discretionary",
+    # ── Consumer Staples ─────────────────────────────────────────────────────
+    "Consumer Staples":                "Consumer Staples",
+    "Consumer Defensive":              "Consumer Staples",
+    "Foods":                           "Consumer Staples",
+    "Food Products":                   "Consumer Staples",
+    "Food & Beverage":                 "Consumer Staples",
+    "Beverages":                       "Consumer Staples",
+    "Tobacco":                         "Consumer Staples",
+    "Household Products":              "Consumer Staples",
+    "Personal Products":               "Consumer Staples",
+    "Fishery, Agriculture & Forestry": "Consumer Staples",
+    "Agriculture":                     "Consumer Staples",
+    "Fishery":                         "Consumer Staples",
+    # ── Utilities ────────────────────────────────────────────────────────────
+    "Utilities":                       "Utilities",
+    "Electric Power & Gas":            "Utilities",
+    "Electric Utilities":              "Utilities",
+    "Gas Utilities":                   "Utilities",
+    "Power":                           "Utilities",
+    "Renewable Energy":                "Utilities",
+    # ── Communication Services ───────────────────────────────────────────────
+    "Communication Services":          "Communication Services",
+    "CommServices":                    "Communication Services",
+    "Telecommunications":              "Communication Services",
+    "Telecoms":                        "Communication Services",
+    "Wireless Telecom Services":       "Communication Services",
+    "Media":                           "Communication Services",
+    "Broadcasting":                    "Communication Services",
+    "Publishing":                      "Communication Services",
+    "Advertising":                     "Communication Services",
+    # ── Real Estate ──────────────────────────────────────────────────────────
+    "Real Estate":                     "Real Estate",
+    "RealEstate":                      "Real Estate",
+    "REITs":                           "Real Estate",
+    "Property":                        "Real Estate",
+    "Real Estate Management":          "Real Estate",
 }
 
 JP_BREADTH_INDICES = {
@@ -133,6 +256,12 @@ JP_SNAPSHOT_TICKERS = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 def load_jp_universe():
+    """
+    Load Japan universe from jp_tselist.csv.
+    Industry column mapped → JP_SECTORS key via JP_INDUSTRY_TO_SECTOR.
+    Covers TSE 33-industry classification + GICS names + Yahoo Finance names.
+    Unmapped industries fall to 'Other' — check the ⚠️ log lines and add them.
+    """
     if not os.path.exists(STOCK_CSV):
         print(f"  ❌ Universe CSV not found: {STOCK_CSV}"); return pd.DataFrame()
     df = pd.read_csv(STOCK_CSV, dtype=str)
@@ -140,41 +269,81 @@ def load_jp_universe():
     if "Symbol" not in df.columns:
         print("  ❌ 'Symbol' column missing"); return pd.DataFrame()
     if "Series" in df.columns:
-        df = df[df["Series"].astype(str).str.strip().str.upper().isin(["EQ",""])]
+        df = df[df["Series"].astype(str).str.strip().str.upper().isin(["EQ", ""])]
     df = df.head(MAX_STOCKS).copy()
-    df["Symbol"]   = df["Symbol"].astype(str).str.strip()
-    #df["Yahoo"]    = df["Symbol"] + ".T"     # Yahoo Finance ticker suffix
+    df["Symbol"]  = df["Symbol"].astype(str).str.strip()
+    df["Company"] = df.get("Company Name", df["Symbol"]).fillna(df["Symbol"])
     from ticker_fixer import ensure_yahoo_suffix
-    df["Yahoo"] = df["Symbol"].apply(lambda s: ensure_yahoo_suffix(s, "JP"))
-    df["Company"]  = df.get("Company Name", df["Symbol"])
-    df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
+    df["Yahoo"]   = df["Symbol"].apply(lambda s: ensure_yahoo_suffix(s, "JP"))
+    df["Industry"] = df["Industry"].astype(str).str.strip() if "Industry" in df.columns else ""
     df["Sector"]   = df["Industry"].map(JP_INDUSTRY_TO_SECTOR).fillna("Other")
-    print(f"  ✅ Japan Universe: {len(df)} stocks loaded")
-    return df.reset_index(drop=True)
+    df = df[df["Yahoo"].astype(str).str.len() >= 2].copy().reset_index(drop=True)
+
+    sectors = df["Sector"].value_counts()
+    unmapped = df[df["Sector"] == "Other"]["Industry"].value_counts()
+    print(f"  ✅ JP Universe: {len(df)} stocks | {len(sectors)} sectors")
+    for sec, cnt in sectors.items():
+        print(f"      {cnt:3d}  {sec}")
+    if not unmapped.empty:
+        print(f"  ⚠️  Unmapped industries ({len(unmapped)} types) → add to JP_INDUSTRY_TO_SECTOR:")
+        for ind, cnt in unmapped.items():
+            print(f"      {cnt:3d}  {ind}")
+    return df
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SECTOR PRICE FETCHER
 # ─────────────────────────────────────────────────────────────────────────────
 
 def fetch_jp_sector_prices():
+    """Attempt ETF downloads (all None for JP — returns empty dict immediately)."""
     result = {}
     end   = datetime.today() + timedelta(days=1)
     start = end - timedelta(days=PERIOD_DAYS + 5)
     for sec_name, cfg in JP_SECTORS.items():
         ticker = cfg.get("yahoo")
-        if not ticker: continue
+        if not ticker:
+            continue
         try:
             raw = yf.download(ticker, start=start.strftime("%Y-%m-%d"),
                               end=end.strftime("%Y-%m-%d"),
                               auto_adjust=True, progress=False)
-            if raw.empty: continue
+            if raw.empty:
+                continue
             cl = raw["Close"]
-            if isinstance(cl, pd.DataFrame): cl = cl.squeeze()
+            if isinstance(cl, pd.DataFrame):
+                cl = cl.squeeze()
             s = _normalize(cl.dropna())
-            if len(s) >= 22: result[sec_name] = s
-        except Exception: pass
-    print(f"  ✅ Japan Sector prices: {len(result)}/{len(JP_SECTORS)}")
+            if len(s) >= 22:
+                result[sec_name] = s
+        except Exception:
+            pass
+    print(f"  ✅ Japan Sector ETFs downloaded: {len(result)}/{len(JP_SECTORS)}")
     return result
+
+
+def fill_missing_sector_prices(universe, price_data, sector_prices, sectors_cfg):
+    """
+    For every sector in sectors_cfg that is missing from sector_prices,
+    build a synthetic equal-weight composite from constituent stocks.
+    Called after price_data is available so all sectors always appear in
+    Sector Strength and Sector Performance tables.
+    """
+    added = []
+    for sector in sectors_cfg:
+        if sector in sector_prices:
+            continue
+        syms = universe[universe["Sector"] == sector]["Yahoo"].tolist()
+        valid = [s for s in syms if s in price_data.columns
+                 and len(price_data[s].dropna()) >= 22]
+        if len(valid) < 2:
+            continue
+        composite = price_data[valid].dropna(how="all").mean(axis=1).dropna()
+        if len(composite) >= 22:
+            sector_prices[sector] = _normalize(composite)
+            added.append(sector)
+    if added:
+        print(f"  ✅ Synthetic sector prices built for: {added}")
+    return sector_prices
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SNAPSHOT
@@ -251,6 +420,10 @@ def main():
     print(f"\n📡 Fetching {len(stock_syms)} stock closes …")
     price_data = fetch_close_batch(stock_syms, PERIOD_DAYS)
     print(f"  ✅ Stocks: {len(price_data.columns)} loaded")
+
+    # All JP sectors use synthetic composites (no ETFs available)
+    print("📡 Building sector prices from stock composites …")
+    sector_prices = fill_missing_sector_prices(universe, price_data, sector_prices, JP_SECTORS)
 
     ohlcv_dict={}
     max_ohlcv=max(PATTERN_MAX, SIGNAL_MAX_STOCKS if ENABLE_SIGNALS else 0)

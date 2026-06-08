@@ -111,6 +111,87 @@ def _remap_signal(val, mapping):
 def _norm_key(col):
     return re.sub(r"[\s_>]", "", str(col).lower().strip())
 
+
+# ── Column tooltips: hover text for abbreviated headers ───────────────────────
+_COL_TIPS = {
+    "symbol":        "Stock ticker symbol. Click to open in TradingView.",
+    "company":       "Company name.",
+    "sector":        "GICS sector classification.",
+    "rank":          "Overall rank within this list (best = 1).",
+    "sec_rank":      "Rank of this stock's sector vs all sectors in this market.",
+    "chg_1d%":       "Price change % today vs previous close.",
+    "chg_5d%":       "Price change % over the last 5 trading days.",
+    "rs_22d_idx%":   "Relative Strength vs the market index over 22 trading days (~1 month). Positive = stock is outperforming the market.",
+    "rs_55d_idx%":   "Relative Strength vs the market index over 55 trading days (~3 months). Positive = sustained outperformance.",
+    "rs_22d_sec%":   "Relative Strength vs the stock's own sector over 22 days. Shows whether the stock leads within its sector.",
+    "rs_55d_sec%":   "Relative Strength vs the stock's own sector over 55 days.",
+    "rs_120d_idx%":  "Relative Strength vs the market index over 120 trading days (~6 months).",
+    "rs_252d_idx%":  "Relative Strength vs the market index over 252 trading days (~1 year).",
+    "rsl_14":        "RS Line momentum over 14 periods — measures how fast relative strength is changing. Positive = accelerating outperformance.",
+    "w_rs21%":       "Weekly Relative Strength over 21 weeks. Captures longer-term momentum.",
+    "signal":        "Current signal based on RS conditions: Bullish, Neutral, or Bearish.",
+    "signal_label":  "Primary signal label: Prime (highest conviction) → Confirmed → RS Leader → Watch → Neutral → Avoid.",
+    "sec_signal":    "Signal for the stock's entire sector. Bullish sector + bullish stock = higher conviction.",
+    "sec_gated":     "✓ = stock's sector is also in a Buy signal. Adds confidence to the individual stock signal.",
+    "sec_rs22d%":    "Relative Strength of the stock's sector vs the market index over 22 days.",
+    "enhanced":      "Enhanced signal combining RS, SMA alignment, and RSI confirmation. Very Strong = all conditions met.",
+    "mst_signal":    "Monthly Supertrend signal direction: Buy or Sell. Captures the primary monthly trend.",
+    "lst_signal":    "Long-term Supertrend signal (weekly): Buy or Sell.",
+    "rs30_signal":   "RS30 weekly signal: positive RS vs index over 30 weeks.",
+    "supertrend":    "Daily Supertrend direction: Buy = price above Supertrend line. Key entry/exit filter.",
+    "trend":         "Overall trend assessment combining SMA positions and Supertrend: Strong Bullish, Bullish, Neutral, Bearish, Strong Bearish.",
+    "sma_score":     "Count of key moving averages (20/50/100/200-day) the stock is currently trading above. Max = 4. Higher = stronger trend.",
+    "total_score":   "Combined score across RS, trend, and signal conditions. Higher = stronger overall setup.",
+    "fin_score":     "Fundamental quality score based on revenue growth, profit margins, and return on equity. Higher = better fundamentals.",
+    "sl_buy%":       "Suggested entry level expressed as % above the last close, based on the strategy signal price.",
+    "sl_buy_price":  "Absolute suggested entry price based on the strategy signal.",
+    "sl_grade":      "Fundamental quality grade (A to F). A = strong fundamentals. F = weak or missing data.",
+    "sales_yoy%":    "Revenue (Sales) growth year-over-year % — latest annual report vs prior year.",
+    "pat_yoy%":      "Profit After Tax growth year-over-year % — measures earnings growth.",
+    "sales_qoq%":    "Revenue growth quarter-over-quarter % — most recent quarter vs prior quarter.",
+    "pat_qoq%":      "Profit After Tax growth quarter-over-quarter %.",
+    "roe%":          "Return on Equity % — how efficiently the company generates profit from shareholders' equity.",
+    "margin%":       "Net profit margin % — profit as a share of total revenue.",
+    "price":         "Last closing price in local currency.",
+    "index_price":   "Index closing price.",
+    "stocks":        "Total number of stocks in this group (sector/index).",
+    "valid":         "Stocks with enough data to generate valid signals.",
+    "adv/dec":       "Advancing stocks / Declining stocks today.",
+    "rs22%":         "% of stocks in this group with positive 22-day RS vs the index. ≥60 = bullish breadth.",
+    "rs55%":         "% of stocks in this group with positive 55-day RS vs the index. ≥60 = sustained bullish breadth.",
+    "rsi50%":        "% of stocks with RSI above 50. ≥60 = majority in bullish momentum.",
+    "abvsma20%":     "% of stocks trading above their 20-day moving average. Short-term breadth indicator.",
+    "abvsma50%":     "% of stocks trading above their 50-day moving average. Medium-term breadth.",
+    "abvsma100%":    "% of stocks trading above their 100-day moving average.",
+    "abvsma200%":    "% of stocks trading above their 200-day moving average. Long-term market health indicator.",
+    "1m_score":      "Market breadth score over 1 month. ≥60 = Bullish · 40-60 = Neutral · <40 = Bearish.",
+    "3m_score":      "Market breadth score over 3 months.",
+    "6m_score":      "Market breadth score over 6 months.",
+    "1m_zone":       "Zone classification for 1-month breadth: Bullish / Neutral / Bearish.",
+    "3m_zone":       "Zone classification for 3-month breadth.",
+    "6m_zone":       "Zone classification for 6-month breadth.",
+    "1m%":           "Price return over the last 1 month.",
+    "3m%":           "Price return over the last 3 months.",
+    "6m%":           "Price return over the last 6 months.",
+    "12m%":          "Price return over the last 12 months.",
+    "ytd%":          "Year-to-date price return.",
+    "rs_1m%":        "Relative return vs index over 1 month (stock return minus index return).",
+    "rs_3m%":        "Relative return vs index over 3 months.",
+    "rs_6m%":        "Relative return vs index over 6 months.",
+}
+
+def _col_tip(col):
+    """Return a title= attribute string for the given column, or empty string."""
+    key = re.sub(r"[\s_]", "", str(col).lower().strip()).replace("%","_pct")
+    # Try exact norm key first, then cleaned version
+    raw = str(col).lower().strip()
+    tip = _COL_TIPS.get(raw) or _COL_TIPS.get(re.sub(r"[\s]","_",raw))
+    if not tip:
+        # normalised lookup: drop non-alpha except % and /
+        nk = re.sub(r"[^a-z0-9%/]","_", raw).strip("_")
+        tip = _COL_TIPS.get(nk)
+    return f' title="{tip}"' if tip else ""
+
 # 0-100 breadth / score columns → ≥60 green · 40-60 orange · <40 red.
 _BREADTH_KEYS = {_norm_key(c) for c in (
     "rs22%", "rs55%", "rsi50%", "rsi>50%",
@@ -217,6 +298,13 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
         if "Bullish" in v or "BULLISH" in v: return "pos-strong"
         if "Bearish" in v or "BEARISH" in v: return "neg-strong"
         return ""
+    # Zone text columns in breadth/rotation tables (e.g. 1m_zone, 3m_zone)
+    if col.endswith("_zone") or col in ("zone",):
+        v = str(val)
+        if "Bullish" in v: return "txt-bull"
+        if "Bearish" in v: return "txt-bear"
+        if "Neutral" in v: return "txt-neut"
+        return ""
     if col == "sec_gated":
         return "pos-strong" if str(val) == "✓" else "dim"
     if col == "sl_grade":
@@ -238,9 +326,7 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
             if f < 0:  return "neg-strong"
         except: pass
 
-    # ── Percent columns — suppressed entirely in no-bg tabs ───────────────────
-    if no_bg:
-        return ""
+    # ── Percent columns — text-only colour (no background) on all tabs ───────
     pct_cols = {
         "chg_1d%", "chg_5d%", "rs_22d%", "rs_55d%", "rs_120d%", "rs_252d%",
         "rs_22d_idx%", "rs_55d_idx%", "rs_120d_idx%", "rs_252d_idx%",
@@ -251,10 +337,13 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
     if col in pct_cols or col.endswith("%"):
         try:
             f = float(val)
-            if f > 5:  return "pos-strong"
-            if f > 0:  return "pos"
-            if f < -5: return "neg-strong"
-            if f < 0:  return "neg"
+            # 6-level gradient: strong / mid / dim for both positive and negative
+            if f > 10:  return "pos-strong"   # > +10 %  — dark green, bold
+            if f > 2:   return "pos"           # +2 – +10 % — medium green
+            if f > 0:   return "pos-dim"       # 0 – +2 %  — light green
+            if f < -10: return "neg-strong"    # < −10 %  — dark red, bold
+            if f < -2:  return "neg"           # −2 – −10 % — medium red
+            if f < 0:   return "neg-dim"       # 0 – −2 %  — light red
         except: pass
     return ""
 
@@ -428,8 +517,8 @@ def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no
 
     cols = [c for c in df.columns if c.lower().strip() not in _SKIP_COLS]
     ths = "".join(
-        f'<th style="text-align:{"left" if c.lower() in _LEFT_COLS else "center"}" '
-        f'onclick="sortTable(this)">{c}</th>'
+        f'<th style="text-align:{"left" if c.lower() in _LEFT_COLS else "center"}"'
+        f'{_col_tip(c)} onclick="sortTable(this)">{c}</th>'
         for c in cols
     )
     rows_html = ""
@@ -437,7 +526,10 @@ def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no
         tds = ""
         for c in cols:
             val = row[c]; cls = _cell_class(c, val, pct_mode, no_bg=no_bg)
-            display = _tv_link(val) if c.lower().strip() == "symbol" else _fmt(val)
+            cl = c.lower().strip()
+            if cl == "symbol":      display = _tv_link(val)
+            elif cl == "etf":       display = _tv_link(val, market="USA")  # Global tab ETFs are US-listed
+            else:                   display = _fmt(val)
             align = "left" if c.lower() in _LEFT_COLS else "center"
             ca = f' class="{cls}"' if cls else ""
             tds += f'<td{ca} style="text-align:{align}">{display}</td>'
@@ -516,17 +608,47 @@ def _build_snap_cards(snapshot_df):
     if snapshot_df is None or snapshot_df.empty: return ""
     cards = ""
     for _, row in snapshot_df.iterrows():
-        name=_fmt(row.get("Name","")); price=_fmt(row.get("Price",""))
+        name=_fmt(row.get("Name","")); price=(_fmt(row.get("Price","")) or "—")
         chg1=row.get("Chg_1D%",""); trend=_fmt(row.get("Trend",""))
         if not name or "──" in name: continue
-        try: cf=float(chg1); cls="pos" if cf>0 else ("neg" if cf<0 else ""); cs=f"{cf:+.2f}%"
-        except: cls=""; cs=_fmt(chg1)
+        try:
+            cf=float(chg1)
+            if cf != cf or cf in (float('inf'), float('-inf')): raise ValueError("nan/inf")
+            cls="pos" if cf>0 else ("neg" if cf<0 else ""); cs=f"{cf:+.2f}%"
+        except: cls=""; cs=(_fmt(chg1) or "N/A")
         tc="pos-strong" if "Bullish" in trend else ("neg-strong" if "Bearish" in trend else "dim")
         cards += (f'<div class="snap-card"><div class="snap-name">{name}</div>'
                   f'<div class="snap-price">{price}</div>'
                   f'<div class="snap-chg {cls}">{cs}</div>'
                   f'<div class="snap-trend {tc}">{trend}</div></div>')
     return f'<div class="snap-grid">{cards}</div>'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  BEGINNER EXPLANATION PANELS
+# ─────────────────────────────────────────────────────────────────────────────
+
+_OPP_PANEL = '''<details class="beginner-panel">
+  <summary>What am I looking at? — Opportunities explained</summary>
+  <ul>
+    <li><strong>🌟 Prime</strong> — Highest conviction setup. Stock is outperforming the market and sector on multiple timeframes with strong fundamentals. Best setups to research first.</li>
+    <li><strong>✅ Confirmed / Long Momentum</strong> — Most conditions are met. Strong relative strength with technical confirmation. Worth adding to your watchlist.</li>
+    <li><strong>📈 RS Leader / RS Buy</strong> — Positive relative strength vs market and sector. Early-stage momentum — watch for breakout confirmation.</li>
+    <li><strong>Green = outperforming</strong> the market index. <strong>Red = underperforming</strong>. Gray = no clear direction.</li>
+    <li>Hover over any column header for a full description. <a href="#" onclick="showTab(\'guide\');return false;">See the full Signal Guide →</a></li>
+  </ul>
+</details>'''
+
+_STOCK_PANEL = '''<details class="beginner-panel">
+  <summary>What am I looking at? — All Stocks table explained</summary>
+  <ul>
+    <li><strong>Signal_Label</strong> — Each stock is classified from 🌟 Prime (strongest) to 🔴 Avoid (weakest vs market). Focus on Prime and Confirmed first.</li>
+    <li><strong>RS_22d_Idx% / RS_55d_Idx%</strong> — How much the stock has outperformed (+) or underperformed (−) the market index over 22 and 55 trading days.</li>
+    <li><strong>SMA_Score</strong> — Count of moving averages (20/50/100/200-day) the stock is trading above. Score 4 = strongest uptrend.</li>
+    <li><strong>Trend</strong> — Overall trend assessment: Strong Bullish → Bullish → Neutral → Bearish → Strong Bearish.</li>
+    <li>Hover over any column header for a full description. Use the search box to filter by sector, symbol, or score range (e.g. &gt;60). <a href="#" onclick="showTab(\'guide\');return false;">Full Guide →</a></li>
+  </ul>
+</details>'''
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -715,7 +837,7 @@ def _build_sleeve_tables(sleeve_df, market="INDIA"):
         show_cols = [c for c in _SLEEVE_SHOW if c in df_sec.columns]
 
         ths = "".join(
-            f'<th style="text-align:{"left" if c.lower() in _LEFT_COLS else "center"}">{c}</th>'
+            f'<th style="text-align:{"left" if c.lower() in _LEFT_COLS else "center"}"{_col_tip(c)}>{c}</th>'
             for c in show_cols
         ) + thead_extra
 
@@ -948,6 +1070,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .country-nav-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);
   font-size:12px;font-weight:600;padding:5px 8px;border-radius:8px;cursor:pointer;outline:none;}
 .country-nav-select:focus{border-color:var(--accent);}
+/* Feedback form */
+.feedback-section{background:var(--bg2);border-top:1px solid var(--border);
+  padding:24px clamp(12px,3vw,40px);}
+.feedback-title{font-size:16px;font-weight:700;color:var(--accent);margin:0 0 6px;}
+.feedback-sub{font-size:13px;color:var(--text2);margin:0 0 14px;}
+.feedback-form{display:flex;flex-direction:column;gap:10px;max-width:600px;}
+.fb-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fb-input,.fb-textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  border-radius:var(--radius);padding:9px 12px;font-size:13px;font-family:inherit;
+  outline:none;transition:border-color .15s;}
+.fb-input:focus,.fb-textarea:focus{border-color:var(--accent);}
+.fb-textarea{min-height:90px;resize:vertical;}
+.fb-btn{align-self:flex-start;background:var(--accent);color:#fff;border:none;
+  border-radius:var(--radius);padding:9px 20px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:opacity .15s;}
+.fb-btn:hover{opacity:.85;}
+/* Floating feedback button */
+.fb-float{position:fixed;bottom:24px;right:20px;z-index:200;background:var(--accent);
+  color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:600;
+  cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3);text-decoration:none;
+  display:flex;align-items:center;gap:5px;transition:opacity .15s;}
+.fb-float:hover{opacity:.85;}
+@media(max-width:600px){.fb-row{grid-template-columns:1fr;}}
 .disclaimer-footer{background:var(--bg2);border-top:2px solid var(--border);
   padding:20px clamp(12px,3vw,40px);margin-top:30px;font-size:11.5px;line-height:1.7;color:var(--text3);}
 .disclaimer-footer h4{font-size:12px;font-weight:700;color:var(--text2);margin:0 0 8px;
@@ -1019,6 +1164,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .sec-sig-badge{font-size:11px;font-weight:600;text-align:center;padding:2px 5px;border-radius:4px;}
 .sig-buy{background:#c8e6c9;color:#1b5e20;}.sig-sell{background:#ffcdd2;color:#b71c1c;}
 .sig-neutral{background:#fff9c4;color:#5d4037;}.sig-strongbuy{background:#006b3c;color:#fff;}
+/* Beginner explanation panel */
+.beginner-panel{background:var(--bg2);border:1px solid var(--border);border-left:4px solid var(--accent);
+  border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13px;}
+.beginner-panel summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none;
+  display:flex;align-items:center;gap:6px;}
+.beginner-panel summary::-webkit-details-marker{display:none;}
+.beginner-panel summary::before{content:"ℹ️";}
+.beginner-panel ul{margin:8px 0 0 16px;padding:0;line-height:1.7;color:var(--text2);}
+.beginner-panel ul li{margin-bottom:2px;}
+.beginner-panel a{color:var(--accent);text-decoration:none;}
+.beginner-panel a:hover{text-decoration:underline;}
 /* Text-only variants for no-bg tabs (Opportunities/Stocks/Global/Patterns) */
 .sig-buy-text{color:#16a34a;font-weight:600;}
 .sig-sell-text{color:#dc2626;font-weight:600;}
@@ -1077,10 +1233,16 @@ table.data-tbl{border-collapse:collapse;width:100%;font-size:12px;min-width:400p
 .pos-strong{color:var(--green);font-weight:600;}.pos{color:#81c784;}
 .pos-dim{color:#a5d6a7;}.neg-strong{color:var(--red);font-weight:600;}
 .neg{color:#e57373;}.neg-dim{color:#ef9a9a;}.dim{color:var(--text3);}
-/* Breadth / rotation 0-100 columns: ≥60 green · 40-60 orange · <40 red */
-.data-tbl td.bd-green{background:rgba(34,197,94,.16)!important;color:#22c55e!important;font-weight:700;}
-.data-tbl td.bd-amber{background:rgba(245,158,11,.16)!important;color:#f59e0b!important;font-weight:700;}
-.data-tbl td.bd-red{background:rgba(239,68,68,.16)!important;color:#ef4444!important;font-weight:700;}
+/* Breadth / rotation 0-100 columns: ≥60 green · 40-60 amber · <40 red */
+.data-tbl td.bd-green{background:rgba(34,197,94,.13)!important;color:#22c55e!important;font-weight:600;}
+.data-tbl td.bd-amber{background:rgba(245,158,11,.13)!important;color:#f59e0b!important;font-weight:600;}
+.data-tbl td.bd-red{background:rgba(239,68,68,.13)!important;color:#ef4444!important;font-weight:600;}
+/* Text signal cells: Bullish / Neutral / Bearish (Trend & Zone columns) */
+.data-tbl td.txt-bull{background:rgba(16,185,129,.13)!important;color:#10b981!important;font-weight:600;}
+.data-tbl td.txt-sbull{background:rgba(16,185,129,.22)!important;color:#10b981!important;font-weight:700;}
+.data-tbl td.txt-bear{background:rgba(239,68,68,.13)!important;color:#ef4444!important;font-weight:600;}
+.data-tbl td.txt-sbear{background:rgba(239,68,68,.22)!important;color:#ef4444!important;font-weight:700;}
+.data-tbl td.txt-neut{background:rgba(100,116,139,.10)!important;color:#8896b0!important;font-weight:500;}
 /* Sleeve calculator */
 .sleeve-global-ctrl{background:var(--bg2);border:1px solid var(--accent);
   border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;}
@@ -1959,15 +2121,18 @@ def build_html_report(
         _build_table(breadth_df, "tbl-breadth", searchable=False, pct_mode="breadth")
     )
 
+    def _sec_block(title, content):
+        """Only render a heading + content block when the table isn't empty."""
+        if not content or content.strip() == '<p class="empty">No data available.</p>':
+            return ""
+        return f'<h2 class="sec-title">{title}</h2>' + content
+
     sector_content = (
         '<h2 class="sec-title">Sector Strength</h2>' +
         _build_sector_bars(sector_str_df) +
-        '<h2 class="sec-title">Sector Performance</h2>' +
-        _build_table(sector_perf_df, "tbl-secperf", searchable=False) +
-        '<h2 class="sec-title">Sector Rotation</h2>' +
-        _build_table(sector_rot_df, "tbl-secrot", pct_mode="breadth") +
-        '<h2 class="sec-title">Industry Rotation</h2>' +
-        _build_table(industry_rot_df, "tbl-indrot", pct_mode="breadth")
+        _sec_block("Sector Performance",  _build_table(sector_perf_df, "tbl-secperf", searchable=False)) +
+        _sec_block("Sector Rotation",     _build_table(sector_rot_df,  "tbl-secrot",  pct_mode="breadth")) +
+        _sec_block("Industry Rotation",   _build_table(industry_rot_df,"tbl-indrot",  pct_mode="breadth"))
     )
 
     opp_cards  = _build_opportunity_cards(top_buy_df)
@@ -1975,12 +2140,13 @@ def build_html_report(
     sell_table = _build_table(top_sell_df, "tbl-sell",      no_bg=True)
     opp_content = (
         _toggle("vt-opp", "table") +
+        _OPP_PANEL +
         f'<div id="vt-opp-cards" style="display:none">{opp_cards}</div>' +
         f'<div id="vt-opp-table">{opp_table}</div>' +
         '<h2 class="sec-title">🔴 Sell Alerts</h2>' + sell_table
     )
 
-    stock_content = _build_table(stock_main, "tbl-stocks", max_rows=500, no_bg=True)
+    stock_content = _STOCK_PANEL + _build_table(stock_main, "tbl-stocks", max_rows=500, no_bg=True)
 
     # ── Patterns: enforce a hard recency cap (request #8). Keep only setups
     #    whose Date is within the last PATTERN_RECENT_DAYS days. Rows without a
@@ -2086,6 +2252,26 @@ def build_html_report(
         f'</select>'
     )
 
+    # ── Feedback form (Formspree) ────────────────────────────────────────────
+    # To activate: create a free form at https://formspree.io and replace
+    # FORMSPREE_ID below with your form ID (e.g. "xpwzjqkb").
+    FORMSPREE_ID = "xpqeqokw"
+    feedback_html = (
+        '<div class="feedback-section" id="feedback">'
+        '<h3 class="feedback-title">💬 Share Your Feedback</h3>'
+        '<p class="feedback-sub">Found a bug? Have a suggestion? Tell us what would make TechnoFunda more useful for you.</p>'
+        f'<form class="feedback-form" action="https://formspree.io/f/{FORMSPREE_ID}" method="POST">'
+        '<div class="fb-row">'
+        '<input type="text" name="name" placeholder="Your name (optional)" class="fb-input">'
+        '<input type="email" name="email" placeholder="Email (optional — for reply)" class="fb-input">'
+        '</div>'
+        f'<input type="hidden" name="market" value="{market}">'
+        '<textarea name="message" placeholder="Your feedback, idea, or question…" class="fb-textarea" required></textarea>'
+        '<button type="submit" class="fb-btn">Send Feedback →</button>'
+        '</form>'
+        '</div>'
+    )
+
     # ── Investment disclaimer footer (regulator-neutral, global) ────────────
     disclaimer_html = (
         '<div class="disclaimer-footer">'
@@ -2159,7 +2345,9 @@ def build_html_report(
 {stats_bar_embed}
 <nav class="tab-bar">{tab_btns}</nav>
 <main>{sections_html}</main>
+{feedback_html}
 {disclaimer_html}
+<a href="#feedback" class="fb-float" title="Share feedback or suggestions">💬 Feedback</a>
 <script>{JS}</script>
 </body>
 </html>"""

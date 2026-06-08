@@ -83,39 +83,39 @@ UK_INDEX_FALLBACK = "^FTSE" # fallback if ISF.L fails
 
 # iShares UK sector ETFs (Yahoo Finance tickers, .L suffix)
 UK_SECTORS = {
-    "Financials":      {"yahoo": "IUKF.L",  "csv": None},
-    "Healthcare":      {"yahoo": "IUHC.L",  "csv": None},
-    "Energy":          {"yahoo": "IUEL.L",  "csv": None},
-    "Materials":       {"yahoo": "IUMB.L",  "csv": None},
-    "Consumer Staples":{"yahoo": "IUCS.L",  "csv": None},
-    "ConsumerDisc":    {"yahoo": "IUCD.L",  "csv": None},
-    "Technology":      {"yahoo": "IUIT.L",  "csv": None},
-    "Industrials":     {"yahoo": "IUIN.L",  "csv": None},
-    "Utilities":       {"yahoo": "IUUT.L",  "csv": None},
-    "CommServices":    {"yahoo": "IUCT.L",  "csv": None},
-    "RealEstate":      {"yahoo": "IUPR.L",  "csv": None},
+    "Financials":             {"yahoo": "IUKF.L",  "csv": None},
+    "Health Care":            {"yahoo": "IUHC.L",  "csv": None},
+    "Energy":                 {"yahoo": "IUEL.L",  "csv": None},
+    "Materials":              {"yahoo": "IUMB.L",  "csv": None},
+    "Consumer Staples":       {"yahoo": "IUCS.L",  "csv": None},
+    "Consumer Discretionary": {"yahoo": "IUCD.L",  "csv": None},
+    "Technology":             {"yahoo": "IUIT.L",  "csv": None},
+    "Industrials":            {"yahoo": "IUIN.L",  "csv": None},
+    "Utilities":              {"yahoo": "IUUT.L",  "csv": None},
+    "Communication Services": {"yahoo": "IUCT.L",  "csv": None},
+    "Real Estate":            {"yahoo": "IUPR.L",  "csv": None},
 }
 
 UK_INDUSTRY_TO_SECTOR = {
     "Financials": "Financials", "Banking": "Financials",
     "Insurance": "Financials", "Asset Management": "Financials",
-    "Healthcare": "Healthcare", "Pharmaceuticals": "Healthcare",
-    "Biotechnology": "Healthcare", "Medical Devices": "Healthcare",
+    "Healthcare": "Health Care", "Pharmaceuticals": "Health Care",
+    "Biotechnology": "Health Care", "Medical Devices": "Health Care",
     "Energy": "Energy", "Oil & Gas": "Energy",
     "Materials": "Materials", "Mining": "Materials",
     "Metals": "Materials", "Chemicals": "Materials",
     "Consumer Staples": "Consumer Staples", "Food & Beverage": "Consumer Staples",
     "Tobacco": "Consumer Staples", "Household Products": "Consumer Staples",
-    "ConsumerDisc": "ConsumerDisc", "Retail": "ConsumerDisc",
-    "Leisure": "ConsumerDisc", "Travel": "ConsumerDisc",
+    "ConsumerDisc": "Consumer Discretionary", "Retail": "Consumer Discretionary",
+    "Leisure": "Consumer Discretionary", "Travel": "Consumer Discretionary",
     "Technology": "Technology", "Software": "Technology",
     "IT Services": "Technology",
     "Industrials": "Industrials", "Aerospace": "Industrials",
     "Defence": "Industrials", "Engineering": "Industrials",
     "Utilities": "Utilities", "Water": "Utilities", "Gas": "Utilities",
-    "CommServices": "CommServices", "Telecoms": "CommServices",
-    "Media": "CommServices",
-    "RealEstate": "RealEstate", "Property": "RealEstate", "REITs": "RealEstate",
+    "CommServices": "Communication Services", "Telecoms": "Communication Services",
+    "Media": "Communication Services",
+    "RealEstate": "Real Estate", "Property": "Real Estate", "REITs": "Real Estate",
 }
 
 UK_BREADTH_INDICES = {
@@ -217,6 +217,26 @@ def fetch_uk_sector_prices():
 
     print(f"  ✅ UK Sector prices: {len(result)}/{len(UK_SECTORS)} from ETFs")
     return result
+
+
+def fill_missing_sector_prices(universe, price_data, sector_prices, sectors_cfg):
+    """Build synthetic equal-weight composites for any sector missing an ETF price series."""
+    added = []
+    for sector in sectors_cfg:
+        if sector in sector_prices:
+            continue
+        syms = universe[universe["Sector"] == sector]["Yahoo"].tolist()
+        valid = [s for s in syms if s in price_data.columns
+                 and len(price_data[s].dropna()) >= 22]
+        if len(valid) < 2:
+            continue
+        composite = price_data[valid].dropna(how="all").mean(axis=1).dropna()
+        if len(composite) >= 22:
+            sector_prices[sector] = _normalize(composite)
+            added.append(sector)
+    if added:
+        print(f"  ✅ Synthetic sector prices built for: {added}")
+    return sector_prices
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -325,6 +345,10 @@ def main():
     print(f"\n📡 Fetching {len(stock_syms)} stock closes …")
     price_data = fetch_close_batch(stock_syms, PERIOD_DAYS)
     print(f"  ✅ Stocks: {len(price_data.columns)} loaded")
+
+    # Fill any sector missing an ETF with equal-weight stock composite
+    print("📡 Filling missing sector prices from stock composites …")
+    sector_prices = fill_missing_sector_prices(universe, price_data, sector_prices, UK_SECTORS)
 
     # ── OHLCV ──────────────────────────────────────────────────────────────────
     ohlcv_dict = {}
