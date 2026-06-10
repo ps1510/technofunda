@@ -1453,14 +1453,14 @@ function setTheme(t){
   const sel=document.getElementById('theme-select'); if(sel)sel.value=t;
 }
 function setFont(delta){
-  let z=parseFloat(localStorage.getItem('fontZoom')||'1');
+  let z=parseFloat(localStorage.getItem('fontZoom')||'0.9');
   z=Math.min(2.0,Math.max(0.6,z+delta*0.1));
   document.documentElement.style.zoom=z;
   try{localStorage.setItem('fontZoom',String(z));}catch(e){}
 }
 function _initThemeFont(){
   setTheme(localStorage.getItem('theme')||'light');
-  document.documentElement.style.zoom=parseFloat(localStorage.getItem('fontZoom')||'1');
+  document.documentElement.style.zoom=parseFloat(localStorage.getItem('fontZoom')||'0.9');
 }
 
 /* ── TABLE FILTER — global box + per-column scanner inputs (#8) ───────────
@@ -1502,8 +1502,16 @@ function matchFilter(text, qRaw){
   return String(text).toLowerCase().includes(q.toLowerCase());
 }
 const _extraFilters={};
-function filterBySector(val,tableId){_extraFilters[tableId]=_extraFilters[tableId]||{};_extraFilters[tableId].sector=val.toLowerCase();applyFilters(tableId);}
-function filterBySignal(val,tableId){_extraFilters[tableId]=_extraFilters[tableId]||{};_extraFilters[tableId].signal=val.toLowerCase();applyFilters(tableId);}
+// Generic setter: colKey = exact header text (lowercase), mode = 'contains'|'exact'|'gte'|'lte'|'range'
+function setDropFilter(tableId,colKey,val,mode){
+  _extraFilters[tableId]=_extraFilters[tableId]||{};
+  if(!val){delete _extraFilters[tableId][colKey];}
+  else{_extraFilters[tableId][colKey]={val,mode};}
+  applyFilters(tableId);
+}
+// Legacy aliases kept for backward compat
+function filterBySector(val,tableId){setDropFilter(tableId,'sector',val.toLowerCase(),'contains');}
+function filterBySignal(val,tableId){setDropFilter(tableId,'signal_label',val.toLowerCase(),'contains');}
 function applyFilters(tableId){
   const table=document.getElementById(tableId); if(!table)return;
   const tb=table.tBodies[0]; if(!tb)return;
@@ -1514,18 +1522,32 @@ function applyFilters(tableId){
   const g=document.querySelector('[data-global-for="'+tableId+'"]');
   const gq=g?g.value.trim().toLowerCase():'';
   const extra=_extraFilters[tableId]||{};
-  let secCol=-1,sigCol=-1;
+  // Build colKey → index map from header row
+  const colIdx={};
   table.querySelectorAll('thead tr:first-child th').forEach((th,i)=>{
-    const t=th.textContent.replace(/[\u2195\u2191\u2193]/g,'').trim().toLowerCase();
-    if(t==='sector')secCol=i; if(t==='signal_label')sigCol=i;
+    const t=th.textContent.replace(/[\u2195\u2191\u2193]/g,'').trim().toLowerCase().replace(/[^a-z0-9_%]/g,'_');
+    colIdx[t]=i;
   });
   let vis=0;
   for(const row of tb.rows){
     if(row.classList.contains('col-filter')){row.style.display='';continue;}
     let show=true;
     if(gq&&!row.textContent.toLowerCase().includes(gq))show=false;
-    if(show&&extra.sector&&secCol>=0){const c=row.cells[secCol];if(!c||!c.textContent.toLowerCase().includes(extra.sector))show=false;}
-    if(show&&extra.signal&&sigCol>=0){const c=row.cells[sigCol];if(!c||!c.textContent.toLowerCase().includes(extra.signal))show=false;}
+    if(show){
+      for(const [key,f] of Object.entries(extra)){
+        const idx=colIdx[key]; if(idx===undefined)continue;
+        const c=row.cells[idx]; if(!c){show=false;break;}
+        const ct=c.textContent.trim();
+        if(f.mode==='contains'){if(!ct.toLowerCase().includes(f.val)){show=false;break;}}
+        else if(f.mode==='exact'){if(ct.toLowerCase()!==f.val){show=false;break;}}
+        else if(f.mode==='gte'){const n=parseFloat(ct);if(isNaN(n)||n<parseFloat(f.val)){show=false;break;}}
+        else if(f.mode==='lte'){const n=parseFloat(ct);if(isNaN(n)||n>parseFloat(f.val)){show=false;break;}}
+        else if(f.mode==='range'){
+          const [lo,hi]=f.val.split(',').map(Number);
+          const n=parseFloat(ct);if(isNaN(n)||n<lo||n>hi){show=false;break;}
+        }
+      }
+    }
     if(show){for(const f of filters){const c=row.cells[f[0]];if(!c||!matchFilter(c.textContent,f[1])){show=false;break;}}}
     row.style.display=show?'':'none'; if(show)vis++;
   }
@@ -1533,6 +1555,14 @@ function applyFilters(tableId){
 }
 function filterTable(input,tableId){applyFilters(tableId);}
 function filterColumn(input,tableId){applyFilters(tableId);}
+function resetStockFilters(){
+  ['sector-filter','signal-filter','trend-filter','secgated-filter','sma-filter','rs22-filter',
+   'pattern-filter','slgrade-filter','finscore-filter','salesqoq-filter','patqoq-filter','roe-filter','de-filter']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  delete _extraFilters['tbl-stocks'];
+  const g=document.querySelector('[data-global-for="tbl-stocks"]');if(g)g.value='';
+  applyFilters('tbl-stocks');
+}
 function exportStocksTV(tableId){
   const table=document.getElementById(tableId); if(!table)return;
   const tb=table.tBodies[0]; if(!tb)return;
@@ -2298,6 +2328,25 @@ document.addEventListener('DOMContentLoaded', ()=>{
     btn.className   = _tvEnabled ? 'tv-on' : 'tv-off';
   }
   _tvAttachHovers();
+
+  // Default sort: RS22% descending for Market Breadth, Sector Performance, Sector Rotation, Industry Rotation
+  ['tbl-breadth','tbl-secperf','tbl-secrot','tbl-indrot'].forEach(tid=>{
+    const tbl=document.getElementById(tid); if(!tbl)return;
+    const ths=Array.from(tbl.querySelectorAll('thead tr:first-child th'));
+    const th=ths.find(h=>h.textContent.replace(/[↕↑↓\s]/g,'').toLowerCase()==='rs22%');
+    if(!th)return;
+    // Sort descending (highest RS22% on top)
+    const tb=tbl.tBodies[0]; if(!tb)return;
+    ths.forEach(h=>h.classList.remove('asc','desc'));
+    th.classList.add('desc');
+    Array.from(tb.rows).sort((a,b)=>{
+      const ai=th.cellIndex;
+      const av=parseFloat((a.cells[ai]?.textContent||'').replace(/[+%,]/g,''));
+      const bv=parseFloat((b.cells[ai]?.textContent||'').replace(/[+%,]/g,''));
+      if(!isNaN(av)&&!isNaN(bv))return bv-av;
+      return 0;
+    }).forEach(r=>tb.appendChild(r));
+  });
 });
 
 window.addEventListener('scroll', _tvHide, {passive:true});
@@ -2494,6 +2543,10 @@ def build_html_report(
     if stock_main is not None and not stock_main.empty and "Sector" in stock_main.columns:
         _sectors = sorted(stock_main["Sector"].dropna().unique().tolist())
         _sector_opts = "".join(f'<option value="{s}">{s}</option>' for s in _sectors)
+    _pattern_opts = ""
+    if stock_main is not None and not stock_main.empty and "Chart_Pattern" in stock_main.columns:
+        _patterns = sorted(stock_main["Chart_Pattern"].dropna().unique().tolist())
+        _pattern_opts = "".join(f'<option value="{p}">{p}</option>' for p in _patterns if str(p).strip())
     _stock_toolbar = f'''
 <div class="stock-toolbar">
   <div class="stock-toolbar-left">
@@ -2503,17 +2556,94 @@ def build_html_report(
     </select>
     <select id="signal-filter" class="sector-sel" onchange="filterBySignal(this.value,'tbl-stocks')" title="Filter by signal">
       <option value="">All Signals</option>
-      <option value="Prime">🌟 Prime</option>
-      <option value="Confirmed">✅ Confirmed</option>
+      <option value="Triple">🌟 Triple Confirmed</option>
+      <option value="RS30">🌟 RS30 Leader / Swing</option>
+      <option value="Long Momentum">✅ Long Momentum</option>
+      <option value="Strong RS">✅ Strong RS</option>
       <option value="RS Leader">📈 RS Leader</option>
-      <option value="Watch">👁 Watch</option>
-      <option value="Avoid">🔴 Avoid</option>
+      <option value="Watch">👁 Watch / Building</option>
+      <option value="Neutral">⬜ Neutral</option>
+      <option value="Breakdown">🔴 RS Breakdown</option>
+    </select>
+    <select id="trend-filter" class="sector-sel" onchange="setDropFilter('tbl-stocks','trend',this.value,'contains')" title="Filter by trend">
+      <option value="">Trend: All</option>
+      <option value="Strong Bullish">💚 Strong Bullish</option>
+      <option value="Bullish">📈 Bullish</option>
+      <option value="Neutral">➡ Neutral</option>
+      <option value="Bearish">📉 Bearish</option>
+      <option value="Strong Bearish">🔴 Strong Bearish</option>
+    </select>
+    <select id="secgated-filter" class="sector-sel" onchange="setDropFilter('tbl-stocks','sec_gated',this.value,'contains')" title="Sector-gated pass/fail">
+      <option value="">Sec Gated: All</option>
+      <option value="✓">✓ Pass</option>
+      <option value="✗">✗ Fail</option>
+    </select>
+    <select id="sma-filter" class="sector-sel" onchange="(function(v){{if(!v){{setDropFilter('tbl-stocks','sma_score','','');}}else{{var p=v.split(',');if(p.length===2){{setDropFilter('tbl-stocks','sma_score',v,'range');}}else if(v[0]==='+'){{setDropFilter('tbl-stocks','sma_score',v.slice(1),'gte');}}else{{setDropFilter('tbl-stocks','sma_score',v.slice(1),'lte');}}}}}})(this.value)" title="SMA Score: how many of 5 SMAs price is above (0=weakest)">
+      <option value="">SMA: All</option>
+      <option value="+4">SMA ≥ 4 (Strong)</option>
+      <option value="+3">SMA ≥ 3</option>
+      <option value="-2">SMA ≤ 2 (Weak)</option>
+      <option value="-1">SMA ≤ 1 (Very Weak)</option>
+    </select>
+    <select id="rs22-filter" class="sector-sel" onchange="(function(v){{if(!v){{setDropFilter('tbl-stocks','rs_22d_idx%','','');}}else{{var p=v.split(',');if(p.length===2){{setDropFilter('tbl-stocks','rs_22d_idx%',v,'range');}}else if(v[0]==='+'){{setDropFilter('tbl-stocks','rs_22d_idx%',v.slice(1),'gte');}}else{{setDropFilter('tbl-stocks','rs_22d_idx%',v.slice(1),'lte');}}}}}})(this.value)" title="22-day Relative Strength vs Index">
+      <option value="">RS 22d: All</option>
+      <option value="+10">RS ≥ +10%</option>
+      <option value="+5">RS ≥ +5%</option>
+      <option value="+0">RS ≥ 0% (Outperforming)</option>
+      <option value="-0.01">RS &lt; 0% (Underperforming)</option>
+    </select>
+    <select id="pattern-filter" class="sector-sel" onchange="setDropFilter('tbl-stocks','chart_pattern',this.value,'contains')" title="Filter by chart pattern">
+      <option value="">Pattern: All</option>
+      {_pattern_opts}
+    </select>
+    <select id="slgrade-filter" class="sector-sel" onchange="setDropFilter('tbl-stocks','sl_grade',this.value,'contains')" title="Stop-Loss Grade: A=tightest risk, F=widest">
+      <option value="">SL Grade: All</option>
+      <option value="A">A (Tightest)</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+      <option value="D">D</option>
+      <option value="F">F (Widest)</option>
+    </select>
+    <select id="finscore-filter" class="sector-sel" onchange="(function(v){{if(!v){{setDropFilter('tbl-stocks','fin_score','','');}}else if(v[0]==='+'){{setDropFilter('tbl-stocks','fin_score',v.slice(1),'gte');}}else{{setDropFilter('tbl-stocks','fin_score',v.slice(1),'lte');}}}})(this.value)" title="Fundamental score (0–10)">
+      <option value="">Fin Score: All</option>
+      <option value="+7">≥ 7 (Strong)</option>
+      <option value="+5">≥ 5</option>
+      <option value="+3">≥ 3</option>
+      <option value="-2">≤ 2 (Weak)</option>
+    </select>
+    <select id="salesqoq-filter" class="sector-sel" onchange="(function(v){{if(!v){{setDropFilter('tbl-stocks','sales_qoq%','','');}}else if(v[0]==='+'){{setDropFilter('tbl-stocks','sales_qoq%',v.slice(1),'gte');}}else{{setDropFilter('tbl-stocks','sales_qoq%',v.slice(1),'lte');}}}})(this.value)" title="Sales growth quarter-on-quarter">
+      <option value="">Sales QoQ: All</option>
+      <option value="+20">≥ +20%</option>
+      <option value="+10">≥ +10%</option>
+      <option value="+0">≥ 0% (Growing)</option>
+      <option value="-0.01">&lt; 0% (Declining)</option>
+    </select>
+    <select id="patqoq-filter" class="sector-sel" onchange="(function(v){{if(!v){{setDropFilter('tbl-stocks','pat_qoq%','','');}}else if(v[0]==='+'){{setDropFilter('tbl-stocks','pat_qoq%',v.slice(1),'gte');}}else{{setDropFilter('tbl-stocks','pat_qoq%',v.slice(1),'lte');}}}})(this.value)" title="Profit after tax growth quarter-on-quarter">
+      <option value="">PAT QoQ: All</option>
+      <option value="+20">≥ +20%</option>
+      <option value="+10">≥ +10%</option>
+      <option value="+0">≥ 0% (Growing)</option>
+      <option value="-0.01">&lt; 0% (Declining)</option>
+    </select>
+    <select id="roe-filter" class="sector-sel" onchange="(function(v){{if(!v){{setDropFilter('tbl-stocks','roe%','','');}}else if(v[0]==='+'){{setDropFilter('tbl-stocks','roe%',v.slice(1),'gte');}}else{{setDropFilter('tbl-stocks','roe%',v.slice(1),'lte');}}}})(this.value)" title="Return on Equity %">
+      <option value="">ROE: All</option>
+      <option value="+20">≥ 20% (Excellent)</option>
+      <option value="+15">≥ 15%</option>
+      <option value="+10">≥ 10%</option>
+      <option value="-0.01">&lt; 0% (Negative)</option>
+    </select>
+    <select id="de-filter" class="sector-sel" onchange="(function(v){{if(!v){{setDropFilter('tbl-stocks','d_e','','');}}else if(v[0]==='+'){{setDropFilter('tbl-stocks','d_e',v.slice(1),'lte');}}else{{setDropFilter('tbl-stocks','d_e',v.slice(1),'gte');}}}})(this.value)" title="Debt-to-Equity ratio (lower = less debt)">
+      <option value="">D/E: All</option>
+      <option value="+0.5">≤ 0.5 (Low Debt)</option>
+      <option value="+1">≤ 1</option>
+      <option value="+2">≤ 2</option>
+      <option value="-2.01">≥ 2 (High Debt)</option>
     </select>
   </div>
   <div class="stock-toolbar-right">
-    <!-- Export CSV and Copy for TradingView buttons hidden -->
-    <!-- <button class="copy-btn sm" onclick="exportStocksTV('tbl-stocks')" title="Copy symbols for TradingView">📋 Copy for TradingView</button> -->
-    <!-- <button class="copy-btn sm" onclick="exportTableCSV('tbl-stocks')" title="Download CSV">⬇ Export CSV</button> -->
+    <button class="copy-btn sm" onclick="resetStockFilters()" title="Clear all filters">✕ Reset</button>
+    <button class="copy-btn sm" onclick="exportStocksTV('tbl-stocks')" title="Copy symbols for TradingView" style="display:none">📋 Copy TV</button>
+    <button class="copy-btn sm" onclick="exportTableCSV('tbl-stocks')" title="Download CSV" style="display:none">⬇ CSV</button>
   </div>
 </div>'''
     stock_content = _STOCK_PANEL + _stock_toolbar + _build_table(stock_main, "tbl-stocks", max_rows=500, no_bg=True)

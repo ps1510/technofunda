@@ -219,14 +219,14 @@ ACTION_TIER_ORDER = {
 RS_PERIODS     = [22, 55, 120, 252]
 SIGNAL_PERIODS = [22, 55]
 HL_LOOKBACK    = 22
-PERIOD_DAYS    = 420   # ↑ from 300 → 420 calendar days (~300 trading days, covers RS_252d & 12M%)
+PERIOD_DAYS    = 500   # ↑ from 300 → 420 calendar days (~300 trading days, covers RS_252d & 12M%)
 BATCH_SIZE     = 300
 BATCH_DELAY    = 0.5
 
 # Master screening knob (#6): number of top stocks extracted PER SECTOR for the
 # Opportunities, Buy Alerts and Sell Alerts sheets. Change this single integer
 # to scale all three at once. A scanner that passes an explicit top_n overrides it.
-TOP_STOCKS_PER_SECTOR = 5
+TOP_STOCKS_PER_SECTOR = 7
 
 
 # ─────────────────────────────────────────────────────────────────────────────

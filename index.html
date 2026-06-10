@@ -14,7 +14,7 @@
   --bg:#080c14;--bg2:#0d1220;--bg3:#111827;
   --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
   --gold:#f0b429;--gold2:#ffd666;
-  --text:#f0f4ff;--text2:#8896b0;--text3:#4a5568;
+  --text:#f0f4ff;--text2:#8896b0;--text3:#7b87a8;
   --green:#10b981;--green-dim:rgba(16,185,129,.12);--green-glow:rgba(16,185,129,.25);
   --red:#ef4444;--red-dim:rgba(239,68,68,.12);
   --amber:#f59e0b;--amber-dim:rgba(245,158,11,.12);
@@ -195,9 +195,9 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     <div class="hero-stats animate-in delay-3">
       <div class="hs-item"><span class="hs-num gold">28</span><span class="hs-label">Markets</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num">4,119+</span><span class="hs-label">Stocks Tracked</span></div>
+      <div class="hs-item"><span class="hs-num">4,368+</span><span class="hs-label">Stocks Tracked</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num green">69</span><span class="hs-label">Prime Setups Today</span></div>
+      <div class="hs-item"><span class="hs-num green">95</span><span class="hs-label">Prime Setups Today</span></div>
       <div class="hs-sep"></div>
       <div class="hs-item"><span class="hs-num">Daily</span><span class="hs-label">Updated</span></div>
     </div>
@@ -213,7 +213,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
         <span class="sec-label">Live Reports</span>
         <h2 class="sec-title">Choose Your Market</h2>
       </div>
-      <span class="sec-updated">Generated: 10 Jun 2026 14:39 UTC</span>
+      <span class="sec-updated" id="gen-time-label" data-utc="10 Jun 2026 15:46 UTC">Generated: 10 Jun 2026 15:46 UTC</span>
     </div>
     <div class="countries-grid" id="countries-grid"></div>
   </section>
@@ -313,14 +313,14 @@ const MARKETS = [
     url:        "US.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 Jun 2026 · 03:37 ET",
+    updated:    "10 Jun 2026 · 19:43 ET",
     index_name: "S&P 500",
-    index_price:"7,387",
-    index_chg:  "-0.26",
+    index_price:"7,324",
+    index_chg:  "-0.85",
     universe:   502,
-    signals:    {prime:13,conf:143,rs:83,avoid:154},
+    signals:    {prime:10,conf:145,rs:114,avoid:131},
     top_sectors:[
-      {name:"Healthcare",pct:"-0.6",dir:"neg"}
+      {name:"Healthcare",pct:"-0.3",dir:"neg"}
     ]
   },
   {
@@ -331,14 +331,14 @@ const MARKETS = [
     url:        "IN.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 14:58 IST",
+    updated:    "10 June 2026 · 20:40 IST",
     index_name: "NIFTY 50",
-    index_price:"23,261",
-    index_chg:  "+0.60",
-    universe:   500,
-    signals:    {prime:18,conf:36,rs:149,avoid:210},
+    index_price:"23,215",
+    index_chg:  "-0.12",
+    universe:   749,
+    signals:    {prime:26,conf:116,rs:165,avoid:322},
     top_sectors:[
-      {name:"Healthcare",pct:"-0.1",dir:"neg"}
+      {name:"Healthcare",pct:"-0.4",dir:"neg"}
     ]
   },
   {
@@ -349,14 +349,14 @@ const MARKETS = [
     url:        "UK.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 19:13 GMT",
+    updated:    "10 June 2026 · 15:40 GMT",
     index_name: "FTSE 100",
-    index_price:"10,227",
-    index_chg:  "-1.41",
+    index_price:"10,262",
+    index_chg:  "+0.34",
     universe:   480,
-    signals:    {prime:3,conf:35,rs:116,avoid:161},
+    signals:    {prime:7,conf:18,rs:140,avoid:159},
     top_sectors:[
-      {name:"Utilities",pct:"-0.6",dir:"neg"}
+      {name:"Utilities",pct:"-0.3",dir:"neg"}
     ]
   },
   {
@@ -367,14 +367,14 @@ const MARKETS = [
     url:        "CA.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 23:24 ET",
+    updated:    "10 June 2026 · 18:48 ET",
     index_name: "S&P/TSX",
     index_price:"—",
     index_chg:  "—",
     universe:   330,
-    signals:    {prime:6,conf:30,rs:66,avoid:157},
+    signals:    {prime:2,conf:36,rs:63,avoid:139},
     top_sectors:[
-      {name:"Communication Services",pct:"-1.1",dir:"neg"}
+      {name:"Financials",pct:"-0.1",dir:"neg"}
     ]
   },
   {
@@ -385,12 +385,12 @@ const MARKETS = [
     url:        "AU.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 21:01 AEST",
+    updated:    "11 June 2026 · 00:21 AEST",
     index_name: "S&P/ASX 200",
-    index_price:"—",
+    index_price:"8,604",
     index_chg:  "N/A",
     universe:   497,
-    signals:    {prime:10,conf:82,rs:114,avoid:197},
+    signals:    {prime:17,conf:77,rs:112,avoid:196},
     top_sectors:[
       {name:"Consumer Staples",pct:"-0.8",dir:"neg"}
     ]
@@ -402,15 +402,15 @@ const MARKETS = [
     exchange:   "XETRA / Frankfurt",
     url:        "DE.html",
     status:     "live",
-    mood:       "mixed",
-    updated:    "09 June 2026 · 21:09 CET",
+    mood:       "bull",
+    updated:    "10 June 2026 · 15:57 CET",
     index_name: "DAX 40",
-    index_price:"24,433",
-    index_chg:  "-0.74",
+    index_price:"24,303",
+    index_chg:  "-0.53",
     universe:   122,
-    signals:    {prime:0,conf:4,rs:27,avoid:59},
+    signals:    {prime:0,conf:3,rs:28,avoid:57},
     top_sectors:[
-      {name:"Health Care",pct:"-1.1",dir:"neg"}
+      {name:"Health Care",pct:"-0.2",dir:"neg"}
     ]
   },
   {
@@ -421,14 +421,14 @@ const MARKETS = [
     url:        "JP.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 20:08 JST",
+    updated:    "11 June 2026 · 00:19 JST",
     index_name: "Nikkei 225",
-    index_price:"64,179",
-    index_chg:  "+0.24",
+    index_price:"65,417",
+    index_chg:  "+2.17",
     universe:   499,
-    signals:    {prime:8,conf:48,rs:118,avoid:164},
+    signals:    {prime:19,conf:44,rs:155,avoid:166},
     top_sectors:[
-      {name:"Communication Services",pct:"-2.6",dir:"neg"}
+      {name:"Technology",pct:"-0.7",dir:"neg"}
     ]
   },
   {
@@ -439,14 +439,14 @@ const MARKETS = [
     url:        "FR.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 21:25 CET",
+    updated:    "10 June 2026 · 16:03 CET",
     index_name: "CAC 40",
-    index_price:"8,203",
-    index_chg:  "+0.05",
+    index_price:"8,189",
+    index_chg:  "-0.18",
     universe:   37,
-    signals:    {prime:0,conf:7,rs:8,avoid:12},
+    signals:    {prime:0,conf:6,rs:10,avoid:7},
     top_sectors:[
-      {name:"Consumer Staples",pct:"-0.6",dir:"neg"}
+      {name:"Consumer Staples",pct:"-0.3",dir:"neg"}
     ]
   },
   {
@@ -457,10 +457,10 @@ const MARKETS = [
     url:        "BR.html",
     status:     "live",
     mood:       "bear",
-    updated:    "09 June 2026 · 18:41 ET",
+    updated:    "10 June 2026 · 18:30 ET",
     index_name: "Ibovespa",
-    index_price:"170,601",
-    index_chg:  "+1.15",
+    index_price:"168,917",
+    index_chg:  "-0.53",
     universe:   6,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
@@ -475,14 +475,14 @@ const MARKETS = [
     url:        "CN.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 19:41 CST",
+    updated:    "10 June 2026 · 22:54 CST",
     index_name: "CSI 300",
     index_price:"4,749",
-    index_chg:  "+0.74",
+    index_chg:  "-1.11",
     universe:   92,
-    signals:    {prime:1,conf:3,rs:20,avoid:40},
+    signals:    {prime:1,conf:8,rs:15,avoid:40},
     top_sectors:[
-      {name:"Utilities",pct:"-1.6",dir:"neg"}
+      {name:"Utilities",pct:"-0.8",dir:"neg"}
     ]
   },
   {
@@ -493,14 +493,14 @@ const MARKETS = [
     url:        "KR.html",
     status:     "live",
     mood:       "mixed",
-    updated:    "10 June 2026 · 20:54 KST",
+    updated:    "11 June 2026 · 00:23 KST",
     index_name: "KOSPI",
-    index_price:"7,731",
-    index_chg:  "+3.29",
+    index_price:"8,097",
+    index_chg:  "+8.18",
     universe:   77,
-    signals:    {prime:0,conf:4,rs:12,avoid:49},
+    signals:    {prime:1,conf:3,rs:11,avoid:49},
     top_sectors:[
-      {name:"Technology",pct:"-0.3",dir:"neg"}
+      {name:"Technology",pct:"-1.2",dir:"neg"}
     ]
   },
   {
@@ -511,14 +511,14 @@ const MARKETS = [
     url:        "TW.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 20:42 CST",
+    updated:    "10 June 2026 · 23:37 CST",
     index_name: "TAIEX",
     index_price:"43,226",
-    index_chg:  "-0.64",
+    index_chg:  "-3.31",
     universe:   69,
-    signals:    {prime:1,conf:8,rs:22,avoid:17},
+    signals:    {prime:1,conf:8,rs:19,avoid:19},
     top_sectors:[
-      {name:"Industrials",pct:"-3.3",dir:"neg"}
+      {name:"Industrials",pct:"-3.2",dir:"neg"}
     ]
   },
   {
@@ -529,14 +529,14 @@ const MARKETS = [
     url:        "CH.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 20:34 CET",
+    updated:    "10 June 2026 · 15:51 CET",
     index_name: "SMI",
-    index_price:"13,356",
-    index_chg:  "+0.27",
+    index_price:"13,458",
+    index_chg:  "+0.76",
     universe:   58,
-    signals:    {prime:0,conf:10,rs:12,avoid:19},
+    signals:    {prime:1,conf:5,rs:12,avoid:17},
     top_sectors:[
-      {name:"Technology",pct:"-3.1",dir:"neg"}
+      {name:"Technology",pct:"-4.3",dir:"neg"}
     ]
   },
   {
@@ -547,14 +547,14 @@ const MARKETS = [
     url:        "SA.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 18:38 AST",
+    updated:    "10 June 2026 · 18:29 AST",
     index_name: "TASI (Tadawul)",
     index_price:"—",
     index_chg:  "—",
     universe:   74,
-    signals:    {prime:0,conf:13,rs:10,avoid:32},
+    signals:    {prime:0,conf:10,rs:8,avoid:29},
     top_sectors:[
-      {name:"Technology",pct:"-1.1",dir:"neg"}
+      {name:"Technology",pct:"-0.0",dir:"neg"}
     ]
   },
   {
@@ -565,14 +565,14 @@ const MARKETS = [
     url:        "NL.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 22:00 CET",
+    updated:    "10 June 2026 · 16:27 CET",
     index_name: "AEX",
-    index_price:"1,047",
-    index_chg:  "+0.18",
+    index_price:"1,051",
+    index_chg:  "+0.40",
     universe:   51,
-    signals:    {prime:2,conf:10,rs:6,avoid:17},
+    signals:    {prime:3,conf:5,rs:10,avoid:16},
     top_sectors:[
-      {name:"Industrials",pct:"-0.8",dir:"neg"}
+      {name:"Industrials",pct:"-0.2",dir:"neg"}
     ]
   },
   {
@@ -583,14 +583,14 @@ const MARKETS = [
     url:        "ES.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 22:16 CET",
+    updated:    "10 June 2026 · 16:01 CET",
     index_name: "IBEX 35",
-    index_price:"18,175",
-    index_chg:  "-0.27",
+    index_price:"18,186",
+    index_chg:  "+0.06",
     universe:   51,
-    signals:    {prime:0,conf:6,rs:8,avoid:15},
+    signals:    {prime:0,conf:7,rs:8,avoid:12},
     top_sectors:[
-      {name:"Utilities",pct:"-0.4",dir:"neg"}
+      {name:"Materials",pct:"-0.2",dir:"neg"}
     ]
   },
   {
@@ -601,14 +601,14 @@ const MARKETS = [
     url:        "SE.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 22:42 CET",
+    updated:    "10 June 2026 · 16:30 CET",
     index_name: "OMX Stockholm 30",
-    index_price:"3,070",
-    index_chg:  "-1.18",
+    index_price:"3,054",
+    index_chg:  "-0.53",
     universe:   55,
-    signals:    {prime:0,conf:11,rs:11,avoid:15},
+    signals:    {prime:0,conf:11,rs:10,avoid:17},
     top_sectors:[
-      {name:"Technology",pct:"-1.8",dir:"neg"}
+      {name:"Technology",pct:"-1.1",dir:"neg"}
     ]
   },
   {
@@ -619,14 +619,14 @@ const MARKETS = [
     url:        "HK.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 20:51 HKT",
+    updated:    "10 June 2026 · 23:05 HKT",
     index_name: "Hang Seng",
     index_price:"24,408",
-    index_chg:  "-1.01",
+    index_chg:  "-0.64",
     universe:   80,
-    signals:    {prime:0,conf:12,rs:21,avoid:36},
+    signals:    {prime:0,conf:20,rs:13,avoid:39},
     top_sectors:[
-      {name:"Energy",pct:"-0.2",dir:"neg"}
+      {name:"Energy",pct:"-13.2",dir:"neg"}
     ]
   },
   {
@@ -637,14 +637,14 @@ const MARKETS = [
     url:        "IT.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 19:36 CET",
+    updated:    "10 June 2026 · 16:18 CET",
     index_name: "FTSE MIB",
-    index_price:"50,263",
-    index_chg:  "+0.11",
+    index_price:"50,105",
+    index_chg:  "-0.31",
     universe:   54,
-    signals:    {prime:4,conf:6,rs:10,avoid:18},
+    signals:    {prime:5,conf:12,rs:6,avoid:15},
     top_sectors:[
-      {name:"Health Care",pct:"-0.7",dir:"neg"}
+      {name:"Consumer Discretionary",pct:"-1.3",dir:"neg"}
     ]
   },
   {
@@ -655,7 +655,7 @@ const MARKETS = [
     url:        "SG.html",
     status:     "live",
     mood:       "mixed",
-    updated:    "10 June 2026 · 22:04 SGT",
+    updated:    "10 June 2026 · 23:32 SGT",
     index_name: "STI",
     index_price:"4,959",
     index_chg:  "-1.28",
@@ -673,7 +673,7 @@ const MARKETS = [
     url:        "ID.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 20:49 WIB",
+    updated:    "10 June 2026 · 22:06 WIB",
     index_name: "IDX Composite",
     index_price:"5,902",
     index_chg:  "+2.71",
@@ -691,14 +691,14 @@ const MARKETS = [
     url:        "ZA.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 20:14 SAST",
+    updated:    "10 June 2026 · 17:44 SAST",
     index_name: "JSE Top 40",
-    index_price:"103,186",
-    index_chg:  "+0.07",
+    index_price:"101,656",
+    index_chg:  "-1.48",
     universe:   76,
-    signals:    {prime:1,conf:32,rs:10,avoid:19},
+    signals:    {prime:0,conf:30,rs:15,avoid:18},
     top_sectors:[
-      {name:"Energy",pct:"-8.8",dir:"neg"}
+      {name:"Consumer Staples",pct:"-12.1",dir:"neg"}
     ]
   },
   {
@@ -709,14 +709,14 @@ const MARKETS = [
     url:        "MX.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 17:01 CST",
+    updated:    "10 June 2026 · 09:26 CST",
     index_name: "IPC Mexico",
-    index_price:"65,409",
-    index_chg:  "-0.44",
+    index_price:"65,341",
+    index_chg:  "-0.10",
     universe:   43,
-    signals:    {prime:0,conf:16,rs:8,avoid:14},
+    signals:    {prime:0,conf:19,rs:6,avoid:13},
     top_sectors:[
-      {name:"Industrials",pct:"-1.5",dir:"neg"}
+      {name:"Consumer Staples",pct:"-0.1",dir:"neg"}
     ]
   },
   {
@@ -727,7 +727,7 @@ const MARKETS = [
     url:        "TH.html",
     status:     "live",
     mood:       "mixed",
-    updated:    "10 June 2026 · 21:22 ICT",
+    updated:    "10 June 2026 · 22:33 ICT",
     index_name: "SET Index",
     index_price:"1,564",
     index_chg:  "-1.30",
@@ -745,7 +745,7 @@ const MARKETS = [
     url:        "MY.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 21:54 MYT",
+    updated:    "10 June 2026 · 23:26 MYT",
     index_name: "KLCI",
     index_price:"1,679",
     index_chg:  "+0.21",
@@ -763,7 +763,7 @@ const MARKETS = [
     url:        "UAE.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 18:38 GST",
+    updated:    "10 June 2026 · 19:39 GST",
     index_name: "DFM / ADX",
     index_price:"—",
     index_chg:  "—",
@@ -781,7 +781,7 @@ const MARKETS = [
     url:        "PL.html",
     status:     "live",
     mood:       "bear",
-    updated:    "09 June 2026 · 19:22 CET",
+    updated:    "10 June 2026 · 16:29 CET",
     index_name: "WIG20",
     index_price:"—",
     index_chg:  "N/A",
@@ -799,12 +799,12 @@ const MARKETS = [
     url:        "TR.html",
     status:     "live",
     mood:       "bull",
-    updated:    "09 June 2026 · 21:31 TRT",
+    updated:    "10 June 2026 · 18:35 TRT",
     index_name: "BIST 100",
-    index_price:"13,742",
-    index_chg:  "-0.86",
+    index_price:"13,745",
+    index_chg:  "+0.02",
     universe:   63,
-    signals:    {prime:0,conf:2,rs:26,avoid:25},
+    signals:    {prime:0,conf:0,rs:22,avoid:25},
     top_sectors:[
       {name:"Consumer Staples",pct:"-0.4",dir:"neg"}
     ]
@@ -870,6 +870,23 @@ function buildCards(){
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('ticker').innerHTML=buildTicker();
   document.getElementById('countries-grid').innerHTML=buildCards();
+  // Append visitor local time next to UTC generated time
+  (function(){
+    const el=document.getElementById('gen-time-label');
+    if(!el)return;
+    try{
+      const utcStr=el.dataset.utc.replace(/\s+/g,' ').trim();
+      const d=new Date(utcStr+' UTC');
+      if(isNaN(d))return;
+      const offsetMins=-d.getTimezoneOffset();
+      if(offsetMins===0)return;
+      const local=d.toLocaleString(undefined,{
+        day:'2-digit',month:'short',year:'numeric',
+        hour:'2-digit',minute:'2-digit',timeZoneName:'short'
+      });
+      el.innerHTML+=' <span style="opacity:.65;font-size:11px;">('+local+')</span>';
+    }catch(e){}
+  })();
 });
 </script>
 </body>

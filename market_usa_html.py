@@ -47,8 +47,8 @@ else:
 STOCK_CSV = os.path.join(INDEX_DATA_DIR, "us_sp500list.csv")
 
 # ── Tunable constants ─────────────────────────────────────────────────────────
-MAX_STOCKS        = 2500
-PERIOD_DAYS       = 1420   # 420 calendar days covers RS_252d & 12M%
+MAX_STOCKS        = 1500
+PERIOD_DAYS       = 500   # 420 calendar days covers RS_252d & 12M%
 ENABLE_PATTERNS   = False
 PATTERN_MAX       = 800
 FETCH_FINANCIALS  = True   # always True in cloud — no cache
