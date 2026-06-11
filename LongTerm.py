@@ -11,7 +11,7 @@
 
 # ── CONFIG — only these 3 lines change per scan file ──────────────────────
 SCAN_NAME         = "LongTerm"                    # → Google Sheet tab name
-CONDITIONS_FOLDER = "Files/Conditions_LongTerm"   # → folder with .txt files
+CONDITIONS_FOLDER = "Files/Conditions_Invest"   # → folder with .txt files
 SHEET_ENV_VAR     = "GOOGLE_SHEET_URL_SCANS"      # → GitHub secret name
 # ──────────────────────────────────────────────────────────────────────────
 

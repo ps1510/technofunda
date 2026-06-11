@@ -37,6 +37,13 @@ ENABLE_SIGNALS    = True
 SIGNAL_MAX_STOCKS = 1400
 PRIMARY_RS_PERIOD = 22   # ← change to 55 or 120 to test other RS periods
 
+# ── Chartink scan folders (India-only) — keys match Scan_Group column ──────
+# Rename .txt files with prefix codes: BO_ VOL_ LT_ MOM_ CAN_ INT_ BR_
+SCAN_CONFIGS = [
+    ("LongTerm", "Files/Conditions_LongTerm"),
+    ("FnO",      "Files/Conditions_FnO"),
+]
+
 
 sys.path.insert(0, SCRIPT_DIR)
 # ── #10 support-files layout: import modules from ./SupportFiles and prefer
@@ -225,6 +232,64 @@ def main():
     dashboard_df = build_dashboard_df(stock_df, sec_str_df, "INDIA", run_time,
                                       primary_rs=PRIMARY_RS_PERIOD)
 
+    # ── Chartink scan data for 📡 Scans tab (India only) ──────────────────────
+    scans_df = None
+    print("  📡 Chartink scans …")
+    try:
+        _ck_path = os.path.join(SCRIPT_DIR, "Files", "support_code")
+        if _ck_path not in sys.path:
+            sys.path.insert(0, _ck_path)
+        from chartink_utils import get_data_from_chartink
+
+        _ck_frames = []
+        for _grp, _rel_dir in SCAN_CONFIGS:
+            _cdir = os.path.join(SCRIPT_DIR, _rel_dir)
+            if not os.path.isdir(_cdir):
+                print(f"    ⚠ {_grp}: folder not found → {_cdir}")
+                continue
+            for _fn in sorted(os.listdir(_cdir)):
+                if not _fn.endswith(".txt"):
+                    continue
+                _cname = _fn.replace(".txt", "")
+                try:
+                    with open(os.path.join(_cdir, _fn)) as _fh:
+                        _ctxt = _fh.read().strip()
+                    _df = get_data_from_chartink(_ctxt)
+                    if _df.empty:
+                        print(f"    ○ {_fn} → 0 stocks"); continue
+                    _df["Scan_Group"] = _grp
+                    _df["Condition"]  = _cname
+                    _ck_frames.append(_df)
+                    print(f"    ✓ {_fn} → {len(_df)} stocks")
+                except Exception as _e:
+                    print(f"    ✗ {_fn}: {_e}")
+
+        if _ck_frames:
+            _ck_raw = pd.concat(_ck_frames, ignore_index=True)
+            # Normalise nsecode (strip special chars same as LongTerm.py)
+            _ck_raw["nsecode"] = (_ck_raw["nsecode"].astype(str)
+                                   .str.replace("&", "_", regex=False)
+                                   .str.replace("-", "_", regex=False))
+            # Build merge key: strip .NS from stock_df Symbol
+            _lu = stock_df.copy()
+            _lu["_sym"] = _lu["Symbol"].str.replace(".NS", "", regex=False).str.strip().str.upper()
+            _ck_raw["_sym"] = _ck_raw["nsecode"].str.strip().str.upper()
+            _mg = _ck_raw.merge(_lu, on="_sym", how="left")
+            # Fill Symbol/Company for stocks not in our universe CSV
+            _mg["Symbol"]  = _mg["Symbol"].fillna(_ck_raw["nsecode"])
+            if "company_name" in _ck_raw.columns:
+                _mg["Company"] = _mg["Company"].fillna(_ck_raw.set_index("nsecode")
+                                                               .reindex(_ck_raw["nsecode"])["company_name"].values)
+            _SCOLS = ["Scan_Group", "Condition", "Symbol", "Company", "Sector",
+                      "Price", "Chg_1D%", "Signal_Label",
+                      "RS_22d_Idx%", "RSI_14", "From_52W_High%", "Rel_Vol", "SMA_Score"]
+            scans_df = _mg[[c for c in _SCOLS if c in _mg.columns]].copy()
+            print(f"  ✅ Scans: {len(scans_df)} rows · {scans_df['Condition'].nunique()} conditions")
+        else:
+            print("  ⚠ Scans: all conditions returned empty")
+    except Exception as _ck_err:
+        print(f"  ⚠ Scans skipped: {_ck_err}")
+
     print("\n🌐 Building India HTML report …")
     try:
         from market_html import build_html_report
@@ -239,6 +304,7 @@ def main():
             dashboard_df=dashboard_df, sleeve_df=sleeve_df,
             country_etf_df=country_etf_df, commodity_df=commodity_df,
             output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD,
+            scans_df=scans_df,
         )
         print(f"  ✅ HTML: {html_path}")
     except Exception as e:

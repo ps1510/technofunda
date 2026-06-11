@@ -2439,6 +2439,236 @@ def _build_screener_tab():
     )
 
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  CHARTINK SCANS TAB  v1.0
+#  Called from build_html_report() when scans_df is passed (India only).
+#  scans_df columns: Scan_Group, Condition, Symbol, Company, Sector,
+#                    Price, Chg_1D%, Signal_Label, RS_22d_Idx%, RSI_14,
+#                    From_52W_High%, Rel_Vol, SMA_Score
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _build_scans_tab(scans_df):
+    if scans_df is None or scans_df.empty:
+        return '<p class="empty">No Chartink scan data available.</p>'
+
+    # ── Prefix → (Category label, sort-order) ─────────────────────────────
+    _PREFIX = [
+        ("BO_",  "📈 Breakout",   0),
+        ("VOL_", "📊 Volume",     1),
+        ("LT_",  "🔭 Long Setup", 2),
+        ("MOM_", "⚡ Momentum",   3),
+        ("CAN_", "🕯 Candle",     4),
+        ("INT_", "⏱ Intraday",   5),
+        ("BR_",  "🔻 Bearish",    6),
+        ("",     "⬜ Other",      99),   # fallback — must be last
+    ]
+
+    def _parse(cname):
+        """Return (category_label, sort_order, display_name) from a condition filename."""
+        cu = cname.upper()
+        for pfx, lbl, order in _PREFIX:
+            if pfx and cu.startswith(pfx):
+                display = cname[len(pfx):].replace("_", " ").strip()
+                return lbl, order, display
+        # no prefix match → clean up underscores
+        return "⬜ Other", 99, cname.replace("_", " ").strip()
+
+    # ── Columns to show ────────────────────────────────────────────────────
+    SCAN_SHOW = [
+        "Symbol", "Company", "Sector", "Price", "Chg_1D%",
+        "Signal_Label", "RS_22d_Idx%", "RSI_14",
+        "From_52W_High%", "Rel_Vol", "SMA_Score",
+    ]
+    COL_LABELS = {
+        "Symbol": "Symbol", "Company": "Company", "Sector": "Sector",
+        "Price": "Price", "Chg_1D%": "Chg%", "Signal_Label": "Signal",
+        "RS_22d_Idx%": "RS 22d%", "RSI_14": "RSI",
+        "From_52W_High%": "52W Hi%", "Rel_Vol": "Rel Vol", "SMA_Score": "SMA",
+    }
+    cols = [c for c in SCAN_SHOW if c in scans_df.columns]
+
+    # ── CSS (scoped to .sc- prefix — no clash with existing styles) ────────
+    css = """<style>
+.sc-meta{font-size:11px;color:var(--text3,#6b7280);margin-bottom:8px}
+.sc-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.sc-pill{padding:5px 18px;border-radius:20px;font-size:12px;font-weight:600;
+  border:1px solid var(--border,#2a2d3a);background:var(--bg2,#1a1d27);
+  color:var(--text2,#9ca3af);cursor:pointer;transition:.15s}
+.sc-pill.sc-on{background:var(--accent,#4fc3f7);color:#000;border-color:var(--accent,#4fc3f7)}
+.sc-pane{display:none}
+.sc-pane.sc-vis{display:block}
+.sc-cat-hdr{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--text3,#6b7280);
+  display:flex;align-items:center;gap:6px;margin:12px 0 5px}
+.sc-cat-hdr::after{content:'';flex:1;height:1px;background:var(--border,#2a2d3a)}
+.sc-cds{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.sc-cd{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;
+  border:1px solid var(--border,#2a2d3a);background:var(--bg2,#1a1d27);
+  color:var(--text1,#e2e8f0);cursor:pointer;transition:.15s;white-space:nowrap}
+.sc-cd:hover{border-color:var(--accent,#4fc3f7);color:var(--accent,#4fc3f7)}
+.sc-cd.sc-active{border-color:var(--accent,#4fc3f7);color:var(--accent,#4fc3f7);
+  background:rgba(79,195,247,.08);font-weight:700}
+.sc-cnt-badge{font-size:9px;color:var(--text3,#6b7280);margin-left:3px}
+.sc-tbl-hdr{display:flex;align-items:baseline;gap:10px;
+  margin:14px 0 6px;padding-bottom:6px;
+  border-bottom:1px solid var(--border,#2a2d3a)}
+.sc-tbl-title{font-size:13px;font-weight:700;color:var(--text1,#e2e8f0)}
+.sc-tbl-sub{font-size:11px;color:var(--text3,#6b7280)}
+.sc-row-hidden{display:none!important}
+</style>"""
+
+    # ── JS ─────────────────────────────────────────────────────────────────
+    js = """<script>
+function _scShowGrp(grp){
+  document.querySelectorAll('.sc-pill').forEach(function(b){
+    b.classList.toggle('sc-on',b.dataset.grp===grp);
+  });
+  document.querySelectorAll('.sc-pane').forEach(function(p){
+    p.classList.toggle('sc-vis',p.id==='sc-pane-'+grp);
+  });
+}
+function _scFilter(grp,cond,dispName){
+  var pane=document.getElementById('sc-pane-'+grp);
+  if(!pane)return;
+  pane.querySelectorAll('.sc-cd').forEach(function(b){
+    b.classList.toggle('sc-active',b.dataset.cond===cond);
+  });
+  var tbl=document.getElementById('sc-tbl-'+grp);
+  var vis=0;
+  if(tbl){
+    tbl.querySelectorAll('tr.sc-row').forEach(function(r){
+      var show=(r.dataset.cond===cond);
+      r.classList.toggle('sc-row-hidden',!show);
+      if(show)vis++;
+    });
+  }
+  var ti=document.getElementById('sc-ti-'+grp);
+  if(ti)ti.textContent=dispName;
+  var ts=document.getElementById('sc-ts-'+grp);
+  if(ts)ts.textContent=vis+' stocks';
+  var rc=document.getElementById('sc-rc-'+grp);
+  if(rc)rc.textContent=vis+' rows';
+}
+</script>"""
+
+    # ── Build scan-group pills + panes ─────────────────────────────────────
+    from collections import defaultdict
+    import html as _hl
+
+    groups = list(dict.fromkeys(scans_df["Scan_Group"].dropna().tolist()))
+    GRP_ICON = {"LongTerm": "📈", "FnO": "⚡"}
+
+    pills_html = ""
+    panes_html = ""
+
+    for gi, grp in enumerate(groups):
+        icon = GRP_ICON.get(grp, "📋")
+        pills_html += (
+            f'<button class="sc-pill{" sc-on" if gi==0 else ""}" '
+            f'data-grp="{grp}" onclick="_scShowGrp(\'{grp}\')">{icon} {grp}</button>'
+        )
+
+    for gi, grp in enumerate(groups):
+        grp_df = scans_df[scans_df["Scan_Group"] == grp].copy()
+        cond_names = list(dict.fromkeys(grp_df["Condition"].dropna().tolist()))
+
+        # Parse each condition → meta
+        cond_meta = {}   # cname → (cat_lbl, cat_order, disp_name, count)
+        for cn in cond_names:
+            lbl, order, disp = _parse(cn)
+            cnt = int((grp_df["Condition"] == cn).sum())
+            cond_meta[cn] = (lbl, order, disp, cnt)
+
+        # Group by category
+        cat_buckets = defaultdict(list)
+        for cn, (lbl, order, disp, cnt) in cond_meta.items():
+            cat_buckets[(order, lbl)].append((cn, disp, cnt))
+
+        # Build condition cards
+        first_cond = cond_names[0] if cond_names else ""
+        first_disp = cond_meta[first_cond][2] if first_cond in cond_meta else first_cond
+        first_cnt  = cond_meta[first_cond][3] if first_cond in cond_meta else 0
+
+        cards_html = ""
+        for (_, cat_lbl), conds in sorted(cat_buckets.items()):
+            cards_html += f'<div class="sc-cat-hdr">{cat_lbl}</div><div class="sc-cds">'
+            for cn, disp, cnt in sorted(conds, key=lambda x: x[1]):
+                active = " sc-active" if cn == first_cond else ""
+                cards_html += (
+                    f'<button class="sc-cd{active}" data-cond="{_hl.escape(cn)}" '
+                    f'onclick="_scFilter(\'{grp}\',\'{_hl.escape(cn)}\',\'{_hl.escape(disp)}\' )">'
+                    f'{_hl.escape(disp)}'
+                    f'<span class="sc-cnt-badge">{cnt}</span></button>'
+                )
+            cards_html += '</div>'
+
+        # Build table header row
+        ths = "".join(
+            f'<th style="text-align:{"left" if c.lower() in _LEFT_COLS else "center"}">'
+            f'{COL_LABELS.get(c,c)}</th>'
+            for c in cols
+        )
+
+        # Build table rows
+        rows_html = ""
+        for _, row in grp_df.iterrows():
+            cond    = str(row.get("Condition", ""))
+            hidden  = "" if cond == first_cond else " sc-row-hidden"
+            tds     = ""
+            for c in cols:
+                val   = row.get(c, "")
+                align = "left" if c.lower() in _LEFT_COLS else "center"
+                if c == "Symbol":
+                    display = _tv_link(str(val), "INDIA")
+                    cls     = ""
+                elif c == "Signal_Label":
+                    scls    = _signal_class(val)
+                    display = f'<span class="{scls}">{_fmt(val)}</span>' if scls else _fmt(val)
+                    cls     = ""
+                else:
+                    cls     = _cell_class(c, val, no_bg=True)
+                    display = _fmt(val)
+                ca = f' class="{cls}"' if cls else ""
+                tds += f'<td{ca} style="text-align:{align}">{display}</td>'
+            rows_html += (
+                f'<tr class="sc-row{hidden}" data-cond="{_hl.escape(cond)}">{tds}</tr>'
+            )
+
+        tbl_html = (
+            f'<div class="sc-tbl-hdr">'
+            f'<span class="sc-tbl-title" id="sc-ti-{grp}">{_hl.escape(first_disp)}</span>'
+            f'<span class="sc-tbl-sub" id="sc-ts-{grp}">{first_cnt} stocks</span>'
+            f'</div>'
+            f'<div class="tbl-wrap">'
+            f'<table class="data-tbl" id="sc-tbl-{grp}">'
+            f'<thead><tr>{ths}</tr></thead>'
+            f'<tbody>{rows_html}</tbody>'
+            f'</table></div>'
+            f'<p class="row-count" id="sc-rc-{grp}">{first_cnt} rows</p>'
+        )
+
+        vis = " sc-vis" if gi == 0 else ""
+        panes_html += (
+            f'<div class="sc-pane{vis}" id="sc-pane-{grp}">'
+            f'{cards_html}{tbl_html}</div>'
+        )
+
+    total_stocks = len(scans_df)
+    total_conds  = scans_df["Condition"].nunique()
+    run_ts       = datetime.now().strftime("%d %b %Y  %H:%M")
+
+    return (
+        css
+        + f'<p class="sc-meta">Chartink live scans &nbsp;·&nbsp; '
+          f'{total_stocks} total stocks &nbsp;·&nbsp; '
+          f'{total_conds} conditions &nbsp;·&nbsp; {run_ts}</p>'
+        + f'<div class="sc-pills">{pills_html}</div>'
+        + panes_html
+        + js
+    )
+
+
 def build_html_report(
     market, snapshot_df, sector_str_df, sector_rot_df, industry_rot_df,
     breadth_df, sector_perf_df, stock_str_df, top_buy_df, top_sell_df,
@@ -2446,10 +2676,17 @@ def build_html_report(
     country_etf_df, commodity_df,
     output_path, run_time="", primary_rs=55,
     show_stats_bar=False,   # v6.3: False for individual market pages; True for index
+    scans_df=None,         # India only: Chartink scans DataFrame → adds 📡 Scans tab
 ):
     run_time = run_time or datetime.now().strftime("%d %b %Y  %H:%M")
     global _CUR_MKT
     _CUR_MKT = market
+    # ── Scans tab content built HERE so it's ready before tabs list & sections_html ──
+    scans_content = (
+        _build_scans_tab(scans_df)
+        if (scans_df is not None and hasattr(scans_df, 'empty') and not scans_df.empty)
+        else None
+    )
 
     # Signal counts
     sl_col = "Signal_Label" if (stock_str_df is not None and not stock_str_df.empty
@@ -2483,6 +2720,7 @@ def build_html_report(
         ("sectors",       "🏭 Sectors"),
         ("opportunities", "🎯 Opportunities"),
         ("stocks",        "📊 Stocks"),
+        *([("scans", "📡 Scans")] if scans_content else []),
         ("screener",      "🔎 Screener"),
         ("patterns",      "📐 Patterns"),
         ("global",        "🌍 Global"),
@@ -2682,6 +2920,7 @@ def build_html_report(
         _sec("sectors",       "🏭 Sector Analysis",            sector_content) +
         _sec("opportunities", "🎯 Opportunities",              opp_content) +
         _sec("stocks",        "📊 All Stocks",                 stock_content) +
+        (_sec("scans", "📡 India Scans", scans_content) if scans_content else "") +
         _sec("screener",      "🔎 Screener",                   _build_screener_tab()) +
         _sec("patterns",      "📐 Chart Patterns",             patterns_content) +
         _sec("global",        "🌍 Global Markets",             global_content) +
