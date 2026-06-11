@@ -65,40 +65,43 @@ permissions:
 
 on:
   schedule:
-    # ── Original 9 ──────────────────────────────────────────
-    - cron: "30 4 * * 1-5"    # India morning
-    - cron: "0 5 * * 1-5"     # India HTML-only (IN.html)
-    - cron: "0 0 * * 1-5"     # USA HTML-only (US.html)
-    - cron: "0 9 * * 1-5"     # India scan / Scans second run
-    - cron: "30 23 * * 0-4"   # USA (Sun–Thu UTC = Mon–Fri ET)
-    - cron: "0 17 * * 1-5"    # UK
-    - cron: "0 22 * * 1-5"    # Canada
+    # ── India HTML (3 runs per day) ──────────────────────────
+    - cron: "15 4 * * 1-5"    # India HTML 1: 04:15 UTC = 09:45 IST
+    - cron: "45 8 * * 1-5"    # India HTML 2: 08:45 UTC = 14:15 IST
+    - cron: "30 10 * * 1-5"   # India HTML 3: 10:30 UTC = 16:00 IST
+
+    # ── USA HTML runs ───────────────────────────────────────
+    # NYSE opens 13:30 UTC (9:30 ET), closes 21:00 UTC (5:00 PM ET)
+    - cron: "0 14 * * 1-5"    # USA HTML 1: 14:00 UTC = 09:00 ET (30min after open)
+    - cron: "30 22 * * 0-4"   # USA HTML 2: 22:30 UTC = 17:30 ET (1.5hr after close)
+
+    # ── Other full markets (1hr after close) ─────────────────
     - cron: "0 7 * * 1-5"     # Australia
-    - cron: "0 18 * * 1-5"    # Germany
-    - cron: "30 18 * * 1-5"   # France
     - cron: "30 7 * * 1-5"    # Japan
-    - cron: "0 21 * * 1-5"    # Brazil
-    - cron: "0 3 * * 1-5"     # Scans morning
-    # ── New 8 countries ─────────────────────────────────────
     - cron: "0 8 * * 1-5"     # China
     - cron: "30 8 * * 1-5"    # South Korea
     - cron: "30 9 * * 1-5"    # Taiwan
-    - cron: "30 12 * * 0-4"   # Saudi Arabia (Sun–Thu, Tadawul trading days)
+    - cron: "30 12 * * 0-4"   # Saudi Arabia (Sun-Thu)
+    - cron: "0 17 * * 1-5"    # UK
     - cron: "30 17 * * 1-5"   # Switzerland
     - cron: "0 19 * * 1-5"    # Netherlands
     - cron: "30 19 * * 1-5"   # Spain
     - cron: "0 20 * * 1-5"    # Sweden
-    - cron: "0 10 * * 1-5"   # Hong Kong (HTML-only)
-    - cron: "45 16 * * 1-5"   # Italy (HTML-only)
-    - cron: "45 10 * * 1-5"   # Singapore (HTML-only)
-    - cron: "15 10 * * 1-5"   # Indonesia (HTML-only)
-    - cron: "0 16 * * 1-5"   # South Africa (HTML-only)
-    - cron: "30 21 * * 1-5"   # Mexico (HTML-only)
-    - cron: "0 11 * * 1-5"   # Thailand (HTML-only)
-    - cron: "30 10 * * 1-5"   # Malaysia (HTML-only)
-    - cron: "30 11 * * 0-4"   # UAE (HTML-only)
-    - cron: "15 16 * * 1-5"   # Poland (HTML-only)
-    - cron: "30 16 * * 1-5"   # Turkey (HTML-only)
+    - cron: "0 18 * * 1-5"    # Germany
+    - cron: "0 21 * * 1-5"    # Brazil
+    - cron: "0 22 * * 1-5"    # Canada
+
+    # ── HTML-only markets (staggered) ────────────────────────
+    - cron: "0 10 * * 1-5"    # Hong Kong
+    - cron: "15 10 * * 1-5"   # Indonesia
+    - cron: "45 10 * * 1-5"   # Singapore
+    - cron: "0 11 * * 1-5"    # Thailand
+    - cron: "30 11 * * 0-4"   # UAE (Sun-Thu)
+    - cron: "15 16 * * 1-5"   # Poland
+    - cron: "30 16 * * 1-5"   # Turkey
+    - cron: "45 16 * * 1-5"   # Italy
+    - cron: "0 16 * * 1-5"    # South Africa
+    - cron: "30 21 * * 1-5"   # Mexico
 
   workflow_dispatch:
     inputs:
@@ -153,16 +156,12 @@ jobs:
   #  ORIGINAL 9 COUNTRIES
   # ──────────────────────────────────────────────────────────────────────────
 
-  run-india:
-    name: "🇮🇳 India  04:30 UTC"
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 4 * * 1-5') ||
-      (github.event_name == 'workflow_dispatch' && (
-        github.event.inputs.market == 'india' ||
-        github.event.inputs.market == 'all'
-      ))
+  # DISABLED: Use run-india-html instead for 3 daily runs
+  # run-india:
+  #   name: "🇮🇳 India  04:30 UTC [DISABLED]"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 90
+  #   if: false
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -216,16 +215,12 @@ jobs:
         if: always()
         run: rm -f /tmp/google_credentials.json
 
-  run-usa:
-    name: "🇺🇸 USA  23:30 UTC"
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 23 * * 0-4') ||
-      (github.event_name == 'workflow_dispatch' && (
-        github.event.inputs.market == 'usa' ||
-        github.event.inputs.market == 'all'
-      ))
+  # DISABLED: Use run-usa-html instead for 2 daily HTML-only runs
+  # run-usa:
+  #   name: "🇺🇸 USA  23:30 UTC [DISABLED]"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 90
+  #   if: false
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -1827,11 +1822,15 @@ jobs:
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Turkey."; exit 1; fi
 
   run-india-html:
-    name: "🇮🇳 India HTML  05:00 UTC"
+    name: "🇮🇳 India HTML  3x daily (09:45 / 14:15 / 16:00 IST)"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '0 5 * * 1-5') ||
+      (github.event_name == 'schedule' && (
+        github.event.schedule == '15 4 * * 1-5' ||
+        github.event.schedule == '45 8 * * 1-5' ||
+        github.event.schedule == '30 10 * * 1-5'
+      )) ||
       (github.event_name == 'workflow_dispatch' && (
         github.event.inputs.market == 'india-html' ||
         github.event.inputs.market == 'all'
@@ -1880,11 +1879,14 @@ jobs:
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — India IN."; exit 1; fi
 
   run-usa-html:
-    name: "🇺🇸 USA HTML  00:00 UTC"
+    name: "🇺🇸 USA HTML  2x daily (09:00 ET market open / 17:30 ET post-close)"
     runs-on: ubuntu-latest
     timeout-minutes: 90
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '0 0 * * 1-5') ||
+      (github.event_name == 'schedule' && (
+        github.event.schedule == '0 14 * * 1-5' ||
+        github.event.schedule == '30 22 * * 0-4'
+      )) ||
       (github.event_name == 'workflow_dispatch' && (
         github.event.inputs.market == 'usa-html' ||
         github.event.inputs.market == 'all'
@@ -1932,19 +1934,12 @@ jobs:
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — USA US."; exit 1; fi
 
-  run-scans:
-    name: "📊 Chartink Scans  03:00 / 09:00 UTC"
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    if: |
-      (github.event_name == 'schedule' && (
-        github.event.schedule == '0 3 * * 1-5' ||
-        github.event.schedule == '0 9 * * 1-5'
-      )) ||
-      (github.event_name == 'workflow_dispatch' && (
-        github.event.inputs.market == 'scans' ||
-        github.event.inputs.market == 'all'
-      ))
+  # DISABLED: Scans job disabled per request
+  # run-scans:
+  #   name: "📊 Chartink Scans  03:00 / 09:00 UTC [DISABLED]"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 60
+  #   if: false
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
