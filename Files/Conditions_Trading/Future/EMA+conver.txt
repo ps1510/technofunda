@@ -1,0 +1,11 @@
+( latest ema(close,50) / latest ema(close,200) between 0.98 and 1.02 )
+and
+( latest ema(close,100) / latest ema(close,200) between 0.98 and 1.02 )
+and
+( latest ema(close,50) / latest ema(close,100) between 0.98 and 1.02 )
+and
+( latest close / latest ema(close,200) between 0.98 and 1.02 )
+and
+( 30 days ago close / 30 days ago ema(close,200) between 0.95 and 1.05 )
+and
+( 60 days ago close / 60 days ago ema(close,200) between 0.93 and 1.07 )

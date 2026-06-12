@@ -1,0 +1,1 @@
+( {45603} (  (  daily close /  55 days ago close ) /  ( rs:'nifty' daily close / rs:'nifty' 55 days ago close ) -  1 <  0 ) )

@@ -1,0 +1,1 @@
+( {cash} ( ( ( latest upper bollinger band ( 20,2 ) - latest lower bollinger band ( 20,2 ) ) / latest sma ( close,20 ) ) <= .05 and latest volume > 5000 and latest close > latest upper bollinger band ( 20,2 ) and latest close < latest lower bollinger band ( 20,2 ) ) )
