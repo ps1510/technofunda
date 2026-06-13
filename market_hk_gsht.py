@@ -330,6 +330,15 @@ def main():
                                         primary_rs=PRIMARY_RS_PERIOD)
 
     # ── BUILD HTML (the only output) ──────────────────────────────────────
+    rrg_html = None
+    try:
+        from market_rrg import build_rrg_data, build_rrg_section, make_sector_colors as _rrg_colors
+        _rrg_d = build_rrg_data(sector_prices, index_prices)
+        _sl = list((_rrg_d.get("weekly") or _rrg_d.get("daily", {})))
+        rrg_html = build_rrg_section(_rrg_d, _sl, _rrg_colors(_sl), market_code="HK")
+    except Exception as _e:
+        print(f"  RRG skipped: {_e}")
+
     print("\n\U0001F310 Building Hong Kong HTML report …")
     try:
         from market_html import build_html_report
@@ -342,7 +351,8 @@ def main():
             chart_pat_df=chart_df, trade_df=trade_df,
             dashboard_df=dashboard_df, sleeve_df=sleeve_df,
             country_etf_df=country_etf_df, commodity_df=commodity_df,
-            output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD)
+            output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD,
+            rrg_section=rrg_html)
         print(f"  \u2705 HTML: {html_path}")
     except Exception as e:
         print(f"  \u274c HTML generation failed: {e}")

@@ -416,12 +416,15 @@ def fetch_close_batch(symbols, days=PERIOD_DAYS, end_date=None):
     end = (pd.Timestamp(end_date) + timedelta(days=1)) if end_date else (datetime.today() + timedelta(days=1))
     start=end-timedelta(days=days+5)
     data={}
+    _failed={}
     for i in range(0,len(symbols),BATCH_SIZE):
         batch=symbols[i:i+BATCH_SIZE]
         try:
             raw=yf.download(tickers=batch,start=start.strftime("%Y-%m-%d"),
                             end=end.strftime("%Y-%m-%d"),auto_adjust=True,progress=False)
-            if raw.empty: continue
+            if raw.empty:
+                for sym in batch: _failed[sym]="empty_response"
+                continue
             if isinstance(raw.columns,pd.MultiIndex): close=raw["Close"]
             else:
                 close=raw[["Close"]] if "Close" in raw.columns else pd.DataFrame()
@@ -431,11 +434,23 @@ def fetch_close_batch(symbols, days=PERIOD_DAYS, end_date=None):
                     col=close[sym]
                     if isinstance(col,pd.DataFrame): col=col.squeeze()
                     s=_normalize(col.dropna())
-                    if len(s)>=10: 
+                    if len(s)>=10:
                         s=s.ffill().bfill()
                         data[sym]=s
-        except: pass
+                    else:
+                        _failed[sym]="insufficient_data"
+                else:
+                    _failed[sym]="not_returned"
+        except Exception as e:
+            for sym in batch: _failed[sym]=f"error:{type(e).__name__}"
         if i+BATCH_SIZE<len(symbols): time.sleep(BATCH_DELAY)
+    total=len(symbols); success=len(data); failed=len(_failed)
+    if failed>0:
+        pct=100*failed/total if total else 0
+        print(f"\n[DATA QUALITY] {total} requested | {success} OK | {failed} failed ({pct:.1f}%)")
+        reasons=", ".join(f"{s}({r})" for s,r in list(_failed.items())[:30])
+        print(f"  Failed symbols: {reasons}")
+        if failed>30: print(f"  ... and {failed-30} more")
     return pd.DataFrame(data).sort_index() if data else pd.DataFrame()
 
 def fetch_ohlcv_batch(symbols, days=PERIOD_DAYS, end_date=None):
@@ -1129,7 +1144,7 @@ def build_stock_strength(universe, price_data, index_prices, sector_prices,
         # We always store all 4 RS periods for display, but name the
         # "signal" columns after the actual periods used
         row={
-            "Symbol":orig,"TV_Symbol":_tv(orig,market),"Company":name,
+            "Symbol":orig,"Yahoo":sym,"TV_Symbol":_tv(orig,market),"Company":name,
             "Sector":sector,"Industry":industry,"Price":round(cur,2),
             "Chg_1D%":round(chg1,2) if chg1==chg1 else np.nan,
             "Chg_5D%":round(chg5,2) if chg5==chg5 else np.nan,
@@ -1860,6 +1875,33 @@ def _compute_turnover(yahoo_sym, ohlcv_dict, market):
 
 
 # ── Helper: ATR inverse-vol position sizing ───────────────────────────────────
+def atr_stop(ohlcv_df, price, period=5, mult=1.2):
+    """ATR(period)-based stop loss for one stock.
+
+    True Range_t = max(High-Low, |High-PrevClose|, |Low-PrevClose|).
+    ATR(period)  = mean of the last `period` True Range values.
+    SL distance  = mult × ATR(period)  (request #6 uses 5-period × 1.2).
+
+    Returns (atr, sl_pct, sl_price) rounded to 2dp, or (nan, nan, nan) when
+    OHLCV is unavailable / insufficient so the caller can fall back gracefully.
+    """
+    try:
+        price = float(price)
+    except (TypeError, ValueError):
+        price = np.nan
+    if (ohlcv_df is None or not {"High", "Low", "Close"}.issubset(set(ohlcv_df.columns))
+            or len(ohlcv_df) < period + 1):
+        return (np.nan, np.nan, np.nan)
+    h, l, c = ohlcv_df["High"], ohlcv_df["Low"], ohlcv_df["Close"]
+    pc = c.shift(1)
+    tr = pd.concat([(h - l), (h - pc).abs(), (l - pc).abs()], axis=1).max(axis=1)
+    atr = tr.tail(period).mean()
+    if not (atr == atr) or atr <= 0 or not (price == price) or price <= 0:
+        return (np.nan, np.nan, np.nan)
+    dist = mult * atr
+    return (round(atr, 2), round(dist / price * 100, 2), round(price - dist, 2))
+
+
 def _atr_weights(yahoo_syms, ohlcv_dict):
     """
     Compute ATR inverse-vol weights for a list of symbols.
@@ -1957,6 +1999,14 @@ def _build_one_sleeve(cfg_key, cfg, stock_df, universe_df, index_data_dir,
 
     if df.empty:
         return pd.DataFrame(), 0
+
+    # ── #8: drop fundamentally weak names — negative PAT YoY ──────────────────
+    # Keep positives and rows with missing PAT (NaN); remove only PAT_YoY% < 0.
+    if "PAT_YoY%" in df.columns:
+        _pat = pd.to_numeric(df["PAT_YoY%"], errors="coerce")
+        df = df[~(_pat < 0)].copy()
+        if df.empty:
+            return pd.DataFrame(), 0
 
     # ── ② Sleeve-specific RS score ────────────────────────────────────────────
     weights = cfg["rs_weights"]
@@ -2066,6 +2116,25 @@ def _build_one_sleeve(cfg_key, cfg, stock_df, universe_df, index_data_dir,
         top["Equal_Wt%"]  = eq
         top["ATR_Wt%"]    = eq
 
+    # ── #6: ATR(5)-based stop loss — SL distance = 1.2 × ATR(5) ───────────────
+    # Computes a per-stock stop from recent volatility (5-period Average True
+    # Range). Overrides the engine SL_Buy% / SL_Buy_Price / SL_Grade for the
+    # sleeve so the displayed SL% and the qty calculator both use the ATR stop.
+    # Falls back to the original engine SL when OHLCV is unavailable.
+    _atr_stops    = top.apply(
+        lambda r: atr_stop(ohlcv_dict.get(r.get("Yahoo", "")) if ohlcv_dict else None,
+                           r.get("Price", np.nan)), axis=1)
+    top["ATR5"]   = [v[0] for v in _atr_stops]
+    _new_sl_pct   = pd.Series([v[1] for v in _atr_stops], index=top.index)
+    _new_sl_price = pd.Series([v[2] for v in _atr_stops], index=top.index)
+    _orig_sl_pct  = pd.to_numeric(top["SL_Buy%"], errors="coerce") \
+                    if "SL_Buy%" in top.columns else pd.Series(np.nan, index=top.index)
+    _orig_sl_prc  = pd.to_numeric(top["SL_Buy_Price"], errors="coerce") \
+                    if "SL_Buy_Price" in top.columns else pd.Series(np.nan, index=top.index)
+    top["SL_Buy%"]      = _new_sl_pct.where(_new_sl_pct.notna(), _orig_sl_pct)
+    top["SL_Buy_Price"] = _new_sl_price.where(_new_sl_price.notna(), _orig_sl_prc)
+    top["SL_Grade"]     = top["SL_Buy%"].apply(lambda x: sl_grade(x))
+
     # ── Select output columns ─────────────────────────────────────────────────
     out_cols = [
         "Rank", "Symbol", "Company", "Sector", "Industry",
@@ -2073,7 +2142,7 @@ def _build_one_sleeve(cfg_key, cfg, stock_df, universe_df, index_data_dir,
         "RS_22d_Idx%", "RS_55d_Idx%", "RS_120d_Idx%", "RS_252d_Idx%",
         "Avg_Turnover", "Daily_Std%", "Equal_Wt%", "ATR_Wt%",
         "Signal", "Enhanced", "RSI_14", "Supertrend",
-        "SL_Buy%", "SL_Grade", "SL_Buy_Price",
+        "ATR5", "SL_Buy%", "SL_Grade", "SL_Buy_Price",
         "MST_Signal", "LST_Signal", "RS30_Signal",
         "Sales_YoY%", "PAT_YoY%", "ROE%", "Mkt_Cap_B",
         "Chart_Pattern",

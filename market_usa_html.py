@@ -70,6 +70,11 @@ if os.path.isdir(_SUPPORT_DIR) and _SUPPORT_DIR not in sys.path:
 if os.path.isdir(os.path.join(_SUPPORT_DIR, "IndexData")):
     INDEX_DATA_DIR = os.path.join(_SUPPORT_DIR, "IndexData")
 from market_signals import build_dashboard_df
+try:
+    from market_rrg import build_rrg_data, build_rrg_section, make_sector_colors as _rrg_colors
+    _RRG_AVAILABLE = True
+except Exception:
+    _RRG_AVAILABLE = False
 from market_engine import (
     US_INDEX, US_SECTORS, US_INDUSTRY_TO_SECTOR, US_BREADTH_INDICES,
     RS_PERIODS, SIGNAL_PERIODS, fetch_close_batch, fetch_ohlcv_batch,
@@ -277,6 +282,24 @@ def main():
     commodity_df   = build_commodity_df(period_days=PERIOD_DAYS,
                                          primary_rs=PRIMARY_RS_PERIOD)
 
+    # ── RRG tab ─────────────────────────────────────────────────────────────────
+    rrg_html = None
+    if _RRG_AVAILABLE and sector_prices:
+        try:
+            print("📡 Building RRG chart data …")
+            rrg_data = build_rrg_data(sector_prices, index_prices)
+            sec_list = [n for n in rrg_data["weekly"] or rrg_data["daily"]]
+            rrg_html = build_rrg_section(
+                rrg_data       = rrg_data,
+                sector_list    = sec_list,
+                sector_colors  = _rrg_colors(sec_list),
+                market_name    = "US",
+                benchmark_name = "S&P 500 (SPY)",
+            )
+            print(f"  ✅ RRG: {len(sec_list)} sectors")
+        except Exception as _e:
+            print(f"  ⚠ RRG skipped: {_e}")
+
     print("\n🌐 Building US HTML report …")
     try:
         from market_html import build_html_report
@@ -291,6 +314,7 @@ def main():
             dashboard_df=dashboard_df, sleeve_df=sleeve_df,
             country_etf_df=country_etf_df, commodity_df=commodity_df,
             output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD,
+            rrg_section=rrg_html,
         )
         print(f"  ✅ HTML generated successfully at: {html_path}")
     except Exception as e:

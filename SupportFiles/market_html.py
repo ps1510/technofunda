@@ -26,6 +26,12 @@ from datetime import datetime, timedelta
 # Patterns tab regardless of timeframe. See request #8.
 PATTERN_RECENT_DAYS = 15
 
+# ── Sector Strength control ───────────────────────────────────────────────────
+# Set to False to hide the "Sector Strength" bars section from the Sectors tab.
+# The Sector Performance, Sector Rotation, and Industry Rotation sections are
+# unaffected — only the bar chart at the top of the Sectors tab is hidden.
+ENABLE_SECTOR_STRENGTH = True
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SIGNAL LABEL → CSS CLASS
@@ -143,6 +149,7 @@ _COL_TIPS = {
     "sma_score":     "Count of key moving averages (20/50/100/200-day) the stock is currently trading above. Max = 4. Higher = stronger trend.",
     "total_score":   "Combined score across RS, trend, and signal conditions. Higher = stronger overall setup.",
     "fin_score":     "Fundamental quality score based on revenue growth, profit margins, and return on equity. Higher = better fundamentals.",
+    "atr5":          "5-period Average True Range — recent daily volatility in price terms. Drives the sleeve stop loss (SL = ATR(5) × 1.2).",
     "sl_buy%":       "Suggested entry level expressed as % above the last close, based on the strategy signal price.",
     "sl_buy_price":  "Absolute suggested entry price based on the strategy signal.",
     "sl_grade":      "Fundamental quality grade (A to F). A = strong fundamentals. F = weak or missing data.",
@@ -329,9 +336,29 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
             if f < 0:  return "neg-strong"
         except: pass
 
-    # ── Percent columns — suppressed entirely in no-bg tabs ───────────────────
-    if no_bg:
+    # ── Chart-pattern table (request #4) ──────────────────────────────────────
+    # Pattern name in bold; RS_Signal / Direction coloured by sentiment;
+    # RS_Score (a weighted RS%) and RR (risk:reward) coloured by quality.
+    if col == "pattern":
+        return "cell-bold"
+    if col == "rs_signal":
+        return {"Buy": "sig-buy-text", "Strong Buy": "sig-strongbuy-text",
+                "Sell": "sig-sell-text", "Neutral": "sig-neutral-text"}.get(str(val), "")
+    if col == "direction":
+        v = str(val).upper()
+        if v == "BULLISH": return "pos-strong"
+        if v == "BEARISH": return "neg-strong"
         return ""
+    if col == "rr":
+        try:
+            f = float(val)
+            if f >= 2:   return "pos-strong"
+            if f >= 1.5: return "pos"
+            if f >= 1:   return "pos-dim"
+            return "neg"
+        except: pass
+
+    # ── Percent columns — text-colour only in no-bg tabs (no background) ────────
     if col == "from_52w_high%":
         try:
             f = float(val)
@@ -355,7 +382,7 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
         "rs_22d_idx%", "rs_55d_idx%", "rs_120d_idx%", "rs_252d_idx%",
         "1m%", "3m%", "6m%", "12m%", "ytd%", "sales_yoy%", "pat_yoy%",
         "sales_qoq%", "pat_qoq%", "roe%", "margin%", "w_rs21%", "w_rs30%",
-        "m_rs12%", "sec_rs22d%", "sec_rs55d%", "sleeve_rs",
+        "m_rs12%", "sec_rs22d%", "sec_rs55d%", "sleeve_rs", "rs_score",
     }
     if col in pct_cols or col.endswith("%"):
         try:
@@ -440,6 +467,34 @@ _SUFFIX_MAP = {
 # Pre-sort by length descending once so the loop is always correct.
 _SUFFIX_ITEMS = sorted(_SUFFIX_MAP.items(), key=lambda x: len(x[0]), reverse=True)
 
+# Yahoo Finance commodity/futures/forex symbols that must map directly to
+# their TradingView equivalents — checked before suffix stripping.
+_DIRECT_TV_MAP = {
+    # Futures (Yahoo =F  →  TV exchange:symbol1!)
+    "GC=F":     "COMEX:GC1!",      # Gold
+    "SI=F":     "COMEX:SI1!",      # Silver
+    "HG=F":     "COMEX:HG1!",      # Copper
+    "PL=F":     "NYMEX:PL1!",      # Platinum
+    "CL=F":     "NYMEX:CL1!",      # Crude Oil WTI
+    "BZ=F":     "NYMEX:BB1!",      # Brent Crude
+    "NG=F":     "NYMEX:NG1!",      # Natural Gas
+    "KC=F":     "ICEUS:KC1!",      # Coffee
+    "ZC=F":     "CBOT:ZC1!",       # Corn
+    "ZW=F":     "CBOT:ZW1!",       # Wheat
+    "ZS=F":     "CBOT:ZS1!",       # Soybeans
+    # Dollar Index
+    "DX-Y.NYB": "TVC:DXY",
+    # Forex (Yahoo =X  →  TV FX:)
+    "USDINR=X": "FX:USDINR",
+    "EURINR=X": "FX:EURINR",
+    "EURUSD=X": "FX:EURUSD",
+    "GBPUSD=X": "FX:GBPUSD",
+    "USDJPY=X": "FX:USDJPY",
+    "USDCAD=X": "FX:USDCAD",
+    "AUDUSD=X": "FX:AUDUSD",
+    "USDCHF=X": "FX:USDCHF",
+}
+
 # When a symbol has NO file-extension suffix, fall back to the market code.
 _MARKET_EXCHANGE = {
     "INDIA": "NSE",
@@ -481,11 +536,21 @@ def _tv_link(sym, market=None):
     and builds a correctly prefixed TradingView URL so Saudi, China, HK, Korea,
     Japan, etc. all resolve instead of showing a broken symbol page.
     Falls back to the market-code exchange when the symbol carries no suffix.
+    Commodity/futures/forex symbols (GC=F, DX-Y.NYB, EURUSD=X …) are mapped
+    directly via _DIRECT_TV_MAP before suffix stripping is attempted.
     """
     market = (market or _CUR_MKT).upper()
     s = str(sym).strip()
     if not s or s in ("—", "nan", "None"):
         return _fmt(sym)
+
+    # 0. Direct override for futures, DXY, forex (=F / =X / .NYB symbols).
+    if s in _DIRECT_TV_MAP:
+        tv   = _DIRECT_TV_MAP[s].replace(":", "%3A")
+        base = s   # display the original Yahoo symbol (e.g. GC=F)
+        url  = "https://www.tradingview.com/chart/?symbol=" + tv
+        return (f'<a href="{url}" target="_blank" rel="noopener" '
+                f'class="tv-link" data-tv="{tv}" title="Open {s} in TradingView">{s}</a>')
 
     base = s
     exch = ""
@@ -512,13 +577,17 @@ def _tv_link(sym, market=None):
 #  TABLE BUILDER
 # ─────────────────────────────────────────────────────────────────────────────
 
-_SKIP_COLS = {"tv_symbol","_o","primary_rs_period"}
+_SKIP_COLS = {"tv_symbol","_o","primary_rs_period","yahoo"}
 _LEFT_COLS = {"symbol","company","name","sector","industry","country","region",
               "commodity","group","chart_pattern","setup_desc","strategy","notes",
               "signal_type","trend","signal_label","etf"}
 
 
-def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no_bg=False):
+def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no_bg=False,
+                 link_cols=("symbol",), link_market=None):
+    """link_cols: header names (lowercase) whose cells become TradingView links.
+       link_market: market code passed to _tv_link (e.g. 'US' for global ETF/commodity
+       tables so US-listed tickers aren't prefixed with the page's home exchange)."""
     if df is None or df.empty:
         return '<p class="empty">No data available.</p>'
     df = df.head(max_rows).copy()
@@ -547,7 +616,8 @@ def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no
         tds = ""
         for c in cols:
             val = row[c]; cls = _cell_class(c, val, pct_mode, no_bg=no_bg)
-            display = _tv_link(val) if c.lower().strip() == "symbol" else _fmt(val)
+            display = (_tv_link(val, link_market) if c.lower().strip() in link_cols
+                       else _fmt(val))
             align = "left" if c.lower() in _LEFT_COLS else "center"
             ca = f' class="{cls}"' if cls else ""
             tds += f'<td{ca} style="text-align:{align}">{display}</td>'
@@ -566,6 +636,16 @@ def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no
     return (f'{search}<div class="tbl-wrap"><table id="{table_id}" class="data-tbl">'
             f'<thead><tr>{ths}</tr>{col_filter}</thead><tbody>{rows_html}</tbody></table></div>'
             f'<p class="row-count" id="{table_id}-count">{len(df)} rows</p>')
+
+
+def _reorder_leading(df, leading):
+    """Return df with `leading` columns moved to the front (only those present),
+    preserving the original order of every remaining column. Non-destructive."""
+    if df is None or df.empty:
+        return df
+    lead = [c for c in leading if c in df.columns]
+    rest = [c for c in df.columns if c not in lead]
+    return df[lead + rest]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -765,7 +845,7 @@ _SLEEVE_META = {
 # Columns to show in sleeve tables (will auto-filter to available ones)
 _SLEEVE_SHOW = ["Rank","Symbol","Company","Sector","Signal_Label",
                 "Price","Sleeve_RS","RS_22d_Idx%","RS_55d_Idx%",
-                "SL_Buy%","SL_Grade","Equal_Wt%","ATR_Wt%",
+                "ATR5","SL_Buy%","SL_Grade","Equal_Wt%","ATR_Wt%",
                 "Sales_YoY%","PAT_YoY%","ROE%"]
 
 
@@ -821,18 +901,19 @@ def _build_sleeve_tables(sleeve_df, market="INDIA"):
              value="1" min="0.1" max="5" step="0.1" oninput="recalcAll()">
     </div>
     <div class="ctrl-field">
-      <label class="ctrl-label">Max SL cap (%)</label>
+      <label class="ctrl-label">SL fallback (%)</label>
       <input type="number" id="global-sl-cap" class="cap-input" style="width:80px"
-             value="5" min="1" max="15" step="0.5" oninput="recalcAll()">
+             value="5" min="1" max="15" step="0.5" oninput="recalcAll()"
+             title="Used only when a stock has no ATR data. The ATR(5)×1.2 stop drives sizing otherwise.">
     </div>
   </div>
   <div class="ctrl-formula">
     <strong>Formula:</strong>
-    Qty&nbsp;=&nbsp;⌊ (Capital&nbsp;×&nbsp;Risk%) &nbsp;÷&nbsp; (Price&nbsp;×&nbsp;effective_SL%) ⌋
+    Qty&nbsp;=&nbsp;⌊ (Capital&nbsp;×&nbsp;Risk%) &nbsp;÷&nbsp; (Price&nbsp;×&nbsp;SL%) ⌋
     &nbsp;·&nbsp;
-    effective_SL&nbsp;=&nbsp;min(SL_Buy%,&nbsp;Max&nbsp;SL&nbsp;cap)
+    SL%&nbsp;=&nbsp;ATR(5)&nbsp;×&nbsp;1.2&nbsp;÷&nbsp;Price (fallback above if no ATR)
     &nbsp;·&nbsp;
-    If SL_Buy% missing → uses Max SL cap as fallback
+    Total deployment is scaled down if it would exceed Portfolio Capital
   </div>
 </div>"""
 
@@ -1086,7 +1167,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   padding:5px 10px;border-radius:8px;transition:all .15s;white-space:nowrap;}
 .home-link:hover{color:var(--accent);border-color:var(--accent);}
 .country-nav-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);
-  font-size:12px;font-weight:600;padding:5px 8px;border-radius:8px;cursor:pointer;outline:none;}
+  font-size:12px;font-weight:600;padding:5px 8px;border-radius:8px;cursor:pointer;outline:none;
+  min-width:160px;max-width:200px;}
 .country-nav-select:focus{border-color:var(--accent);}
 /* Feedback form */
 .feedback-section{background:var(--bg2);border-top:1px solid var(--border);
@@ -1146,8 +1228,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .tab-content{display:none;padding:14px clamp(12px,3vw,40px);max-width:100%;margin:0 auto;}
 .tab-content.active{display:block;}
 .sec-title{font-size:14px;font-weight:600;color:var(--text);
-  margin:18px 0 8px;border-left:3px solid var(--accent);padding-left:10px;}
+  margin:18px 0 4px;border-left:3px solid var(--accent);padding-left:10px;}
 .sec-title:first-child{margin-top:0;}
+.sec-subtitle{font-size:11px;color:var(--text-dim);margin:0 0 8px 13px;padding:0;}
 /* Health card */
 .health-card{background:var(--bg2);border:1px solid var(--border);
   border-radius:var(--radius);padding:16px;margin-bottom:16px;}
@@ -1265,6 +1348,7 @@ table.data-tbl{border-collapse:collapse;width:100%;font-size:12px;min-width:400p
 .pos-strong{color:var(--green);font-weight:600;}.pos{color:#81c784;}
 .pos-dim{color:#a5d6a7;}.neg-strong{color:var(--red);font-weight:600;}
 .neg{color:#e57373;}.neg-dim{color:#ef9a9a;}.dim{color:var(--text3);}
+.cell-bold{font-weight:700;}
 /* Breadth / rotation 0-100 columns: ≥60 green · 40-60 amber · <40 red */
 .data-tbl td.bd-green{background:rgba(34,197,94,.13)!important;color:#22c55e!important;font-weight:600;}
 .data-tbl td.bd-amber{background:rgba(245,158,11,.13)!important;color:#f59e0b!important;font-weight:600;}
@@ -1538,8 +1622,8 @@ function applyFilters(tableId){
         const idx=colIdx[key]; if(idx===undefined)continue;
         const c=row.cells[idx]; if(!c){show=false;break;}
         const ct=c.textContent.trim();
-        if(f.mode==='contains'){if(!ct.toLowerCase().includes(f.val)){show=false;break;}}
-        else if(f.mode==='exact'){if(ct.toLowerCase()!==f.val){show=false;break;}}
+        if(f.mode==='contains'){if(!ct.toLowerCase().includes(String(f.val).toLowerCase())){show=false;break;}}
+        else if(f.mode==='exact'){if(ct.toLowerCase()!==String(f.val).toLowerCase()){show=false;break;}}
         else if(f.mode==='gte'){const n=parseFloat(ct);if(isNaN(n)||n<parseFloat(f.val)){show=false;break;}}
         else if(f.mode==='lte'){const n=parseFloat(ct);if(isNaN(n)||n>parseFloat(f.val)){show=false;break;}}
         else if(f.mode==='range'){
@@ -1599,13 +1683,13 @@ function exportTableCSV(tableId){
 const SCREEN_DEFS={
   rs30_buy:{cat:'signal',name:'🟢 RS30 Buy',
     test(row,h){const r30=_sv(row,_ci(h,'RS30_Signal'));const rs=_n(_sv(row,_ci(h,'RS_22d_Idx%')));const sq=_n(_sv(row,_ci(h,'Sales_QoQ%')));const pq=_n(_sv(row,_ci(h,'PAT_QoQ%')));
-    return r30==='Buy'&&rs!==null&&rs>0&&sq!==null&&sq>15&&pq!==null&&pq>15;}},
+    return _isBuy(r30)&&rs!==null&&rs>0&&sq!==null&&sq>15&&pq!==null&&pq>15;}},
   mst_buy:{cat:'signal',name:'📈 MST Swing Buy',
     test(row,h){const mst=_sv(row,_ci(h,'MST_Signal'));const tr=_sv(row,_ci(h,'Trend')).toLowerCase();const rsi=_n(_sv(row,_ci(h,'RSI_14')));
-    return mst==='Buy'&&tr.includes('bull')&&rsi!==null&&rsi>50;}},
+    return _isBuy(mst)&&tr.includes('bull')&&rsi!==null&&rsi>50;}},
   lst_buy:{cat:'signal',name:'🚀 LST Long Buy',
     test(row,h){const lst=_sv(row,_ci(h,'LST_Signal'));const sma=_n(_sv(row,_ci(h,'SMA_Score')));const rs55=_n(_sv(row,_ci(h,'RS_55d_Idx%')));
-    return lst==='Buy'&&sma!==null&&sma>=3&&rs55!==null&&rs55>0;}},
+    return _isBuy(lst)&&sma!==null&&sma>=3&&rs55!==null&&rs55>0;}},
   prime:{cat:'signal',name:'🌟 Prime Setups',
     test(row,h){const sig=_sv(row,_ci(h,'Signal_Label')).toLowerCase();const gate=_sv(row,_ci(h,'Sec_Gated'));const sma=_n(_sv(row,_ci(h,'SMA_Score')));
     return (sig.includes('prime')||sig.includes('triple'))&&gate==='✓'&&sma===4;}},
@@ -1671,6 +1755,9 @@ const SCREEN_DEFS={
 function _ci(headers,name){const n=name.toLowerCase();for(let i=0;i<headers.length;i++){if(headers[i].textContent.replace(/[\u2195\u2191\u2193]/g,'').trim().toLowerCase()===n)return i;}return -1;}
 function _sv(row,idx){return idx>=0&&row.cells[idx]?row.cells[idx].textContent.trim():'';}
 function _n(v){const f=parseFloat(v);return isNaN(f)?null:f;}
+/* MST/LST/RS30 cells display the remapped word 'Active' (engine value 'Buy').
+   Accept both so the signal screens match regardless of display vocabulary. */
+function _isBuy(v){const s=String(v).trim().toLowerCase();return s==='buy'||s==='active';}
 let _activeScreen=null;
 function runScreen(cardEl,screenKey){
   const def=SCREEN_DEFS[screenKey];if(!def)return;
@@ -1803,54 +1890,60 @@ function calcSleeve(key){
   const tbl      = document.getElementById('sleeve-' + key);
   if(!tbl || capital <= 0) return;
 
-  const cur      = getCurrency();
-  let totalDeployed = 0;
-  let totalRisk     = 0;
-  let n             = 0;
+  const cur = getCurrency();
 
+  // ── Pass 1: risk-based base sizing per row ───────────────────────────────
+  //   Qty = floor( (Capital × Risk%) / (Price × SL%) )
+  //   #6: SL% is the ATR(5)×1.2 stop from the engine (row.dataset.sl).
+  //       The 'Max SL cap' input is only a fallback when ATR is unavailable.
+  const items = [];
   for(const row of tbl.tBodies[0].rows){
     const price = parseFloat(row.dataset.price) || 0;
-    const slRaw = parseFloat(row.dataset.sl)    || 0;  // SL_Buy% from engine
-
-    const qCell   = row.querySelector('.qty-cell');
-    const aCell   = row.querySelector('.amt-cell');
-    const slpCell = row.querySelector('.slp-cell');
-    const rCell   = row.querySelector('.rsk-cell');
-    const eslCell = row.querySelector('.esl-cell');
-
+    const slRaw = parseFloat(row.dataset.sl)    || 0;   // ATR-based SL% from engine
+    const cells = {
+      q:   row.querySelector('.qty-cell'),
+      a:   row.querySelector('.amt-cell'),
+      slp: row.querySelector('.slp-cell'),
+      r:   row.querySelector('.rsk-cell'),
+      esl: row.querySelector('.esl-cell'),
+    };
     if(price <= 0){
-      if(qCell)   qCell.textContent   = '—';
-      if(aCell)   aCell.textContent   = '—';
-      if(slpCell) slpCell.textContent = '—';
-      if(rCell)   rCell.textContent   = '—';
-      if(eslCell) eslCell.textContent = '—';
+      Object.values(cells).forEach(c=>{ if(c) c.textContent='—'; });
       continue;
     }
+    const effectiveSL = (slRaw > 0) ? slRaw : slCap;     // ATR drives; cap = fallback
+    const riskAmount  = capital * riskPct / 100;
+    const riskPerShr  = price * effectiveSL / 100;
+    const baseQty     = riskPerShr > 0 ? Math.floor(riskAmount / riskPerShr) : 0;
+    items.push({price, slRaw, effectiveSL, baseQty, cells});
+  }
 
-    // effective SL: use engine value if available, cap at slCap, fallback to slCap
-    const effectiveSL = (slRaw > 0) ? Math.min(slRaw, slCap) : slCap;
+  // ── #7: cap total deployment at portfolio capital ────────────────────────
+  //   Pure risk sizing can deploy far more than the account holds. Scale every
+  //   position down by the same factor so the sum fits the capital ceiling.
+  let baseDeployed = 0;
+  items.forEach(it => { baseDeployed += it.baseQty * it.price; });
+  const scale = (baseDeployed > capital && baseDeployed > 0) ? capital / baseDeployed : 1;
 
-    // Risk-based position sizing
-    const riskAmount = capital * riskPct / 100;          // e.g. 1% of 10L = ₹10,000
-    const riskPerShr = price   * effectiveSL / 100;      // e.g. ₹1000 × 5% = ₹50
-    const qty        = riskPerShr > 0 ? Math.floor(riskAmount / riskPerShr) : 0;
-    const amount     = qty * price;
-    const slPrice    = price * (1 - effectiveSL / 100);
-    const actualRisk = qty * riskPerShr;                  // should ≈ riskAmount
-
-    if(qCell)   qCell.textContent   = qty > 0 ? qty.toLocaleString('en-IN') : '—';
-    if(aCell)   aCell.textContent   = qty > 0 ? fmtNum(amount, cur) : '—';
-    if(slpCell) slpCell.textContent = qty > 0 ? slPrice.toFixed(2) : '—';
-    if(rCell)   rCell.textContent   = qty > 0 ? fmtNum(actualRisk, cur) : '—';
-    if(eslCell){
-      eslCell.textContent = effectiveSL.toFixed(1) + '%';
-      // Highlight if SL was capped (engine SL was wider than cap)
-      eslCell.style.color = (slRaw > slCap && slRaw > 0) ? '#f59e0b' : '';
-      eslCell.title = slRaw > 0
-        ? `Engine SL: ${slRaw.toFixed(1)}% → capped to ${effectiveSL.toFixed(1)}%`
-        : `No SL data → using fallback ${effectiveSL.toFixed(1)}%`;
+  // ── Pass 2: apply scale, fill cells, accumulate totals ───────────────────
+  let totalDeployed = 0, totalRisk = 0, n = 0;
+  for(const it of items){
+    const qty        = scale < 1 ? Math.floor(it.baseQty * scale) : it.baseQty;
+    const amount     = qty * it.price;
+    const slPrice    = it.price * (1 - it.effectiveSL / 100);
+    const actualRisk = qty * it.price * it.effectiveSL / 100;
+    const {q, a, slp, r, esl} = it.cells;
+    if(q)   q.textContent   = qty > 0 ? qty.toLocaleString('en-IN') : '—';
+    if(a)   a.textContent   = qty > 0 ? fmtNum(amount, cur) : '—';
+    if(slp) slp.textContent = qty > 0 ? slPrice.toFixed(2) : '—';
+    if(r)   r.textContent   = qty > 0 ? fmtNum(actualRisk, cur) : '—';
+    if(esl){
+      esl.textContent = it.effectiveSL.toFixed(1) + '%';
+      esl.style.color = (it.slRaw <= 0) ? '#f59e0b' : '';
+      esl.title = it.slRaw > 0
+        ? `ATR(5)×1.2 stop: ${it.slRaw.toFixed(1)}%`
+        : `No ATR data → fallback ${it.effectiveSL.toFixed(1)}%`;
     }
-
     totalDeployed += amount;
     totalRisk     += actualRisk;
     if(qty > 0) n++;
@@ -1858,10 +1951,15 @@ function calcSleeve(key){
 
   const sumEl = document.getElementById('sum-'  + key);
   const totEl = document.getElementById('total-' + key);
+  const scaleNote = scale < 1
+    ? ' · ⚖ scaled to ' + Math.round(scale*100) + '% to fit capital'
+    : '';
   if(sumEl) sumEl.textContent =
     n + ' stocks · Deployed ' + fmtNum(totalDeployed, cur) +
-    ' · Total Risk ' + fmtNum(totalRisk, cur) +
-    ' (' + (capital > 0 ? (totalRisk/capital*100).toFixed(1) : '0') + '% of capital)';
+    ' / ' + fmtNum(capital, cur) +
+    ' · Risk ' + fmtNum(totalRisk, cur) +
+    ' (' + (capital > 0 ? (totalRisk/capital*100).toFixed(1) : '0') + '% of capital)' +
+    scaleNote;
   if(totEl) totEl.textContent = fmtNum(totalDeployed, cur);
 }
 
@@ -2414,8 +2512,8 @@ def _build_screener_tab():
 
     return (
         '<style>' +
-        '.scr-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}' +
-        '.scr-cat-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-size:12px;font-weight:600;}' +
+        '.scr-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}' +
+        '.scr-cat-btn{padding:8px 20px;border-radius:20px;border:2px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;transition:.15s;letter-spacing:.01em;}' +
         '.scr-cat-btn.active,.scr-cat-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}' +
         '.scr-cat-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;border-left:3px solid var(--accent);padding-left:8px;}' +
         '</style>' +
@@ -2479,42 +2577,50 @@ def _build_scans_tab(scans_df):
         "Symbol", "Company", "Sector", "Price", "Chg_1D%",
         "Signal_Label", "RS_22d_Idx%", "RSI_14",
         "From_52W_High%", "Rel_Vol", "SMA_Score",
+        "Sec_Gated", "Sec_Index",
     ]
     COL_LABELS = {
         "Symbol": "Symbol", "Company": "Company", "Sector": "Sector",
         "Price": "Price", "Chg_1D%": "Chg%", "Signal_Label": "Signal",
         "RS_22d_Idx%": "RS 22d%", "RSI_14": "RSI",
         "From_52W_High%": "52W Hi%", "Rel_Vol": "Rel Vol", "SMA_Score": "SMA",
+        "Sec_Gated": "Sec✓", "Sec_Index": "Sec Idx",
     }
     cols = [c for c in SCAN_SHOW if c in scans_df.columns]
 
     # ── CSS (scoped to .sc- prefix — no clash with existing styles) ────────
     css = """<style>
 .sc-meta{font-size:11px;color:var(--text3,#6b7280);margin-bottom:8px}
-.sc-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.sc-pill{padding:5px 18px;border-radius:20px;font-size:12px;font-weight:600;
-  border:1px solid var(--border,#2a2d3a);background:var(--bg2,#1a1d27);
-  color:var(--text2,#9ca3af);cursor:pointer;transition:.15s}
-.sc-pill.sc-on{background:var(--accent,#4fc3f7);color:#000;border-color:var(--accent,#4fc3f7)}
+.sc-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.sc-pill{padding:8px 22px;border-radius:20px;font-size:13px;font-weight:700;
+  border:2px solid var(--border);background:var(--bg3);
+  color:var(--text2);cursor:pointer;transition:.15s;letter-spacing:.01em}
+.sc-pill.sc-on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sc-pill[data-grp="Investment"]{border-color:#4fc3f7;color:#4fc3f7}
+.sc-pill[data-grp="Investment"].sc-on{background:#4fc3f7;color:#0f1117}
+.sc-pill[data-grp="Trading"]{border-color:#ffb74d;color:#ffb74d}
+.sc-pill[data-grp="Trading"].sc-on{background:#ffb74d;color:#0f1117}
+.sc-pill[data-grp="SwingTrade"]{border-color:#a5d6a7;color:#a5d6a7}
+.sc-pill[data-grp="SwingTrade"].sc-on{background:#a5d6a7;color:#0f1117}
 .sc-pane{display:none}
 .sc-pane.sc-vis{display:block}
 .sc-cat-hdr{font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.07em;color:var(--text3,#6b7280);
+  letter-spacing:.07em;color:var(--text3);
   display:flex;align-items:center;gap:6px;margin:12px 0 5px}
-.sc-cat-hdr::after{content:'';flex:1;height:1px;background:var(--border,#2a2d3a)}
+.sc-cat-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
 .sc-cds{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
 .sc-cd{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;
-  border:1px solid var(--border,#2a2d3a);background:var(--bg2,#1a1d27);
-  color:var(--text1,#e2e8f0);cursor:pointer;transition:.15s;white-space:nowrap}
-.sc-cd:hover{border-color:var(--accent,#4fc3f7);color:var(--accent,#4fc3f7)}
-.sc-cd.sc-active{border-color:var(--accent,#4fc3f7);color:var(--accent,#4fc3f7);
-  background:rgba(79,195,247,.08);font-weight:700}
+  border:1px solid var(--border);background:var(--bg3);
+  color:var(--text);cursor:pointer;transition:.15s;white-space:nowrap}
+.sc-cd:hover{border-color:var(--accent);color:var(--accent)}
+.sc-cd.sc-active{border-color:var(--accent);color:var(--accent);
+  background:rgba(79,195,247,.1);font-weight:700}
 .sc-cnt-badge{font-size:9px;color:var(--text3,#6b7280);margin-left:3px}
 .sc-tbl-hdr{display:flex;align-items:baseline;gap:10px;
   margin:14px 0 6px;padding-bottom:6px;
-  border-bottom:1px solid var(--border,#2a2d3a)}
-.sc-tbl-title{font-size:13px;font-weight:700;color:var(--text1,#e2e8f0)}
-.sc-tbl-sub{font-size:11px;color:var(--text3,#6b7280)}
+  border-bottom:1px solid var(--border)}
+.sc-tbl-title{font-size:13px;font-weight:700;color:var(--text)}
+.sc-tbl-sub{font-size:11px;color:var(--text3)}
 .sc-row-hidden{display:none!important}
 </style>"""
 
@@ -2550,6 +2656,23 @@ function _scFilter(grp,cond,dispName){
   var rc=document.getElementById('sc-rc-'+grp);
   if(rc)rc.textContent=vis+' rows';
 }
+function _scResetFilter(grp){
+  var tbl=document.getElementById('sc-tbl-'+grp);
+  if(!tbl)return;
+  var vis=0;
+  tbl.querySelectorAll('tr.sc-row').forEach(function(r){
+    r.classList.remove('sc-row-hidden');
+    vis++;
+  });
+  var pane=document.getElementById('sc-pane-'+grp);
+  if(pane)pane.querySelectorAll('.sc-cd').forEach(function(b){b.classList.remove('sc-active');});
+  var ti=document.getElementById('sc-ti-'+grp);
+  if(ti)ti.textContent='All Conditions';
+  var ts=document.getElementById('sc-ts-'+grp);
+  if(ts)ts.textContent=vis+' stocks';
+  var rc=document.getElementById('sc-rc-'+grp);
+  if(rc)rc.textContent=vis+' rows';
+}
 </script>"""
 
     # ── Build scan-group pills + panes ─────────────────────────────────────
@@ -2557,7 +2680,7 @@ function _scFilter(grp,cond,dispName){
     import html as _hl
 
     groups = list(dict.fromkeys(scans_df["Scan_Group"].dropna().tolist()))
-    GRP_ICON = {"LongTerm": "📈", "FnO": "⚡"}
+    GRP_ICON = {"Investment": "📈", "Trading": "⚡", "SwingTrade": "🌊"}
 
     pills_html = ""
     panes_html = ""
@@ -2574,16 +2697,33 @@ function _scFilter(grp,cond,dispName){
         cond_names = list(dict.fromkeys(grp_df["Condition"].dropna().tolist()))
 
         # Parse each condition → meta
+        # If a "Category" column exists (subfolder mode), use it directly.
+        # Otherwise fall back to _parse() prefix detection.
+        has_category_col = "Category" in grp_df.columns
         cond_meta = {}   # cname → (cat_lbl, cat_order, disp_name, count)
-        for cn in cond_names:
-            lbl, order, disp = _parse(cn)
+        for i, cn in enumerate(cond_names):
+            if has_category_col:
+                # Get the category from the first row matching this condition
+                _row = grp_df[grp_df["Condition"] == cn]
+                _cat_val = _row["Category"].iloc[0] if not _row.empty else None
+                if _cat_val and str(_cat_val).strip() and str(_cat_val) != "nan":
+                    lbl   = str(_cat_val).strip()
+                    order = i   # preserve folder/file order
+                    disp  = cn.replace("_", " ").strip()
+                else:
+                    lbl, order, disp = _parse(cn)
+            else:
+                lbl, order, disp = _parse(cn)
             cnt = int((grp_df["Condition"] == cn).sum())
             cond_meta[cn] = (lbl, order, disp, cnt)
 
-        # Group by category
+        # Group by category — use (order, lbl) key so subfolder order is stable
         cat_buckets = defaultdict(list)
+        _seen_cat_order = {}
         for cn, (lbl, order, disp, cnt) in cond_meta.items():
-            cat_buckets[(order, lbl)].append((cn, disp, cnt))
+            # normalise: same label → same sort key (take first seen order)
+            key_order = _seen_cat_order.setdefault(lbl, order)
+            cat_buckets[(key_order, lbl)].append((cn, disp, cnt))
 
         # Build condition cards
         first_cond = cond_names[0] if cond_names else ""
@@ -2639,6 +2779,9 @@ function _scFilter(grp,cond,dispName){
             f'<div class="sc-tbl-hdr">'
             f'<span class="sc-tbl-title" id="sc-ti-{grp}">{_hl.escape(first_disp)}</span>'
             f'<span class="sc-tbl-sub" id="sc-ts-{grp}">{first_cnt} stocks</span>'
+            f'<button class="copy-btn sm" onclick="_scResetFilter(\'{grp}\')" style="margin-left:10px">✖ Reset</button>'
+            f'<button class="copy-btn sm" onclick="exportStocksTV(\'sc-tbl-{grp}\')" style="margin-left:6px">📋 Copy TV</button>'
+            f'<button class="copy-btn sm" onclick="exportTableCSV(\'sc-tbl-{grp}\')" style="margin-left:6px">⬇ CSV</button>'
             f'</div>'
             f'<div class="tbl-wrap">'
             f'<table class="data-tbl" id="sc-tbl-{grp}">'
@@ -2677,6 +2820,8 @@ def build_html_report(
     output_path, run_time="", primary_rs=55,
     show_stats_bar=False,   # v6.3: False for individual market pages; True for index
     scans_df=None,         # India only: Chartink scans DataFrame → adds 📡 Scans tab
+    enable_sector_strength=None,  # None = use module-level ENABLE_SECTOR_STRENGTH constant
+    rrg_section=None,       # Optional RRG HTML snippet → adds 📡 RRG tab after Sectors
 ):
     run_time = run_time or datetime.now().strftime("%d %b %Y  %H:%M")
     global _CUR_MKT
@@ -2700,10 +2845,10 @@ def build_html_report(
     prime=_cnt("🌟","PRIME BUY"); conf=_cnt("✅","CONFIRMED BUY")
     rsbuy=_cnt("📈","RS BUY");    avoid=_cnt("🔴","AVOID")
 
-    # Simplified stock view
-    MAIN_COLS = ["Symbol","Company","Sector","Price","Chg_1D%",
+    # Simplified stock view — #2: Sector moved after Trend, Industry added beside it
+    MAIN_COLS = ["Symbol","Company","Price","Chg_1D%",
                  "Signal_Label","Sec_Gated","RS_22d_Idx%","RS_55d_Idx%",
-                 "RSI_14","Trend","SMA_Score","Total_Score","Fin_Score",
+                 "RSI_14","Trend","Sector","Industry","SMA_Score","Total_Score","Fin_Score",
                  "From_52W_High%","Rel_Vol",
                  "SL_Buy%","SL_Grade","SL_Buy_Price",
                  "Sales_QoQ%","Sales_YoY%","PAT_QoQ%","PAT_YoY%",
@@ -2718,6 +2863,7 @@ def build_html_report(
     tabs = [
         ("market",        "📸 Market"),
         ("sectors",       "🏭 Sectors"),
+        *([("rrg",        "📡 RRG")]     if rrg_section else []),
         ("opportunities", "🎯 Opportunities"),
         ("stocks",        "📊 Stocks"),
         *([("scans", "📡 Scans")] if scans_content else []),
@@ -2729,7 +2875,8 @@ def build_html_report(
         ("dashboard",     "📋 Dashboard"),
     ]
     tab_btns = "".join(
-        f'<button class="tab-btn" data-tab="{tid}" onclick="showTab(\'{tid}\')">{lbl}</button>'
+        (f'<button class="tab-btn" data-tab="{tid}" '
+         f'onclick="showTab(\'{tid}\'){";rrgInit()" if tid=="rrg" else ""}">{lbl}</button>')
         for tid, lbl in tabs
     )
 
@@ -2755,20 +2902,32 @@ def build_html_report(
         _build_table(breadth_df, "tbl-breadth", searchable=False, pct_mode="breadth")
     )
 
+    _show_str = ENABLE_SECTOR_STRENGTH if enable_sector_strength is None else enable_sector_strength
+    _sector_strength_block = (
+        '<h2 class="sec-title">Sector Strength</h2>'
+        '<p class="sec-subtitle">ETF-based — each sector ETF\'s relative performance vs the benchmark index.</p>' +
+        _build_sector_bars(sector_str_df)
+    ) if _show_str else ""
     sector_content = (
-        '<h2 class="sec-title">Sector Strength</h2>' +
-        _build_sector_bars(sector_str_df) +
-        '<h2 class="sec-title">Sector Performance</h2>' +
+        _sector_strength_block +
+        '<h2 class="sec-title">Sector Performance</h2>'
+        '<p class="sec-subtitle">Absolute and relative returns for each sector ETF over multiple time periods.</p>' +
         _build_table(sector_perf_df, "tbl-secperf", searchable=False) +
-        '<h2 class="sec-title">Sector Rotation</h2>' +
+        '<h2 class="sec-title">Sector Rotation</h2>'
+        '<p class="sec-subtitle">Breadth-based — percentage of individual stocks per sector above key technical levels (RS, RSI, SMA).</p>' +
         _build_table(sector_rot_df, "tbl-secrot", pct_mode="breadth") +
-        '<h2 class="sec-title">Industry Rotation</h2>' +
+        '<h2 class="sec-title">Industry Rotation</h2>'
+        '<p class="sec-subtitle">Breadth-based — same metrics broken down by industry within each sector.</p>' +
         _build_table(industry_rot_df, "tbl-indrot", pct_mode="breadth")
     )
 
     opp_cards  = _build_opportunity_cards(top_buy_df)
-    opp_table  = _build_table(top_buy_df,  "tbl-opp-table", no_bg=True)
-    sell_table = _build_table(top_sell_df, "tbl-sell",      no_bg=True)
+    # #1: both tables share one leading column layout (sector context first, then stock)
+    _sec_rs_col = f"Sec_RS{primary_rs}d%"
+    _opp_lead = ["Sec_Rank", "Sector", "Sec_Signal", "Rank", "Symbol", "Company",
+                 "Price", "Chg_1D%", _sec_rs_col, "RS_22d_Idx%"]
+    opp_table  = _build_table(_reorder_leading(top_buy_df,  _opp_lead), "tbl-opp-table", no_bg=True)
+    sell_table = _build_table(_reorder_leading(top_sell_df, _opp_lead), "tbl-sell",      no_bg=True)
     opp_content = (
         _toggle("vt-opp", "table") +
         _OPP_PANEL +
@@ -2904,11 +3063,15 @@ def build_html_report(
         _build_table(chart_pat_recent, "tbl-patterns", no_bg=True)
     )
 
+    # Global ETF/commodity tickers are US-listed → link the "ETF" column with
+    # market="US" so they aren't prefixed with the page's home exchange (#5).
     global_content = (
         '<h2 class="sec-title">🌍 Country ETFs (RS vs SPY)</h2>' +
-        _build_table(country_etf_df, "tbl-etfs", no_bg=True) +
+        _build_table(country_etf_df, "tbl-etfs", no_bg=True,
+                     link_cols=("etf",), link_market="US") +
         '<h2 class="sec-title">🏅 Commodities (RS vs GLD)</h2>' +
-        _build_table(commodity_df, "tbl-commod", no_bg=True)
+        _build_table(commodity_df, "tbl-commod", no_bg=True,
+                     link_cols=("etf",), link_market="US")
     )
 
     sleeves_content = _build_sleeve_tables(sleeve_df, market)
@@ -2918,6 +3081,7 @@ def build_html_report(
     sections_html = (
         _sec("market",        "📸 Market Overview",            market_content) +
         _sec("sectors",       "🏭 Sector Analysis",            sector_content) +
+        (f'<div class="tab-content" id="tab-rrg">{rrg_section}</div>' if rrg_section else "") +
         _sec("opportunities", "🎯 Opportunities",              opp_content) +
         _sec("stocks",        "📊 All Stocks",                 stock_content) +
         (_sec("scans", "📡 India Scans", scans_content) if scans_content else "") +
@@ -2973,7 +3137,7 @@ def build_html_report(
         "MX":        ("Mexico",        "🇲🇽", "MX.html"),
         "TH":        ("Thailand",      "🇹🇭", "TH.html"),
         "MY":        ("Malaysia",      "🇲🇾", "MY.html"),
-        "AE":        ("UAE",           "🇦🇪", "UAE.html"),
+        "AE":        ("UAE",           "🇦🇪", "AE.html"),
         "PL":        ("Poland",        "🇵🇱", "PL.html"),
         "TR":        ("Turkey",        "🇹🇷", "TR.html"),
     }

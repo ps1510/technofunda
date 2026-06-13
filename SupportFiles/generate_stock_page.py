@@ -451,6 +451,8 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
 .tv-open-btn{background:var(--accent);color:#fff;border:none;
   border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;}
 .tv-frame{width:100%;height:500px;border:none;display:block;}
+.tv-fallback-note{padding:8px 16px;font-size:12px;color:var(--text3);
+  border-top:1px solid var(--border);}
 /* Sparkline */
 .sparkline-wrap{padding:12px 16px;}
 canvas#sparkline{width:100%;height:120px;display:block;}
@@ -657,6 +659,82 @@ def _sma_bars(d):
     return f'<div class="sma-bars">{rows}</div>'
 
 
+def _tv_symbol(ticker, country="", yf_exchange=""):
+    """
+    Convert a yfinance ticker into a TradingView 'EXCHANGE:SYMBOL' string.
+
+    The exchange is derived from the yfinance suffix (e.g. .MI, .NS, .DE),
+    which uniquely identifies the trading venue. This is far more reliable
+    than guessing from the country code, and it is the reason charts were
+    failing for markets such as Italy, Germany, France, Spain, Poland,
+    Indonesia, Thailand and Brazil — their suffixes were never stripped and
+    never mapped to a TradingView exchange, so the widget got a symbol it
+    could not resolve ("symbol only available on TradingView").
+
+    US tickers have no suffix, so the yfinance exchange code is used to pick
+    NASDAQ / NYSE / AMEX; if that is unknown the bare symbol is returned and
+    TradingView resolves it to the primary US listing.
+    """
+    t = (ticker or "").strip().upper()
+    if not t:
+        return ""
+
+    # yfinance suffix  ->  TradingView exchange prefix
+    SUFFIX_MAP = {
+        # India
+        "NS": "NSE", "BO": "BSE",
+        # UK / Ireland
+        "L": "LSE", "IL": "LSE",
+        # Euronext (Paris, Amsterdam, Brussels, Lisbon, Dublin)
+        "PA": "EURONEXT", "AS": "EURONEXT", "BR": "EURONEXT",
+        "LS": "EURONEXT", "IR": "EURONEXT",
+        # Germany / Switzerland / Austria
+        "DE": "XETR", "F": "FWB", "BE": "BER", "MU": "MUN",
+        "SG": "STU", "HM": "HAM", "DU": "DUS", "HA": "HAN",
+        "SW": "SIX", "VI": "VIE",
+        # Southern Europe
+        "MI": "MIL", "MC": "BME", "AT": "ATHEX",
+        # Nordics
+        "ST": "OMXSTO", "HE": "OMXHEX", "CO": "OMXCOP",
+        "OL": "OSL", "IC": "OMXICE",
+        # Eastern Europe
+        "WA": "GPW",
+        # Asia-Pacific
+        "AX": "ASX", "NZ": "NZX",
+        "T": "TSE", "HK": "HKEX",
+        "KS": "KRX", "KQ": "KRX",
+        "TW": "TWSE", "TWO": "TPEX",
+        "SS": "SSE", "SZ": "SZSE",
+        "SI": "SGX", "JK": "IDX", "BK": "SET", "KL": "MYX",
+        # Americas (ex-US)
+        "TO": "TSX", "V": "TSXV", "CN": "CSE", "NE": "NEO",
+        "SA": "BMFBOVESPA", "MX": "BMV", "BA": "BCBA", "SN": "BCS",
+        # Middle East / Africa
+        "SR": "TADAWUL", "QA": "QSE", "TA": "TASE",
+        "IS": "BIST", "JO": "JSE",
+    }
+
+    # yfinance US exchange codes  ->  TradingView prefix
+    US_EXCH_MAP = {
+        "NMS": "NASDAQ", "NGM": "NASDAQ", "NCM": "NASDAQ", "NSM": "NASDAQ",
+        "NAS": "NASDAQ", "NASDAQ": "NASDAQ",
+        "NYQ": "NYSE", "NYS": "NYSE", "NYE": "NYSE", "NYSE": "NYSE",
+        "ASE": "AMEX", "AMEX": "AMEX", "PCX": "AMEX",
+        "BTS": "BATS", "BATS": "BATS",
+    }
+
+    if "." in t:
+        base, suffix = t.rsplit(".", 1)
+        if suffix == "HK":
+            base = base.lstrip("0") or "0"     # 0700.HK -> HKEX:700
+        ex = SUFFIX_MAP.get(suffix, "")
+        return f"{ex}:{base}" if ex else base  # unknown suffix -> bare base
+
+    base = t.replace("-", ".")                 # BRK-B -> BRK.B
+    ex = US_EXCH_MAP.get((yf_exchange or "").strip().upper(), "")
+    return f"{ex}:{base}" if ex else base
+
+
 def build_html(d):
     ticker  = d["ticker"]
     country = d["country"]
@@ -666,14 +744,11 @@ def build_html(d):
     sign    = "+" if (chg1d or 0) > 0 else ""
     chg_cls = _color_pct(chg1d) if chg1d is not None and not math.isnan(chg1d) else ""
 
-    # TradingView symbol (strip .NS, .BO, etc. for some markets)
-    tv_sym = ticker.replace(".NS","").replace(".BO","").replace(".AX","")
-    tv_exchange_map = {
-        "IN": "NSE", "US": "NASDAQ", "AU": "ASX", "UK": "LSE",
-        "JP": "TYO", "HK": "HKEX", "KR": "KRX", "DE": "XETRA",
-    }
-    tv_exchange = tv_exchange_map.get(country, "")
-    tv_full = f"{tv_exchange}:{tv_sym}" if tv_exchange else tv_sym
+    # TradingView symbol — derived from the yfinance suffix (reliable),
+    # not the country. d["exchange"] (NMS/NYQ/...) disambiguates US listings.
+    tv_full = _tv_symbol(ticker, country, d.get("exchange", ""))
+    tv_chart_url = f"https://www.tradingview.com/chart/?symbol={tv_full}"
+    tv_frame_id = "tv_chart_" + ticker.replace(".", "_").replace("-", "_")
 
     # Currency
     cur_sym = {"USD":"$","INR":"₹","GBP":"£","EUR":"€","JPY":"¥","AUD":"A$",
@@ -817,13 +892,16 @@ def build_html(d):
   <div class="chart-section">
     <div class="chart-title-row">
       <span class="chart-title">📊 TradingView Chart — {ticker}</span>
-      <a href="https://www.tradingview.com/chart/?symbol={tv_full}" target="_blank">
+      <a href="{tv_chart_url}" target="_blank" rel="noopener">
         <button class="tv-open-btn">Open Full Chart ↗</button>
       </a>
     </div>
     <iframe class="tv-frame"
-      src="https://s.tradingview.com/widgetembed/?frameElementId=tv_chart_{ticker.replace('.','_')}&symbol={tv_full}&interval=D&hidesidetoolbar=0&symboledit=1&saveimage=0&toolbarbg=f1f3f6&studies=RSI@tv-basicstudies&theme=dark&style=1&timezone=exchange&withdateranges=1&showpopupbutton=1"
+      src="https://s.tradingview.com/widgetembed/?frameElementId={tv_frame_id}&symbol={tv_full}&interval=D&hidesidetoolbar=0&symboledit=1&saveimage=0&toolbarbg=f1f3f6&studies=RSI@tv-basicstudies&theme=dark&style=1&timezone=exchange&withdateranges=1&showpopupbutton=1"
       allowtransparency="true" allowfullscreen></iframe>
+    <div class="tv-fallback-note">
+      Chart not loading for this symbol? <a href="{tv_chart_url}" target="_blank" rel="noopener">Open {tv_full} on TradingView ↗</a>
+    </div>
   </div>
 
   <!-- SPARKLINE (1Y) -->

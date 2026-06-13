@@ -60,6 +60,11 @@ if os.path.isdir(_SUPPORT_DIR) and _SUPPORT_DIR not in sys.path:
 if os.path.isdir(os.path.join(_SUPPORT_DIR, "IndexData")):
     INDEX_DATA_DIR = os.path.join(_SUPPORT_DIR, "IndexData")
 from market_signals import build_dashboard_df
+try:
+    from market_rrg import build_rrg_data, build_rrg_section, make_sector_colors as _rrg_colors
+    _RRG_AVAILABLE = True
+except Exception:
+    _RRG_AVAILABLE = False
 from market_engine import (
     INDIA_INDEX, INDIA_SECTORS, INDIA_INDUSTRY_TO_SECTOR, INDIA_BREADTH_INDICES,
     RS_PERIODS, SIGNAL_PERIODS, fetch_close_batch, fetch_ohlcv_batch,
@@ -321,6 +326,24 @@ def main():
     except Exception as _ck_err:
         print(f"  ⚠ Scans skipped: {_ck_err}")
 
+    # ── RRG tab ─────────────────────────────────────────────────────────────────
+    rrg_html = None
+    if _RRG_AVAILABLE and sector_prices:
+        try:
+            print("📡 Building RRG chart data …")
+            rrg_data = build_rrg_data(sector_prices, index_prices)
+            sec_list = [n for n in rrg_data["weekly"] or rrg_data["daily"]]
+            rrg_html = build_rrg_section(
+                rrg_data       = rrg_data,
+                sector_list    = sec_list,
+                sector_colors  = _rrg_colors(sec_list),
+                market_name    = "India",
+                benchmark_name = "Nifty 50",
+            )
+            print(f"  ✅ RRG: {len(sec_list)} sectors")
+        except Exception as _e:
+            print(f"  ⚠ RRG skipped: {_e}")
+
     print("\n🌐 Building India HTML report …")
     try:
         from market_html import build_html_report
@@ -336,6 +359,7 @@ def main():
             country_etf_df=country_etf_df, commodity_df=commodity_df,
             output_path=html_path, run_time=run_time, primary_rs=PRIMARY_RS_PERIOD,
             scans_df=scans_df,
+            rrg_section=rrg_html,
         )
         print(f"  ✅ HTML: {html_path}")
     except Exception as e:

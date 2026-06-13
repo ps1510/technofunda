@@ -96,6 +96,7 @@ on:
     - cron: "15 10 * * 1-5"   # Indonesia
     - cron: "45 10 * * 1-5"   # Singapore
     - cron: "0 11 * * 1-5"    # Thailand
+    - cron: "15 11 * * 1-5"   # Malaysia
     - cron: "30 11 * * 0-4"   # UAE (Sun-Thu)
     - cron: "15 16 * * 1-5"   # Poland
     - cron: "30 16 * * 1-5"   # Turkey
@@ -277,7 +278,7 @@ jobs:
   run-uk:
     name: "🇬🇧 UK  17:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 17 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -291,13 +292,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run UK analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_UK: ${{ secrets.GOOGLE_SHEET_URL_UK }}
         run: python market_uk_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -333,14 +328,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — UK."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-canada:
     name: "🇨🇦 Canada  22:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 22 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -354,13 +346,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Canada analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_CA: ${{ secrets.GOOGLE_SHEET_URL_CA }}
         run: python market_ca_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -396,14 +382,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Canada."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-australia:
     name: "🇦🇺 Australia  07:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 7 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -417,13 +400,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Australia analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_AU: ${{ secrets.GOOGLE_SHEET_URL_AU }}
         run: python market_au_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -459,14 +436,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Australia."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-germany:
     name: "🇩🇪 Germany  18:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 18 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -480,13 +454,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Germany analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_DE: ${{ secrets.GOOGLE_SHEET_URL_DE }}
         run: python market_de_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -522,14 +490,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Germany."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-japan:
     name: "🇯🇵 Japan  07:30 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 7 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -543,13 +508,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Japan analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_JP: ${{ secrets.GOOGLE_SHEET_URL_JP }}
         run: python market_jp_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -585,14 +544,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Japan."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-france:
     name: "🇫🇷 France  18:30 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 18 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -606,13 +562,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run France analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_FR: ${{ secrets.GOOGLE_SHEET_URL_FR }}
         run: python market_fr_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -648,14 +598,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — France."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-brazil:
     name: "🇧🇷 Brazil  21:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 21 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -669,13 +616,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Brazil analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_BR: ${{ secrets.GOOGLE_SHEET_URL_BR }}
         run: python market_br_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -711,9 +652,6 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Brazil."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   # ──────────────────────────────────────────────────────────────────────────
   #  NEW 8 COUNTRIES
@@ -722,7 +660,7 @@ jobs:
   run-china:
     name: "🇨🇳 China  08:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 8 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -736,13 +674,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run China analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_CN: ${{ secrets.GOOGLE_SHEET_URL_CN }}
         run: python market_cn_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -778,14 +710,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — China."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-southkorea:
     name: "🇰🇷 South Korea  08:30 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 8 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -799,13 +728,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run South Korea analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_KR: ${{ secrets.GOOGLE_SHEET_URL_KR }}
         run: python market_kr_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -841,14 +764,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — SouthKorea."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-taiwan:
     name: "🇹🇼 Taiwan  09:30 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 9 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -862,13 +782,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Taiwan analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_TW: ${{ secrets.GOOGLE_SHEET_URL_TW }}
         run: python market_tw_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -904,14 +818,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Taiwan."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-switzerland:
     name: "🇨🇭 Switzerland  17:30 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 17 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -925,13 +836,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Switzerland analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_CH: ${{ secrets.GOOGLE_SHEET_URL_CH }}
         run: python market_ch_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -967,14 +872,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Switzerland."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-saudiarabia:
     name: "🇸🇦 Saudi Arabia  12:30 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 12 * * 0-4') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -988,13 +890,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Saudi Arabia analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_SA: ${{ secrets.GOOGLE_SHEET_URL_SA }}
         run: python market_sa_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -1030,14 +926,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — SaudiArabia."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-netherlands:
     name: "🇳🇱 Netherlands  19:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -1051,13 +944,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Netherlands analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_NL: ${{ secrets.GOOGLE_SHEET_URL_NL }}
         run: python market_nl_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -1093,14 +980,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Netherlands."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-spain:
     name: "🇪🇸 Spain  19:30 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 19 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -1114,13 +998,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Spain analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_ES: ${{ secrets.GOOGLE_SHEET_URL_ES }}
         run: python market_es_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -1156,14 +1034,11 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Spain."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   run-sweden:
     name: "🇸🇪 Sweden  20:00 UTC"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 20 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
@@ -1177,13 +1052,7 @@ jobs:
         with: { python-version: "3.11", cache: "pip" }
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r requirements.txt
-      - name: Write Google credentials
-        env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
-        run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
       - name: Run Sweden analysis
-        env:
-          GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
-          GOOGLE_SHEET_URL_SE: ${{ secrets.GOOGLE_SHEET_URL_SE }}
         run: python market_se_gsht.py
       - name: Rebuild homepage
         run: python build_index.py
@@ -1219,12 +1088,9 @@ jobs:
             sleep $((attempt * 10))
           done
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Sweden."; exit 1; fi
-      - name: Remove credentials
-        if: always()
-        run: rm -f /tmp/google_credentials.json
 
   # ──────────────────────────────────────────────────────────────────────────
-  #  SCANS (India chartink + FnO)
+  #  SCANS (India chartink — Investment + Trade)
   # ──────────────────────────────────────────────────────────────────────────
 
   run-hk:
@@ -1606,11 +1472,11 @@ jobs:
           if [ "$PUSHED" != "1" ]; then echo "::error::Push failed after 7 attempts — Thailand."; exit 1; fi
 
   run-my:
-    name: "🇲🇾 Malaysia  10:30 UTC (HTML)"
+    name: "🇲🇾 Malaysia  11:15 UTC (HTML)"
     runs-on: ubuntu-latest
     timeout-minutes: 45
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 10 * * 1-5') ||
+      (github.event_name == 'schedule' && github.event.schedule == '15 11 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (
         github.event.inputs.market == 'my' ||
         github.event.inputs.market == 'all'
@@ -1824,7 +1690,7 @@ jobs:
   run-india-html:
     name: "🇮🇳 India HTML  3x daily (09:45 / 14:15 / 16:00 IST)"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && (
         github.event.schedule == '15 4 * * 1-5' ||
@@ -1881,7 +1747,7 @@ jobs:
   run-usa-html:
     name: "🇺🇸 USA HTML  2x daily (09:00 ET market open / 17:30 ET post-close)"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     if: |
       (github.event_name == 'schedule' && (
         github.event.schedule == '0 14 * * 1-5' ||
@@ -1950,16 +1816,16 @@ jobs:
   #     - name: Write Google credentials
   #       env: { GOOGLE_CREDENTIALS: "${{ secrets.GOOGLE_CREDENTIALS }}" }
   #       run: echo "$GOOGLE_CREDENTIALS" > /tmp/google_credentials.json
-  #     - name: Run LongTerm scan
+  #     - name: Run Investment scan
   #       env:
   #         GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
   #         GOOGLE_SHEET_URL_SCANS: ${{ secrets.GOOGLE_SHEET_URL_SCANS }}
-  #       run: python LongTerm.py
-  #     - name: Run FnO scan
+  #       run: python Investment.py
+  #     - name: Run Trade scan
   #       env:
   #         GOOGLE_CREDENTIALS_PATH: /tmp/google_credentials.json
   #         GOOGLE_SHEET_URL_SCANS: ${{ secrets.GOOGLE_SHEET_URL_SCANS }}
-  #       run: python FnO.py
+  #       run: python Trade.py
   #     - name: Remove credentials
   #       if: always()
   #       run: rm -f /tmp/google_credentials.json
