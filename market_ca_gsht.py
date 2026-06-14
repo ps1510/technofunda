@@ -151,7 +151,7 @@ CA_INDUSTRY_TO_SECTOR = {
     "Systems Software":                "Technology",
     # ── Health Care ──────────────────────────────────────────────────────────
     "Health Care":                     "Health Care",
-    "Healthcare":                      "Health Care",
+    "Health Care":                      "Health Care",
     "Pharmaceuticals":                 "Health Care",
     "Biotechnology":                   "Health Care",
     "Medical Devices":                 "Health Care",
@@ -182,7 +182,7 @@ CA_INDUSTRY_TO_SECTOR = {
     "Human Resource Services":         "Industrials",
     # ── Consumer Discretionary ───────────────────────────────────────────────
     "Consumer Discretionary":          "Consumer Discretionary",
-    "ConsumerDisc":                    "Consumer Discretionary",
+    "Consumer Discretionary":                    "Consumer Discretionary",
     "Consumer Cyclical":               "Consumer Discretionary",
     "Retail":                          "Consumer Discretionary",
     "Specialty Retail":                "Consumer Discretionary",
@@ -218,7 +218,7 @@ CA_INDUSTRY_TO_SECTOR = {
     "Independent Power":               "Utilities",
     # ── Communication Services ───────────────────────────────────────────────
     "Communication Services":          "Communication Services",
-    "CommServices":                    "Communication Services",
+    "Communication Services":                    "Communication Services",
     "Telecoms":                        "Communication Services",
     "Telecommunications":              "Communication Services",
     "Wireless Telecom Services":       "Communication Services",
@@ -229,7 +229,7 @@ CA_INDUSTRY_TO_SECTOR = {
     "Interactive Media":               "Communication Services",
     # ── Real Estate ──────────────────────────────────────────────────────────
     "Real Estate":                     "Real Estate",
-    "RealEstate":                      "Real Estate",
+    "Real Estate":                      "Real Estate",
     "REITs":                           "Real Estate",
     "Diversified REITs":               "Real Estate",
     "Retail REITs":                    "Real Estate",
@@ -512,6 +512,14 @@ def main():
             rrg_section=rrg_html)
         print(f"  ✅ HTML: {html_path}")
     except Exception as e: print(f"  ⚠ HTML skipped: {e}")
+    # ── Save to local DB (silently skipped when db_excel is unavailable) ──────
+    try:
+        from db_excel import auto_save_run as _db_save
+        _db_save(stock_df, sec_str_df, market="CA",
+                 elapsed=time.time() - t0, primary_rs=PRIMARY_RS_PERIOD)
+    except Exception:
+        pass
+
 
     elapsed = time.time()-t0
     print(f"\n{'═'*68}")

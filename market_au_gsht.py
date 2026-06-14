@@ -386,6 +386,14 @@ def main():
             rrg_section=rrg_html)
         print(f"  ✅ HTML: {html_path}")
     except Exception as e: print(f"  ⚠ HTML skipped: {e}")
+    # ── Save to local DB (silently skipped when db_excel is unavailable) ──────
+    try:
+        from db_excel import auto_save_run as _db_save
+        _db_save(stock_df, sec_str_df, market="AU",
+                 elapsed=time.time() - t0, primary_rs=PRIMARY_RS_PERIOD)
+    except Exception:
+        pass
+
 
     elapsed = time.time()-t0
     print(f"\n{'═'*68}")

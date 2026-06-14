@@ -60,13 +60,13 @@ COUNTRY_CONFIG = {
             "Energy":           {"yahoo": "XEG.TO",  "csv": None},
             "Materials":        {"yahoo": "XMA.TO",  "csv": None},
             "Technology":       {"yahoo": "XIT.TO",  "csv": None},
-            "Healthcare":       {"yahoo": "XHC.TO",  "csv": None},
+            "Health Care":       {"yahoo": "XHC.TO",  "csv": None},
             "Industrials":      {"yahoo": "XIN.TO",  "csv": None},
-            "ConsumerDisc":     {"yahoo": "XCD.TO",  "csv": None},
+            "Consumer Discretionary":     {"yahoo": "XCD.TO",  "csv": None},
             "Consumer Staples": {"yahoo": "XST.TO",  "csv": None},
             "Utilities":        {"yahoo": "XUT.TO",  "csv": None},
-            "CommServices":     {"yahoo": "XCO.TO",  "csv": None},
-            "RealEstate":       {"yahoo": "XRE.TO",  "csv": None},
+            "Communication Services":     {"yahoo": "XCO.TO",  "csv": None},
+            "Real Estate":       {"yahoo": "XRE.TO",  "csv": None},
         },
 
         "breadth_indices": {
@@ -106,7 +106,7 @@ COUNTRY_CONFIG = {
 
         "sectors": {
             "Technology":             {"yahoo": "XLK",  "csv": "us_sector_technology.csv"},
-            "Healthcare":             {"yahoo": "XLV",  "csv": "us_sector_healthcare.csv"},
+            "Health Care":             {"yahoo": "XLV",  "csv": "us_sector_health_care.csv"},
             "Financials":             {"yahoo": "XLF",  "csv": "us_sector_financials.csv"},
             "Consumer Discretionary": {"yahoo": "XLY",  "csv": "us_sector_consumer_discretionary.csv"},
             "Consumer Staples":       {"yahoo": "XLP",  "csv": "us_sector_consumer_staples.csv"},
@@ -157,11 +157,11 @@ COUNTRY_CONFIG = {
             "Financials":       {"yahoo": "^CNXBANK", "csv": None},
             "Energy":           {"yahoo": "^CNXENERGY","csv": None},
             "Materials":        {"yahoo": "^CNXMETAL", "csv": None},
-            "Healthcare":       {"yahoo": "^CNXPHARMA","csv": None},
+            "Health Care":       {"yahoo": "^CNXPHARMA","csv": None},
             "Industrials":      {"yahoo": "^CNXINFRA", "csv": None},
-            "ConsumerDisc":     {"yahoo": "^CNXAUTO",  "csv": None},
+            "Consumer Discretionary":     {"yahoo": "^CNXAUTO",  "csv": None},
             "Consumer Staples": {"yahoo": "^CNXFMCG",  "csv": None},
-            "RealEstate":       {"yahoo": "^CNXREALTY","csv": None},
+            "Real Estate":       {"yahoo": "^CNXREALTY","csv": None},
             "Utilities":        {"yahoo": "^CNXPSUBANK","csv": None},
         },
 
@@ -205,12 +205,12 @@ COUNTRY_CONFIG = {
             "Energy":           {"yahoo": "IUKY.L",  "csv": None},
             "Materials":        {"yahoo": "IUKM.L",  "csv": None},
             "Technology":       {"yahoo": "IITU.L",  "csv": None},
-            "Healthcare":       {"yahoo": "IUKH.L",  "csv": None},
+            "Health Care":       {"yahoo": "IUKH.L",  "csv": None},
             "Industrials":      {"yahoo": "IUKI.L",  "csv": None},
-            "ConsumerDisc":     {"yahoo": "IUKD.L",  "csv": None},
+            "Consumer Discretionary":     {"yahoo": "IUKD.L",  "csv": None},
             "Consumer Staples": {"yahoo": "IUKS.L",  "csv": None},
             "Utilities":        {"yahoo": "IUKU.L",  "csv": None},
-            "RealEstate":       {"yahoo": "IUKREIT.L","csv": None},
+            "Real Estate":       {"yahoo": "IUKREIT.L","csv": None},
         },
 
         "breadth_indices": {
@@ -250,13 +250,13 @@ COUNTRY_CONFIG = {
             "Financials":       {"yahoo": "OZF.AX",  "csv": None},
             "Materials":        {"yahoo": "OZR.AX",  "csv": None},
             "Energy":           {"yahoo": "OZE.AX",  "csv": None},
-            "Healthcare":       {"yahoo": "OZH.AX",  "csv": None},
+            "Health Care":       {"yahoo": "OZH.AX",  "csv": None},
             "Technology":       {"yahoo": "TECH.AX", "csv": None},
             "Industrials":      {"yahoo": "OZI.AX",  "csv": None},
-            "ConsumerDisc":     {"yahoo": "OZD.AX",  "csv": None},
+            "Consumer Discretionary":     {"yahoo": "OZD.AX",  "csv": None},
             "Consumer Staples": {"yahoo": "OZS.AX",  "csv": None},
             "Utilities":        {"yahoo": "OZU.AX",  "csv": None},
-            "RealEstate":       {"yahoo": "OZP.AX",  "csv": None},
+            "Real Estate":       {"yahoo": "OZP.AX",  "csv": None},
         },
 
         "breadth_indices": {
@@ -295,14 +295,14 @@ COUNTRY_CONFIG = {
         "sectors": {
             "Technology":       {"yahoo": "EXV5.DE", "csv": None},
             "Financials":       {"yahoo": "EXV1.DE", "csv": None},
-            "Healthcare":       {"yahoo": "EXV4.DE", "csv": None},
+            "Health Care":       {"yahoo": "EXV4.DE", "csv": None},
             "Industrials":      {"yahoo": "EXV6.DE", "csv": None},
             "Energy":           {"yahoo": "EXV2.DE", "csv": None},
             "Materials":        {"yahoo": "EXV3.DE", "csv": None},
-            "ConsumerDisc":     {"yahoo": "EXV8.DE", "csv": None},
+            "Consumer Discretionary":     {"yahoo": "EXV8.DE", "csv": None},
             "Consumer Staples": {"yahoo": "EXV7.DE", "csv": None},
             "Utilities":        {"yahoo": "EXV9.DE", "csv": None},
-            "RealEstate":       {"yahoo": "EXSI.DE", "csv": None},
+            "Real Estate":       {"yahoo": "EXSI.DE", "csv": None},
         },
 
         "breadth_indices": {
@@ -341,14 +341,14 @@ COUNTRY_CONFIG = {
         "sectors": {
             "Technology":       {"yahoo": "1621.T", "csv": None},
             "Financials":       {"yahoo": "1615.T", "csv": None},
-            "Healthcare":       {"yahoo": "1622.T", "csv": None},
-            "ConsumerDisc":     {"yahoo": "1620.T", "csv": None},
+            "Health Care":       {"yahoo": "1622.T", "csv": None},
+            "Consumer Discretionary":     {"yahoo": "1620.T", "csv": None},
             "Industrials":      {"yahoo": "1617.T", "csv": None},
             "Materials":        {"yahoo": "1616.T", "csv": None},
             "Energy":           {"yahoo": "1618.T", "csv": None},
             "Consumer Staples": {"yahoo": "1619.T", "csv": None},
             "Utilities":        {"yahoo": "1623.T", "csv": None},
-            "RealEstate":       {"yahoo": "1624.T", "csv": None},
+            "Real Estate":       {"yahoo": "1624.T", "csv": None},
         },
 
         "breadth_indices": {
@@ -386,7 +386,7 @@ COUNTRY_CONFIG = {
 
         "sectors": {
             "Financials":  {"yahoo": "G13.SI",  "csv": None},  # proxy stock
-            "RealEstate":  {"yahoo": "C38U.SI", "csv": None},
+            "Real Estate":  {"yahoo": "C38U.SI", "csv": None},
             "Industrials": {"yahoo": "C6L.SI",  "csv": None},
             "Technology":  {"yahoo": "U11.SI",  "csv": None},
             "Consumer":    {"yahoo": "F99.SI",  "csv": None},
@@ -424,7 +424,7 @@ COUNTRY_CONFIG = {
 
         "sectors": {
             "Financials":   {"yahoo": "2388.HK", "csv": None},
-            "RealEstate":   {"yahoo": "1997.HK", "csv": None},
+            "Real Estate":   {"yahoo": "1997.HK", "csv": None},
             "Technology":   {"yahoo": "3033.HK", "csv": None},  # CSOP HSTECH ETF
             "Industrials":  {"yahoo": "0003.HK", "csv": None},
             "Energy":       {"yahoo": "0857.HK", "csv": None},
@@ -465,7 +465,7 @@ COUNTRY_CONFIG = {
         "sectors": {
             "Financials":   {"yahoo": "FBU.NZ",  "csv": None},
             "Utilities":    {"yahoo": "MEL.NZ",  "csv": None},
-            "RealEstate":   {"yahoo": "PCT.NZ",  "csv": None},
+            "Real Estate":   {"yahoo": "PCT.NZ",  "csv": None},
             "Consumer":     {"yahoo": "SKC.NZ",  "csv": None},
             "Industrials":  {"yahoo": "ATM.NZ",  "csv": None},
         },
@@ -503,10 +503,10 @@ COUNTRY_CONFIG = {
         "sectors": {
             "Technology":       {"yahoo": "TNO.PA",  "csv": None},
             "Financials":       {"yahoo": "BNP.PA",  "csv": None},
-            "Healthcare":       {"yahoo": "SAN.PA",  "csv": None},
+            "Health Care":       {"yahoo": "SAN.PA",  "csv": None},
             "Energy":           {"yahoo": "TTE.PA",  "csv": None},
             "Industrials":      {"yahoo": "AIR.PA",  "csv": None},
-            "ConsumerDisc":     {"yahoo": "MC.PA",   "csv": None},
+            "Consumer Discretionary":     {"yahoo": "MC.PA",   "csv": None},
             "Consumer Staples": {"yahoo": "OR.PA",   "csv": None},
             "Materials":        {"yahoo": "AI.PA",   "csv": None},
             "Utilities":        {"yahoo": "ENGI.PA", "csv": None},
@@ -704,7 +704,7 @@ COUNTRY_CONFIG = {
             "Materials":    {"yahoo": "2010.SR",   "csv": None},
             "Utilities":    {"yahoo": "4200.SR",   "csv": None},
             "Consumer":     {"yahoo": "4003.SR",   "csv": None},
-            "RealEstate":   {"yahoo": "4020.SR",   "csv": None},
+            "Real Estate":   {"yahoo": "4020.SR",   "csv": None},
         },
 
         "breadth_indices": {

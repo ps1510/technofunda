@@ -99,23 +99,23 @@ UK_SECTORS = {
 UK_INDUSTRY_TO_SECTOR = {
     "Financials": "Financials", "Banking": "Financials",
     "Insurance": "Financials", "Asset Management": "Financials",
-    "Healthcare": "Health Care", "Pharmaceuticals": "Health Care",
+    "Health Care": "Health Care", "Pharmaceuticals": "Health Care",
     "Biotechnology": "Health Care", "Medical Devices": "Health Care",
     "Energy": "Energy", "Oil & Gas": "Energy",
     "Materials": "Materials", "Mining": "Materials",
     "Metals": "Materials", "Chemicals": "Materials",
     "Consumer Staples": "Consumer Staples", "Food & Beverage": "Consumer Staples",
     "Tobacco": "Consumer Staples", "Household Products": "Consumer Staples",
-    "ConsumerDisc": "Consumer Discretionary", "Retail": "Consumer Discretionary",
+    "Consumer Discretionary": "Consumer Discretionary", "Retail": "Consumer Discretionary",
     "Leisure": "Consumer Discretionary", "Travel": "Consumer Discretionary",
     "Technology": "Technology", "Software": "Technology",
     "IT Services": "Technology",
     "Industrials": "Industrials", "Aerospace": "Industrials",
     "Defence": "Industrials", "Engineering": "Industrials",
     "Utilities": "Utilities", "Water": "Utilities", "Gas": "Utilities",
-    "CommServices": "Communication Services", "Telecoms": "Communication Services",
+    "Communication Services": "Communication Services", "Telecoms": "Communication Services",
     "Media": "Communication Services",
-    "RealEstate": "Real Estate", "Property": "Real Estate", "REITs": "Real Estate",
+    "Real Estate": "Real Estate", "Property": "Real Estate", "REITs": "Real Estate",
 }
 
 UK_BREADTH_INDICES = {
@@ -445,6 +445,14 @@ def main():
         print(f"  ⚠ HTML skipped: {e}")
 
     # ── Summary ────────────────────────────────────────────────────────────────
+    # ── Save to local DB (silently skipped when db_excel is unavailable) ──────
+    try:
+        from db_excel import auto_save_run as _db_save
+        _db_save(stock_df, sec_str_df, market="UK",
+                 elapsed=time.time() - t0, primary_rs=PRIMARY_RS_PERIOD)
+    except Exception:
+        pass
+
     elapsed = time.time() - t0
     print(f"\n{'═' * 68}")
     print(f"  ✅  COMPLETE!  |  ⏱ {elapsed:.0f}s  |  📄 UK.html")

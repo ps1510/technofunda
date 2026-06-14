@@ -375,6 +375,7 @@ def fetch_stock_data(ticker_yf, country_code):
         "pat_yoy":  fin_data.get("pat_yoy"),
 
         "price_json":   price_json,
+        "weekly_history": _compute_weekly_history(hist),
         "news":         news,
         "analyst":      analyst,
         "inst_holders": inst_holders,
@@ -488,6 +489,11 @@ canvas#sparkline{width:100%;height:120px;display:block;}
 .neg-strong{color:#f87171;font-weight:700;}
 .neg{color:#ef4444;font-weight:600;}
 .neg-dim{color:#fca5a5;}
+/* Signal history table */
+.hist-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.hist-tbl th{background:var(--bg3);padding:6px 10px;text-align:left;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);}
+.hist-tbl td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,.04);}
+.hist-tbl tr:hover td{background:var(--bg2);}
 /* 52W slider */
 .range-bar-wrap{margin:10px 0;}
 .range-bar{position:relative;height:6px;background:linear-gradient(to right,var(--red),var(--amber),var(--green));
@@ -627,6 +633,108 @@ def _holders_html(holders):
   <span class="holder-pct">{pct:.1f}%</span>
 </div>'''
     return rows
+
+def _compute_weekly_history(hist, n_weeks=52):
+    """
+    Compute a weekly technical signal table from daily price history.
+    Returns list of dicts: Week, Date, Price, 1W%, RSI, AbvSMA50, AbvSMA200.
+    Uses last trading day of each calendar week.
+    """
+    if hist is None or hist.empty or "Close" not in hist.columns:
+        return []
+    prices = hist["Close"].dropna()
+    if len(prices) < 20:
+        return []
+
+    # Resample to weekly (last trading day per week)
+    weekly = prices.resample("W-FRI").last().dropna()
+    if len(weekly) < 2:
+        return []
+    weekly = weekly.tail(n_weeks + 1)  # extra for 1W% calc
+
+    rows = []
+    daily_prices = prices  # full series for rolling SMA/RSI
+    for i in range(1, len(weekly)):
+        wk_date  = weekly.index[i]
+        wk_price = float(weekly.iloc[i])
+        prev_price = float(weekly.iloc[i - 1])
+        w1_pct = (wk_price / prev_price - 1) * 100
+
+        # Use price data up to and including this week's last day for indicators
+        mask = daily_prices.index <= wk_date
+        p_slice = daily_prices[mask]
+
+        rsi = float("nan")
+        sma50_v = sma200_v = float("nan")
+        try:
+            if len(p_slice) >= 14:
+                rsi = calc_rsi(p_slice)
+            if len(p_slice) >= 50:
+                sma50_v  = float(p_slice.rolling(50).mean().iloc[-1])
+            if len(p_slice) >= 200:
+                sma200_v = float(p_slice.rolling(200).mean().iloc[-1])
+        except Exception:
+            pass
+
+        abv50  = "✓" if not math.isnan(sma50_v)  and wk_price > sma50_v  else ("✗" if not math.isnan(sma50_v)  else "—")
+        abv200 = "✓" if not math.isnan(sma200_v) and wk_price > sma200_v else ("✗" if not math.isnan(sma200_v) else "—")
+
+        rows.append({
+            "Week":       wk_date.strftime("%Y-W%V"),
+            "Date":       wk_date.strftime("%d %b %Y"),
+            "Price":      round(wk_price, 2),
+            "1W%":        round(w1_pct, 2),
+            "RSI":        round(rsi, 1) if not math.isnan(rsi) else None,
+            "Abv SMA50":  abv50,
+            "Abv SMA200": abv200,
+        })
+
+    rows.reverse()  # most recent first
+    return rows
+
+
+def _history_html(rows):
+    """Render weekly signal history as a compact HTML table."""
+    if not rows:
+        return '<p style="color:var(--text3);font-size:13px;">Insufficient price history.</p>'
+
+    def _rsi_cls(v):
+        if v is None: return ""
+        if v >= 70:   return "color:var(--red)"
+        if v >= 60:   return "color:var(--amber)"
+        if v >= 50:   return "color:var(--green)"
+        return "color:var(--text3)"
+
+    def _chg_cls(v):
+        if v > 1:  return "color:var(--green)"
+        if v < -1: return "color:var(--red)"
+        return "color:var(--text3)"
+
+    def _sma_cls(v):
+        return "color:var(--green)" if v == "✓" else ("color:var(--red)" if v == "✗" else "")
+
+    thead = ("<thead><tr>"
+             "<th>Date</th><th>Price</th>"
+             "<th>1W %</th><th>RSI</th>"
+             "<th>Abv 50</th><th>Abv 200</th>"
+             "</tr></thead>")
+    tbody = "<tbody>"
+    for r in rows:
+        rsi_v  = r["RSI"]
+        w1_v   = r["1W%"]
+        tbody += (f'<tr>'
+                  f'<td>{r["Date"]}</td>'
+                  f'<td style="text-align:right">{r["Price"]}</td>'
+                  f'<td style="text-align:right;{_chg_cls(w1_v)}">{"+" if w1_v > 0 else ""}{w1_v:.1f}%</td>'
+                  f'<td style="text-align:center;{_rsi_cls(rsi_v)}">{rsi_v if rsi_v is not None else "—"}</td>'
+                  f'<td style="text-align:center;{_sma_cls(r["Abv SMA50"])}">{r["Abv SMA50"]}</td>'
+                  f'<td style="text-align:center;{_sma_cls(r["Abv SMA200"])}">{r["Abv SMA200"]}</td>'
+                  f'</tr>')
+    tbody += "</tbody>"
+    return (f'<div style="overflow-x:auto">'
+            f'<table class="hist-tbl">{thead}{tbody}</table>'
+            f'</div>')
+
 
 def _52w_slider(cur, low, high):
     if not cur or not low or not high or low >= high:
@@ -962,6 +1070,12 @@ def build_html(d):
       <div class="section-title">Top Institutional Holders</div>
       {_holders_html(d.get("inst_holders",[]))}
     </div>
+  </div>
+
+  <!-- SIGNAL HISTORY -->
+  <div class="section-card" style="margin-bottom:16px">
+    <div class="section-title">Weekly Technical History (52 weeks)</div>
+    {_history_html(d.get("weekly_history", []))}
   </div>
 
   <!-- ABOUT -->

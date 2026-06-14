@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import os
 import re
+import html
 from datetime import datetime, timedelta
 
 # Chart-pattern recency cap (days). Patterns older than this are hidden in the
@@ -30,7 +31,7 @@ PATTERN_RECENT_DAYS = 15
 # Set to False to hide the "Sector Strength" bars section from the Sectors tab.
 # The Sector Performance, Sector Rotation, and Industry Rotation sections are
 # unaffected — only the bar chart at the top of the Sectors tab is hidden.
-ENABLE_SECTOR_STRENGTH = True
+ENABLE_SECTOR_STRENGTH = False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -239,6 +240,48 @@ def _is_breadth_col(col, pct_mode=None):
     return False
 
 
+# ── Gradient colour thresholds per column group ───────────────────────────────
+# Each entry: (frozenset_of_norm_col_names, [t0, t1, t2, t3, t4])
+# Bucket mapping:  val>t0 → pos-strong · >t1 → pos · >t2 → pos-dim
+#                  >t3 → neg-dim · >t4 → neg · ≤t4 → neg-strong
+_GRAD_CLASSES = ("pos-strong", "pos", "pos-dim", "neg-dim", "neg", "neg-strong")
+_GRAD_THRESHOLDS = [
+    # Short-term price change (1D, 5D)
+    (frozenset({"chg_1d%","chg_5d%","chg1d%","chg5d%"}),            [3,   0.5, 0, -0.5,  -3]),
+    # RS vs index / sector — wider range
+    (frozenset({"rs_22d%","rs_55d%","rs_120d%","rs_252d%",
+                "rs_22d_idx%","rs_55d_idx%","rs_120d_idx%","rs_252d_idx%",
+                "rs_22d_sec%","rs_55d_sec%","sec_rs22d%","sec_rs55d%",
+                "w_rs21%","w_rs30%","m_rs12%","rsl_14"}),            [10,  3,   0, -3,   -10]),
+    # Medium/long-term returns (1M, 3M, 6M, 12M, YTD)
+    (frozenset({"1m%","3m%","6m%","12m%","ytd%"}),                   [15,  5,   0, -5,   -15]),
+    # Growth metrics
+    (frozenset({"sales_yoy%","pat_yoy%","sales_qoq%","pat_qoq%"}),   [20, 10,   0, -5,   -20]),
+    # Quality metrics — ROE / margin (absolute levels, not changes)
+    (frozenset({"roe%","margin%"}),                                   [20, 12,   5,  0,    -5]),
+]
+# Default thresholds used for any % column not matched above
+_GRAD_DEFAULT = [5, 2, 0, -2, -5]
+
+def _grad_class(col_norm, val):
+    """Return a gradient CSS class for a numeric value based on column type."""
+    try:
+        f = float(val)
+    except (TypeError, ValueError):
+        return ""
+    thresholds = _GRAD_DEFAULT
+    for col_set, thr in _GRAD_THRESHOLDS:
+        if col_norm in col_set:
+            thresholds = thr
+            break
+    if f > thresholds[0]: return _GRAD_CLASSES[0]
+    if f > thresholds[1]: return _GRAD_CLASSES[1]
+    if f > thresholds[2]: return _GRAD_CLASSES[2]
+    if f > thresholds[3]: return _GRAD_CLASSES[3]
+    if f > thresholds[4]: return _GRAD_CLASSES[4]
+    return _GRAD_CLASSES[5]
+
+
 def _cell_class(col, val, pct_mode=None, no_bg=False):
     # Breadth / rotation 0-100 colouring — suppress entirely when no_bg
     if _is_breadth_col(col, pct_mode):
@@ -377,21 +420,18 @@ def _cell_class(col, val, pct_mode=None, no_bg=False):
             if f >= 1.0: return "pos-dim"
             return "neg-dim"
         except: pass
-    pct_cols = {
+    # ── Gradient text colour for all percent / return columns ────────────────
+    _pct_col_names = {
         "chg_1d%", "chg_5d%", "rs_22d%", "rs_55d%", "rs_120d%", "rs_252d%",
         "rs_22d_idx%", "rs_55d_idx%", "rs_120d_idx%", "rs_252d_idx%",
-        "1m%", "3m%", "6m%", "12m%", "ytd%", "sales_yoy%", "pat_yoy%",
-        "sales_qoq%", "pat_qoq%", "roe%", "margin%", "w_rs21%", "w_rs30%",
-        "m_rs12%", "sec_rs22d%", "sec_rs55d%", "sleeve_rs", "rs_score",
+        "rs_22d_sec%", "rs_55d_sec%", "sec_rs22d%", "sec_rs55d%",
+        "1m%", "3m%", "6m%", "12m%", "ytd%", "rs_1m%", "rs_3m%", "rs_6m%",
+        "sales_yoy%", "pat_yoy%", "sales_qoq%", "pat_qoq%",
+        "roe%", "margin%", "w_rs21%", "w_rs30%", "m_rs12%", "rsl_14",
+        "sleeve_rs", "rs_score",
     }
-    if col in pct_cols or col.endswith("%"):
-        try:
-            f = float(val)
-            if f > 5:  return "pos-strong"
-            if f > 0:  return "pos"
-            if f < -5: return "neg-strong"
-            if f < 0:  return "neg"
-        except: pass
+    if col in _pct_col_names or col.endswith("%"):
+        return _grad_class(col, val)
     return ""
 
 
@@ -493,6 +533,44 @@ _DIRECT_TV_MAP = {
     "USDCAD=X": "FX:USDCAD",
     "AUDUSD=X": "FX:AUDUSD",
     "USDCHF=X": "FX:USDCHF",
+    # Indian indices (Yahoo ^ prefix → NSE/BSE)
+    "^NSEI":       "NSE:NIFTY",
+    "^BSESN":      "BSE:SENSEX",
+    "^NSEBANK":    "NSE:BANKNIFTY",
+    "^CNXIT":      "NSE:CNXIT",
+    "^CNXSC":      "NSE:NIFTY_SMLCAP100",
+    "^CNXAUTO":    "NSE:CNXAUTO",
+    "^CNXPHARMA":  "NSE:CNXPHARMA",
+    "^CNXFMCG":    "NSE:CNXFMCG",
+    "^CNXMETAL":   "NSE:CNXMETAL",
+    "^CNXENERGY":  "NSE:CNXENERGY",
+    "^CNXREALTY":  "NSE:CNXREALTY",
+    "^CNXINFRA":   "NSE:CNXINFRA",
+    "^CNXMEDIA":   "NSE:CNXMEDIA",
+    "^CNXPSUBANK": "NSE:CNXPSUBANK",
+    "^INDIAVIX":   "NSE:INDIAVIX",
+    # US indices
+    "^GSPC":  "SP:SPX",
+    "^NDX":   "NASDAQ:NDX",
+    "^DJI":   "DJ:DJI",
+    "^RUT":   "TVC:RUT",
+    "^VIX":   "CBOE:VIX",
+    "^TNX":   "TVC:US10Y",
+    "^IXIC":  "NASDAQ:COMP",
+    # Other global indices
+    "^FTSE":  "INDEX:UKX",
+    "^GDAXI": "XETR:DAX",
+    "^FCHI":  "EURONEXT:PX1",
+    "^N225":  "TSE:NI225",
+    "^HSI":   "HKEX:HSI",
+    "^KS11":  "KRX:KOSPI",
+    "^TWII":  "TWSE:TAIEX",
+    "^AXJO":  "ASX:XJO",
+    "^BVSP":  "BMFBOVESPA:IBOV",
+    "^JKSE":  "IDX:COMPOSITE",
+    "^STI":   "SGX:STI",
+    "^KLSE":  "MYX:KLCI",
+    "^SET":   "SET:SET",
 }
 
 # When a symbol has NO file-extension suffix, fall back to the market code.
@@ -529,7 +607,7 @@ _MARKET_EXCHANGE = {
 }
 
 
-def _tv_link(sym, market=None):
+def _tv_link(sym, market=None, display=None):
     """Wrap a ticker in a TradingView chart hyperlink.
 
     Strips yfinance-style country suffixes (e.g. .SR, .SS, .SZ, .HK, .KS, .T …)
@@ -538,19 +616,22 @@ def _tv_link(sym, market=None):
     Falls back to the market-code exchange when the symbol carries no suffix.
     Commodity/futures/forex symbols (GC=F, DX-Y.NYB, EURUSD=X …) are mapped
     directly via _DIRECT_TV_MAP before suffix stripping is attempted.
+
+    display: if provided, used as the visible link text instead of the base ticker.
     """
     market = (market or _CUR_MKT).upper()
     s = str(sym).strip()
     if not s or s in ("—", "nan", "None"):
-        return _fmt(sym)
+        return _fmt(display if display else sym)
 
     # 0. Direct override for futures, DXY, forex (=F / =X / .NYB symbols).
     if s in _DIRECT_TV_MAP:
         tv   = _DIRECT_TV_MAP[s].replace(":", "%3A")
-        base = s   # display the original Yahoo symbol (e.g. GC=F)
+        base = s
         url  = "https://www.tradingview.com/chart/?symbol=" + tv
+        text = display if display else base
         return (f'<a href="{url}" target="_blank" rel="noopener" '
-                f'class="tv-link" data-tv="{tv}" title="Open {s} in TradingView">{s}</a>')
+                f'class="tv-link" data-tv="{tv}" title="Open {s} in TradingView">{text}</a>')
 
     base = s
     exch = ""
@@ -577,9 +658,10 @@ def _tv_link(sym, market=None):
     # hover JS; when absent the hover falls back to data-tv.
     preview_attr = f' data-tv-preview="BSE%3A{base}"' if exch == "NSE" else ""
 
+    text = display if display else base
     return (f'<a href="{url}" target="_blank" rel="noopener" '
             f'class="tv-link" data-tv="{tv}"{preview_attr} '
-            f'title="Open {base} in TradingView">{base}</a>')
+            f'title="Open {base} in TradingView">{text}</a>')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -624,9 +706,36 @@ def _auto_group_map(cols):
     return gm
 
 
+def _sparkline(vals, width=60, height=20):
+    """Inline SVG sparkline from a list of numeric values (oldest→newest, NaN ok)."""
+    import math
+    vs = []
+    for v in vals:
+        try:
+            f = float(v)
+            if not math.isnan(f):
+                vs.append(f)
+        except (TypeError, ValueError):
+            pass
+    if len(vs) < 2:
+        return ""
+    mn, mx = min(vs), max(vs)
+    rng = mx - mn or 1
+    n = len(vs)
+    pts = " ".join(
+        f"{round(i*(width/(n-1)),1)},{round(height-((v-mn)/rng)*height,1)}"
+        for i, v in enumerate(vs)
+    )
+    color = "#22c55e" if vs[-1] >= vs[0] else "#ef4444"
+    return (f'<svg class="spark-svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">'
+            f'<polyline points="{pts}" fill="none" stroke="{color}" '
+            f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+
+
 def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no_bg=False,
                  link_cols=("symbol",), link_market=None, groups=False,
-                 group_default="analysis"):
+                 group_default="analysis", raw_html_cols=()):
     """link_cols: header names (lowercase) whose cells become TradingView links.
        link_market: market code passed to _tv_link (e.g. 'US' for global ETF/commodity
        tables so US-listed tickers aren't prefixed with the page's home exchange).
@@ -677,13 +786,19 @@ def _build_table(df, table_id, searchable=True, max_rows=2000, pct_mode=None, no
         f'{_col_tip(c)} onclick="sortTable(this)">{c}</th>'
         for c, gc in zip(cols, gcls)
     )
+    _rh_lower = {x.lower().strip() for x in raw_html_cols}
     rows_html = ""
     for _, row in df.iterrows():
         tds = ""
         for c, gc in zip(cols, gcls):
             val = row[c]; cls = _cell_class(c, val, pct_mode, no_bg=no_bg)
-            display = (_tv_link(val, link_market) if c.lower().strip() in link_cols
-                       else _fmt(val))
+            cl = c.lower().strip()
+            if cl in link_cols:
+                display = _tv_link(val, link_market)
+            elif cl in _rh_lower:
+                display = val if val is not None else ""
+            else:
+                display = _fmt(val)
             align = "left" if c.lower() in _LEFT_COLS else "center"
             ca = _cls_attr(cls, gc)
             tds += f'<td{ca} style="text-align:{align}">{display}</td>'
@@ -780,6 +895,443 @@ def _build_health_card(stock_df, sector_str_df, market):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  ECONOMIC CALENDAR
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  PER-MARKET METADATA  (used by both the News and Econ Calendar tabs)
+#  Keyed by the `market` code that country scripts pass to build_html_report.
+#    name        — display name for headers
+#    index       — benchmark ticker (bonus news source; best-effort)
+#    cal_regions — which calendar region tags this market should show.
+#                  "US" is included for every market (US macro is globally
+#                  market-moving); European markets add "EU" (ECB), etc.
+# ─────────────────────────────────────────────────────────────────────────────
+_MARKET_META = {
+    "USA":   {"name": "United States", "index": "^GSPC",      "cal_regions": {"US", "GLOBAL", "*"}},
+    "INDIA": {"name": "India",         "index": "^NSEI",      "cal_regions": {"US", "INDIA", "GLOBAL", "*"}},
+    "UK":    {"name": "United Kingdom","index": "^FTSE",      "cal_regions": {"US", "UK", "GLOBAL", "*"}},
+    "CA":    {"name": "Canada",        "index": "^GSPTSE",    "cal_regions": {"US", "CA", "GLOBAL", "*"}},
+    "AU":    {"name": "Australia",     "index": "^AXJO",      "cal_regions": {"US", "AU", "GLOBAL", "*"}},
+    "DE":    {"name": "Germany",       "index": "^GDAXI",     "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "JP":    {"name": "Japan",         "index": "^N225",      "cal_regions": {"US", "JP", "GLOBAL", "*"}},
+    "FR":    {"name": "France",        "index": "^FCHI",      "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "BR":    {"name": "Brazil",        "index": "^BVSP",      "cal_regions": {"US", "GLOBAL", "*"}},
+    "CN":    {"name": "China",         "index": "000001.SS",  "cal_regions": {"US", "GLOBAL", "*"}},
+    "KR":    {"name": "South Korea",   "index": "^KS11",      "cal_regions": {"US", "GLOBAL", "*"}},
+    "TW":    {"name": "Taiwan",        "index": "^TWII",      "cal_regions": {"US", "GLOBAL", "*"}},
+    "CH":    {"name": "Switzerland",   "index": "^SSMI",      "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "SA":    {"name": "Saudi Arabia",  "index": "^TASI.SR",   "cal_regions": {"US", "GLOBAL", "*"}},
+    "NL":    {"name": "Netherlands",   "index": "^AEX",       "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "ES":    {"name": "Spain",         "index": "^IBEX",      "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "SE":    {"name": "Sweden",        "index": "^OMX",       "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "HK":    {"name": "Hong Kong",     "index": "^HSI",       "cal_regions": {"US", "GLOBAL", "*"}},
+    "IT":    {"name": "Italy",         "index": "FTSEMIB.MI", "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "SG":    {"name": "Singapore",     "index": "^STI",       "cal_regions": {"US", "GLOBAL", "*"}},
+    "ID":    {"name": "Indonesia",     "index": "^JKSE",      "cal_regions": {"US", "GLOBAL", "*"}},
+    "ZA":    {"name": "South Africa",  "index": "^J203.JO",   "cal_regions": {"US", "GLOBAL", "*"}},
+    "MX":    {"name": "Mexico",        "index": "^MXX",       "cal_regions": {"US", "GLOBAL", "*"}},
+    "TH":    {"name": "Thailand",      "index": "^SET.BK",    "cal_regions": {"US", "GLOBAL", "*"}},
+    "MY":    {"name": "Malaysia",      "index": "^KLSE",      "cal_regions": {"US", "GLOBAL", "*"}},
+    "AE":    {"name": "UAE",           "index": "^TASI.SR",   "cal_regions": {"US", "GLOBAL", "*"}},
+    "PL":    {"name": "Poland",        "index": "WIG20.WA",   "cal_regions": {"US", "EU", "GLOBAL", "*"}},
+    "TR":    {"name": "Turkey",        "index": "XU100.IS",   "cal_regions": {"US", "GLOBAL", "*"}},
+}
+
+# Static curated calendar — update quarterly. Verify exact times with official
+# sources. Format: (YYYY-MM-DD, label, region, impact, category, note)
+#   region: "US" shown on every page; "INDIA"/"EU"/"UK"/"JP"/"AU"/"CA" region-
+#           specific; "GLOBAL" truly global (e.g. OPEC+). impact: VERY HIGH/HIGH/MED
+_ECON_EVENTS = [
+    # ── United States (shown on every market — globally market-moving) ──
+    ("2026-06-17", "FOMC Rate Decision",        "US", "VERY HIGH", "Monetary Policy", "Fed rate decision + updated dot-plot projections."),
+    ("2026-07-02", "US Nonfarm Payrolls (Jun)", "US", "VERY HIGH", "Economic Data",   "Monthly jobs report (early — July 4 holiday week)."),
+    ("2026-07-04", "US Independence Day (Holiday)", "US", "MED",    "Holiday",         "US markets closed."),
+    ("2026-07-14", "US CPI (Jun)",              "US", "VERY HIGH", "Economic Data",   "Consumer inflation — key Fed input."),
+    ("2026-07-29", "FOMC Rate Decision",        "US", "VERY HIGH", "Monetary Policy", "Summer policy review."),
+    ("2026-07-30", "US GDP Q2 2026 (Adv)",      "US", "VERY HIGH", "Economic Data",   "Advance estimate of Q2 GDP growth."),
+    ("2026-08-07", "US Nonfarm Payrolls (Jul)", "US", "VERY HIGH", "Economic Data",   "Monthly jobs report (first Friday)."),
+    ("2026-08-12", "US CPI (Jul)",              "US", "VERY HIGH", "Economic Data",   "July inflation print."),
+    ("2026-09-04", "US Nonfarm Payrolls (Aug)", "US", "VERY HIGH", "Economic Data",   "Pre-FOMC jobs data."),
+    ("2026-09-11", "US CPI (Aug)",              "US", "VERY HIGH", "Economic Data",   "Pre-September FOMC inflation print."),
+    ("2026-09-16", "FOMC Rate Decision",        "US", "VERY HIGH", "Monetary Policy", "Major meeting — updated SEP projections."),
+    ("2026-10-02", "US Nonfarm Payrolls (Sep)", "US", "VERY HIGH", "Economic Data",   "Monthly jobs report (first Friday)."),
+    ("2026-10-14", "US CPI (Sep)",              "US", "VERY HIGH", "Economic Data",   "Q3 inflation summary."),
+    ("2026-10-28", "FOMC Rate Decision",        "US", "VERY HIGH", "Monetary Policy", "Q4 guidance."),
+    ("2026-10-29", "US GDP Q3 2026 (Adv)",      "US", "VERY HIGH", "Economic Data",   "Advance estimate of Q3 GDP growth."),
+    ("2026-11-06", "US Nonfarm Payrolls (Oct)", "US", "VERY HIGH", "Economic Data",   "Monthly jobs report (first Friday)."),
+    ("2026-11-13", "US CPI (Oct)",              "US", "VERY HIGH", "Economic Data",   "October inflation print."),
+    ("2026-12-04", "US Nonfarm Payrolls (Nov)", "US", "VERY HIGH", "Economic Data",   "Pre-year-end FOMC jobs data."),
+    ("2026-12-10", "US CPI (Nov)",              "US", "VERY HIGH", "Economic Data",   "Pre-December FOMC inflation print."),
+    ("2026-12-16", "FOMC Rate Decision",        "US", "VERY HIGH", "Monetary Policy", "Final 2026 decision."),
+    # ── India ──
+    ("2026-06-25", "NSE F&O Expiry (Jun)",      "INDIA", "HIGH",      "F&O Expiry",      "Monthly derivatives expiry — elevated intraday volatility."),
+    ("2026-07-14", "India CPI (Jun)",           "INDIA", "HIGH",      "Economic Data",   "Monthly CPI — key for RBI rate path."),
+    ("2026-07-30", "NSE F&O Expiry (Jul)",      "INDIA", "HIGH",      "F&O Expiry",      "Last Thursday — monthly expiry."),
+    ("2026-08-06", "RBI MPC Policy Decision",   "INDIA", "VERY HIGH", "Monetary Policy", "Repo rate decision + RBI commentary."),
+    ("2026-08-12", "India CPI (Jul)",           "INDIA", "HIGH",      "Economic Data",   "July inflation data."),
+    ("2026-08-27", "NSE F&O Expiry (Aug)",      "INDIA", "HIGH",      "F&O Expiry",      "Last Thursday — monthly expiry."),
+    ("2026-09-12", "India CPI (Aug)",           "INDIA", "HIGH",      "Economic Data",   "August inflation data."),
+    ("2026-09-24", "NSE F&O Expiry (Sep)",      "INDIA", "VERY HIGH", "F&O Expiry",      "September quarterly expiry — major volatility."),
+    ("2026-10-08", "RBI MPC Policy Decision",   "INDIA", "VERY HIGH", "Monetary Policy", "Pre-festive season decision."),
+    ("2026-10-13", "India CPI (Sep)",           "INDIA", "HIGH",      "Economic Data",   "September inflation data."),
+    ("2026-10-29", "NSE F&O Expiry (Oct)",      "INDIA", "HIGH",      "F&O Expiry",      "Last Thursday — monthly expiry."),
+    ("2026-11-12", "India CPI (Oct)",           "INDIA", "HIGH",      "Economic Data",   "October inflation data."),
+    ("2026-11-26", "NSE F&O Expiry (Nov)",      "INDIA", "HIGH",      "F&O Expiry",      "Last Thursday — monthly expiry."),
+    ("2026-12-06", "RBI MPC Policy Decision",   "INDIA", "VERY HIGH", "Monetary Policy", "Year-end RBI policy."),
+    ("2026-12-31", "NSE F&O Expiry (Dec)",      "INDIA", "VERY HIGH", "F&O Expiry",      "December quarterly + year-end expiry."),
+    # ── Eurozone (DE/FR/IT/NL/ES + broader Europe) ──
+    ("2026-07-23", "ECB Rate Decision",         "EU", "VERY HIGH", "Monetary Policy", "European Central Bank monetary policy decision."),
+    ("2026-09-10", "ECB Rate Decision",         "EU", "VERY HIGH", "Monetary Policy", "ECB policy decision + staff projections."),
+    ("2026-10-29", "ECB Rate Decision",         "EU", "VERY HIGH", "Monetary Policy", "Autumn ECB policy decision."),
+    ("2026-12-17", "ECB Rate Decision",         "EU", "VERY HIGH", "Monetary Policy", "Year-end ECB decision."),
+    ("2026-08-31", "Eurozone CPI Flash (Aug)",  "EU", "HIGH",      "Economic Data",   "Flash HICP inflation estimate."),
+    ("2026-09-30", "Eurozone CPI Flash (Sep)",  "EU", "HIGH",      "Economic Data",   "Flash HICP inflation estimate."),
+    # ── United Kingdom ──
+    ("2026-06-18", "BoE Rate Decision",         "UK", "VERY HIGH", "Monetary Policy", "Bank of England MPC rate decision."),
+    ("2026-07-15", "UK CPI (Jun)",              "UK", "HIGH",      "Economic Data",   "UK consumer inflation."),
+    ("2026-08-06", "BoE Rate Decision",         "UK", "VERY HIGH", "Monetary Policy", "MPC decision + Monetary Policy Report."),
+    ("2026-08-19", "UK CPI (Jul)",              "UK", "HIGH",      "Economic Data",   "UK consumer inflation."),
+    ("2026-09-17", "BoE Rate Decision",         "UK", "VERY HIGH", "Monetary Policy", "Bank of England MPC rate decision."),
+    ("2026-11-05", "BoE Rate Decision",         "UK", "VERY HIGH", "Monetary Policy", "MPC decision + Monetary Policy Report."),
+    ("2026-12-17", "BoE Rate Decision",         "UK", "VERY HIGH", "Monetary Policy", "Year-end MPC decision."),
+    # ── Japan ──
+    ("2026-06-16", "BoJ Rate Decision",         "JP", "VERY HIGH", "Monetary Policy", "Bank of Japan policy decision + outlook."),
+    ("2026-07-30", "BoJ Rate Decision",         "JP", "VERY HIGH", "Monetary Policy", "Policy decision + Outlook Report."),
+    ("2026-09-18", "BoJ Rate Decision",         "JP", "VERY HIGH", "Monetary Policy", "Bank of Japan policy decision."),
+    ("2026-10-30", "BoJ Rate Decision",         "JP", "VERY HIGH", "Monetary Policy", "Policy decision + Outlook Report."),
+    ("2026-12-18", "BoJ Rate Decision",         "JP", "VERY HIGH", "Monetary Policy", "Year-end policy decision."),
+    # ── Australia ──
+    ("2026-06-16", "RBA Rate Decision",         "AU", "VERY HIGH", "Monetary Policy", "Reserve Bank of Australia cash-rate decision."),
+    ("2026-08-04", "RBA Rate Decision",         "AU", "VERY HIGH", "Monetary Policy", "RBA cash-rate decision + statement."),
+    ("2026-09-29", "RBA Rate Decision",         "AU", "VERY HIGH", "Monetary Policy", "RBA cash-rate decision."),
+    ("2026-11-03", "RBA Rate Decision",         "AU", "VERY HIGH", "Monetary Policy", "RBA cash-rate decision + statement."),
+    ("2026-12-08", "RBA Rate Decision",         "AU", "VERY HIGH", "Monetary Policy", "Year-end RBA decision."),
+    # ── Canada ──
+    ("2026-07-29", "BoC Rate Decision",         "CA", "VERY HIGH", "Monetary Policy", "Bank of Canada rate decision + MPR."),
+    ("2026-09-09", "BoC Rate Decision",         "CA", "VERY HIGH", "Monetary Policy", "Bank of Canada rate decision."),
+    ("2026-10-28", "BoC Rate Decision",         "CA", "VERY HIGH", "Monetary Policy", "Bank of Canada rate decision + MPR."),
+    ("2026-12-09", "BoC Rate Decision",         "CA", "VERY HIGH", "Monetary Policy", "Year-end Bank of Canada decision."),
+    # ── Global ──
+    ("2026-12-04", "OPEC+ Ministerial Meeting", "GLOBAL", "HIGH", "Commodities", "OPEC+ reviews production policy — moves oil & energy."),
+]
+
+
+def _econ_cat(label):
+    """Map an event label to a (short tag, css class) for the coloured badge."""
+    L = (label or "").lower()
+    if "fomc" in L:                                  return "FOMC", "ec-fomc"
+    if "rbi" in L:                                   return "RBI", "ec-rbi"
+    if "ecb" in L:                                   return "ECB", "ec-ecb"
+    if "boe" in L or "bank of england" in L:         return "BoE", "ec-boe"
+    if "boj" in L or "bank of japan" in L:           return "BoJ", "ec-boj"
+    if "rba" in L:                                   return "RBA", "ec-rba"
+    if "boc" in L or "bank of canada" in L:          return "BoC", "ec-boc"
+    if "cpi" in L or "inflation" in L:               return "CPI", "ec-cpi"
+    if "payroll" in L or "nfp" in L or "jobs" in L:  return "NFP", "ec-nfp"
+    if "gdp" in L:                                   return "GDP", "ec-gdp"
+    if "expiry" in L:                                return "Expiry", "ec-expiry"
+    if "budget" in L or "fiscal" in L:               return "Fiscal", "ec-fiscal"
+    if "earnings" in L or "results" in L:            return "Earnings", "ec-earn"
+    if "opec" in L:                                  return "OPEC", "ec-opec"
+    if "holiday" in L:                               return "Holiday", "ec-holiday"
+    return "Event", "ec-other"
+
+
+def _impact_badge(impact):
+    """Map an impact string to a (label, css class) for the impact badge."""
+    imp = (impact or "").strip().upper()
+    if imp == "VERY HIGH": return "🔴 V.High", "ec-imp-vh"
+    if imp == "HIGH":      return "🟡 High",   "ec-imp-h"
+    return "🟢 Med", "ec-imp-m"
+
+
+def _build_econ_calendar(market):
+    """Upcoming macro events for `market` (next 10 weeks), enriched with impact
+    + category badges. Always includes US macro plus the market's own region."""
+    from datetime import date, timedelta as _td
+    today = date.today()
+    cutoff = today + _td(weeks=10)
+    regions = _MARKET_META.get(str(market).upper(), {}).get(
+        "cal_regions", {"US", "GLOBAL", "*"})
+
+    upcoming = []
+    for dt_str, label, region, impact, category, note in _ECON_EVENTS:
+        if region not in regions:
+            continue
+        try:
+            ev_date = date.fromisoformat(dt_str)
+        except ValueError:
+            continue
+        if today <= ev_date <= cutoff:
+            upcoming.append((ev_date, label, impact, note))
+
+    if not upcoming:
+        return ('<p class="ec-empty">No major scheduled events in the next 10 weeks. '
+                'Check back as new dates are confirmed.</p>')
+
+    MONTH = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    WDAY  = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    rows  = ""
+    for ev_date, label, impact, note in sorted(upcoming, key=lambda x: x[0]):
+        diff = (ev_date - today).days
+        if diff == 0:   when = "Today"
+        elif diff == 1: when = "Tomorrow"
+        else:           when = f"in {diff}d"
+        date_str = f"{WDAY[ev_date.weekday()]} {ev_date.day} {MONTH[ev_date.month]}"
+        tag, cls = _econ_cat(label)
+        imp_lbl, imp_cls = _impact_badge(impact)
+        note_html = f'<span class="ec-note">{html.escape(note)}</span>' if note else ""
+        rows += (f'<div class="ec-row">'
+                 f'<span class="ec-date">{date_str}</span>'
+                 f'<span class="ec-badge {cls}">{tag}</span>'
+                 f'<div class="ec-main"><span class="ec-label">{html.escape(label)}</span>{note_html}</div>'
+                 f'<span class="ec-impact {imp_cls}">{imp_lbl}</span>'
+                 f'<span class="ec-when">{when}</span>'
+                 f'</div>')
+
+    legend = ('<div class="ec-legend">'
+              '<span><b style="color:#fca5a5">●</b> Very High</span>'
+              '<span><b style="color:#fcd34d">●</b> High</span>'
+              '<span><b style="color:#86efac">●</b> Medium</span>'
+              '</div>')
+    subtitle = ('<p class="sec-subtitle">Scheduled macro events that can move this '
+                'market — its own central bank &amp; data plus key US/global events. '
+                'Curated calendar; confirm exact release times with official sources.</p>')
+    return subtitle + legend + f'<div class="ec-list">{rows}</div>'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MARKET NEWS  (build-time fetch: yfinance + curated global RSS)
+#  Headlines must be fetched at build time — browser-side RSS is CORS-blocked.
+#  Every network call degrades gracefully: a failure yields an empty list, never
+#  an exception, so a country build never crashes because news was unavailable.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Max age (days) for headlines — keeps the tab to "current dates only".
+NEWS_MAX_AGE_DAYS = 3
+
+# yfinance tickers for the USA / international block.
+_INTL_YF_TICKERS = ["^GSPC", "^DJI", "^IXIC", "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL"]
+
+# Curated global financial RSS feeds (US / world macro). Trimmed from the set
+# vetted in Daily Start/daily_market_report_v3.py.
+_GLOBAL_RSS_FEEDS = [
+    ("CNBC",          "https://www.cnbc.com/id/100003114/device/rss/rss.html"),
+    ("CNBC Markets",  "https://www.cnbc.com/id/10001147/device/rss/rss.html"),
+    ("Yahoo Finance", "https://finance.yahoo.com/news/rssindex"),
+    ("Investing.com", "https://www.investing.com/rss/news_301.rss"),
+]
+
+
+def _parse_yf_news_item(n):
+    """Normalise one yfinance news entry (handles new + legacy API shapes)."""
+    try:
+        content = n.get("content", {}) if isinstance(n, dict) else {}
+        title = (content.get("title") or n.get("title", "") or "").strip()
+        if not title:
+            return None
+        url = ((content.get("canonicalUrl", {}) or {}).get("url")
+               or n.get("link") or "#")
+        prov = content.get("provider", {}) or {}
+        source = prov.get("displayName") or n.get("publisher", "") or ""
+        pub = content.get("pubDate") or n.get("providerPublishTime", "")
+        dt = None; pub_disp = ""
+        if isinstance(pub, (int, float)) and pub:
+            try:
+                dt = datetime.fromtimestamp(int(pub)); pub_disp = dt.strftime("%d %b %Y")
+            except Exception:
+                pass
+        elif isinstance(pub, str) and pub:
+            try:
+                dt = datetime.fromisoformat(pub.replace("Z", "+00:00")).replace(tzinfo=None)
+                pub_disp = dt.strftime("%d %b %Y")
+            except Exception:
+                pub_disp = pub[:10]
+        return {"title": title, "url": url or "#", "source": source, "pub": pub_disp, "_dt": dt}
+    except Exception:
+        return None
+
+
+def _fetch_yf_news(tickers, max_age_days=NEWS_MAX_AGE_DAYS, limit=12):
+    """Aggregate recent, de-duplicated headlines from yfinance for `tickers`."""
+    try:
+        import yfinance as yf
+    except Exception:
+        return []
+    cutoff = datetime.now() - timedelta(days=max_age_days)
+    out, seen = [], set()
+    for tk in tickers:
+        if len(out) >= limit:
+            break
+        if not tk:
+            continue
+        try:
+            raw = yf.Ticker(tk).news or []
+        except Exception:
+            continue
+        for n in raw:
+            item = _parse_yf_news_item(n)
+            if not item:
+                continue
+            if item["_dt"] is not None and item["_dt"] < cutoff:
+                continue
+            key = item["title"].lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(item)
+            if len(out) >= limit:
+                break
+    return out
+
+
+def _fetch_rss_news(feeds, max_age_days=NEWS_MAX_AGE_DAYS, limit=12):
+    """Recent headlines from RSS feeds via feedparser (bounded socket timeout)."""
+    try:
+        import feedparser
+    except Exception:
+        return []
+    import socket, calendar as _cal
+    cutoff_ts = (datetime.now() - timedelta(days=max_age_days)).timestamp()
+    out, seen = [], set()
+    _old_to = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(8)
+    try:
+        for src, url in feeds:
+            if len(out) >= limit:
+                break
+            try:
+                fp = feedparser.parse(url)
+            except Exception:
+                continue
+            for e in getattr(fp, "entries", [])[:25]:
+                try:
+                    title = (getattr(e, "title", "") or "").strip()
+                    if not title:
+                        continue
+                    pp = getattr(e, "published_parsed", None) or getattr(e, "updated_parsed", None)
+                    dt = None; pub_disp = ""
+                    if pp:
+                        ts = _cal.timegm(pp)
+                        if ts < cutoff_ts:
+                            continue
+                        dt = datetime.utcfromtimestamp(ts); pub_disp = dt.strftime("%d %b %Y")
+                    key = title.lower()
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    out.append({"title": title, "url": getattr(e, "link", "#") or "#",
+                                "source": src, "pub": pub_disp, "_dt": dt})
+                    if len(out) >= limit:
+                        break
+                except Exception:
+                    continue
+    finally:
+        socket.setdefaulttimeout(_old_to)
+    return out
+
+
+def _news_cache_path(key):
+    import tempfile
+    return os.path.join(tempfile.gettempdir(),
+                        f"mkt_news_{key}_{datetime.now().strftime('%Y-%m-%d')}.json")
+
+
+def _news_cache_read(key):
+    try:
+        import json
+        p = _news_cache_path(key)
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return None
+
+
+def _news_cache_write(key, items):
+    try:
+        import json
+        clean = [{"title": i.get("title", ""), "url": i.get("url", "#"),
+                  "source": i.get("source", ""), "pub": i.get("pub", "")} for i in items]
+        with open(_news_cache_path(key), "w", encoding="utf-8") as f:
+            json.dump(clean, f)
+    except Exception:
+        pass
+
+
+def _fetch_intl_news(max_age_days=NEWS_MAX_AGE_DAYS, limit=16):
+    """USA + global headlines, shared across the 16 country builds via a dated
+    on-disk cache so the slow US/RSS fetch happens once per day, not 16 times."""
+    cached = _news_cache_read("intl")
+    if cached is not None:
+        return cached
+    items = _fetch_yf_news(_INTL_YF_TICKERS, max_age_days=max_age_days, limit=10)
+    items += _fetch_rss_news(_GLOBAL_RSS_FEEDS, max_age_days=max_age_days, limit=12)
+    seen, out = set(), []
+    for it in items:
+        k = it.get("title", "").lower()
+        if not k or k in seen:
+            continue
+        seen.add(k)
+        out.append(it)
+    out = out[:limit]
+    _news_cache_write("intl", out)
+    return out
+
+
+def _news_list_html(news):
+    if not news:
+        return ('<p class="news-empty">No recent news available right now — '
+                'check back after the next update.</p>')
+    items = ""
+    for n in news:
+        title = html.escape(n.get("title", "") or "")
+        url = html.escape(n.get("url", "#") or "#", quote=True)
+        meta = " · ".join(x for x in [html.escape(n.get("source", "") or ""),
+                                      n.get("pub", "") or ""] if x)
+        items += (f'<div class="news-item"><div class="news-title">'
+                  f'<a href="{url}" target="_blank" rel="noopener">{title}</a></div>'
+                  f'<div class="news-meta">{meta}</div></div>')
+    return f'<div class="news-list">{items}</div>'
+
+
+def _build_news_tab(market, stock_str_df):
+    """Country headlines (top-ranked stocks + benchmark index) + USA/global news."""
+    meta = _MARKET_META.get(str(market).upper(), {})
+    name = meta.get("name") or str(market).title()
+    index_t = meta.get("index")
+
+    country_tickers = []
+    if index_t:
+        country_tickers.append(index_t)
+    if stock_str_df is not None and getattr(stock_str_df, "empty", True) is False:
+        col = "Yahoo" if "Yahoo" in stock_str_df.columns else (
+              "Symbol" if "Symbol" in stock_str_df.columns else None)
+        if col:
+            for x in stock_str_df[col].dropna().head(10).tolist():
+                xs = str(x).strip()
+                if xs and xs not in country_tickers:
+                    country_tickers.append(xs)
+
+    country_news = _fetch_yf_news(country_tickers, limit=12)
+    intl_news = _fetch_intl_news()
+
+    safe_name = html.escape(name)
+    return (
+        f'<p class="sec-subtitle">Recent headlines for {safe_name} plus key US &amp; '
+        f'global news that can move it. Refreshed each update; only the latest '
+        f'{NEWS_MAX_AGE_DAYS} days are shown. Click a headline to read the full story.</p>'
+        f'<h2 class="sec-title">🏠 {safe_name} — Latest</h2>'
+        + _news_list_html(country_news) +
+        '<h2 class="sec-title">🌎 USA &amp; Global — Key Headlines</h2>'
+        + _news_list_html(intl_news)
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  SNAPSHOT CARDS
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -789,6 +1341,7 @@ def _build_snap_cards(snapshot_df):
     for _, row in snapshot_df.iterrows():
         name=_fmt(row.get("Name","")); price=(_fmt(row.get("Price","")) or "—")
         chg1=row.get("Chg_1D%",""); trend=_fmt(row.get("Trend",""))
+        ticker=_fmt(row.get("Ticker",""))
         if not name or "──" in name: continue
         try:
             cf=float(chg1)
@@ -796,7 +1349,9 @@ def _build_snap_cards(snapshot_df):
             cls="pos" if cf>0 else ("neg" if cf<0 else ""); cs=f"{cf:+.2f}%"
         except: cls=""; cs=(_fmt(chg1) or "N/A")
         tc="pos-strong" if "Bullish" in trend else ("neg-strong" if "Bearish" in trend else "dim")
-        cards += (f'<div class="snap-card"><div class="snap-name">{name}</div>'
+        # Make name a TV link when ticker is available; hover preview works automatically.
+        name_html = _tv_link(ticker, display=name) if ticker else name
+        cards += (f'<div class="snap-card"><div class="snap-name">{name_html}</div>'
                   f'<div class="snap-price">{price}</div>'
                   f'<div class="snap-chg {cls}">{cs}</div>'
                   f'<div class="snap-trend {tc}">{trend}</div></div>')
@@ -856,6 +1411,39 @@ def _build_sector_bars(sector_df):
                  f'<div class="sec-rsi {rsi_cls}">RSI {rsi}</div>'
                  f'<div class="{sc} sec-sig-badge">{sig}</div></div>')
     return html + "</div>"
+
+
+def _build_sector_overview(sector_df):
+    """Compact sector overview table with RS trend sparklines (120d→55d→22d)."""
+    if sector_df is None or sector_df.empty:
+        return ""
+    rows = []
+    for _, r in sector_df.iterrows():
+        rs22  = r.get("RS_22d%",  None)
+        rs55  = r.get("RS_55d%",  None)
+        rs120 = r.get("RS_120d%", None)
+        sig   = str(r.get("Signal", ""))
+        trend_spark = _sparkline([rs120, rs55, rs22])
+        rows.append({
+            "Rank":       r.get("Rank", ""),
+            "Sector":     r.get("Sector", ""),
+            "Signal":     sig,
+            "RS 120d%":   rs120,
+            "RS 55d%":    rs55,
+            "RS 22d%":    rs22,
+            "RSI 14":     r.get("RSI_14", None),
+            "Avg 1D%":    r.get("Avg_Chg_1D%", None),
+            "Trend":      trend_spark,
+        })
+    import pandas as _pd
+    overview_df = _pd.DataFrame(rows)
+    return (
+        '<h2 class="sec-title">Sector Trend Overview</h2>'
+        '<p class="sec-subtitle">RS momentum path: 120d → 55d → 22d. '
+        'Rising green line = improving relative strength; declining red = weakening.</p>' +
+        _build_table(overview_df, "tbl-sec-overview", searchable=False,
+                     pct_mode="breadth", raw_html_cols=("Trend",))
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1274,6 +1862,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   display:flex;align-items:center;gap:5px;transition:opacity .15s;}
 .fb-float:hover{opacity:.85;}
 @media(max-width:600px){.fb-row{grid-template-columns:1fr;}}
+/* ── Newsletter strip ───────────────────────────────────────────────────── */
+.nl-strip{background:var(--bg2);border-top:1px solid var(--border);
+  padding:22px clamp(12px,3vw,40px);display:flex;align-items:center;
+  justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.nl-strip-copy{display:flex;flex-direction:column;gap:3px}
+.nl-strip-title{font-size:14px;font-weight:700;color:var(--text)}
+.nl-strip-sub{font-size:12px;color:var(--text3)}
+.nl-strip-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.nl-strip-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;
+  transition:border-color .15s;min-width:200px;}
+.nl-strip-input:focus{border-color:var(--accent);}
+.nl-strip-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;
+  white-space:nowrap;}
+.nl-strip-btn:hover{opacity:.85;}.nl-strip-btn:disabled{opacity:.5;cursor:not-allowed;}
+.nl-strip-msg{font-size:12px;color:var(--green);}
+.nl-strip-err{font-size:12px;color:var(--red);}
+/* ── End Newsletter strip ────────────────────────────────────────────────── */
 .disclaimer-footer{background:var(--bg2);border-top:2px solid var(--border);
   padding:20px clamp(12px,3vw,40px);margin-top:30px;font-size:11.5px;line-height:1.7;color:var(--text3);}
 .disclaimer-footer h4{font-size:12px;font-weight:700;color:var(--text2);margin:0 0 8px;
@@ -1282,6 +1889,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .disclaimer-footer strong{color:var(--text2);}
 .disclaimer-footer .df-brand{color:var(--accent);font-weight:700;}
 .disclaimer-footer a{color:var(--text2);text-decoration:underline;}
+/* ── Bookmarks ──────────────────────────────────────────────────────────── */
+.bm-star{cursor:pointer;opacity:.28;font-size:13px;user-select:none;padding:0 4px;
+  transition:opacity .15s,color .15s;line-height:1;}
+.bm-star.bm-on{opacity:1;color:#f5a623;}
+/* ── Recently Viewed bar ─────────────────────────────────────────────────── */
+.rv-bar{display:flex;align-items:center;gap:6px;padding:4px 16px;background:var(--bg2);
+  border-bottom:1px solid var(--border);font-size:12px;overflow-x:auto;white-space:nowrap;
+  scrollbar-width:none;}
+.rv-label{color:var(--text3);font-size:11px;flex-shrink:0;font-weight:600;}
+.rv-chip{background:var(--bg3);color:var(--accent);border-radius:12px;padding:2px 9px;
+  cursor:pointer;border:1px solid var(--border);font-size:11px;transition:background .15s,color .15s;}
+.rv-chip:hover{background:var(--accent);color:#fff;}
+.rv-clear{margin-left:auto;color:var(--text3);font-size:10px;cursor:pointer;
+  flex-shrink:0;padding:2px 6px;opacity:.7;}
+.rv-clear:hover{opacity:1;}
+/* ── Sparkline (sector trend) ────────────────────────────────────────────── */
+.spark-svg{display:block;margin:0 auto;overflow:visible;}
+/* ── Top Movers sub-tabs ─────────────────────────────────────────────────── */
+.mover-tabs{display:flex;gap:6px;padding:10px 0 10px;flex-wrap:wrap;}
+.mover-btn{padding:5px 14px;border:1px solid var(--border);border-radius:16px;font-size:12px;
+  cursor:pointer;background:var(--bg2);color:var(--text2);transition:background .15s,color .15s;}
+.mover-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.mover-period{display:none;}
+.mover-period.active{display:block;}
+.mover-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:6px;}
+@media(max-width:700px){.mover-grid{grid-template-columns:1fr;}}
+.mover-half h3{font-size:13px;font-weight:700;margin:0 0 6px;color:var(--text2);}
 .sl-badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;}
 .sl-triple{background:var(--sl-triple-bg);color:var(--sl-triple-fg);}
 .sl-prime{background:var(--sl-prime-bg);color:var(--sl-prime-fg);}
@@ -1327,8 +1961,55 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .mood-on{color:#22c55e;}.mood-mix{color:var(--amber);}.mood-off{color:var(--red);}
 /* Snapshot */
 .snap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:16px;}
-.snap-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;}
+.snap-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;transition:border-color .15s;}
+.snap-card:hover{border-color:var(--accent);}
 .snap-name{font-size:11px;color:var(--text3);margin-bottom:3px;}
+.snap-name a{color:inherit;text-decoration:none;cursor:pointer;}
+.snap-name a:hover{color:var(--accent);}
+/* Economic calendar */
+.ec-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+.ec-row{display:grid;grid-template-columns:104px 58px 1fr auto auto;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.ec-row:last-child{border-bottom:none;}
+.ec-row:nth-child(even){background:var(--bg2);}
+.ec-date{color:var(--text2);font-variant-numeric:tabular-nums;}
+.ec-badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;text-align:center;}
+.ec-fomc{background:rgba(99,102,241,.18);color:#a5b4fc;}
+.ec-rbi{background:rgba(249,115,22,.18);color:#fb923c;}
+.ec-ecb{background:rgba(59,130,246,.18);color:#93c5fd;}
+.ec-boe{background:rgba(168,85,247,.18);color:#d8b4fe;}
+.ec-boj{background:rgba(236,72,153,.18);color:#f9a8d4;}
+.ec-rba{background:rgba(20,184,166,.18);color:#5eead4;}
+.ec-boc{background:rgba(244,63,94,.18);color:#fda4af;}
+.ec-cpi{background:rgba(16,185,129,.18);color:#34d399;}
+.ec-nfp{background:rgba(234,179,8,.18);color:#fbbf24;}
+.ec-gdp{background:rgba(14,165,233,.18);color:#7dd3fc;}
+.ec-expiry{background:rgba(139,92,246,.18);color:#c4b5fd;}
+.ec-fiscal{background:rgba(251,146,60,.18);color:#fdba74;}
+.ec-earn{background:rgba(132,204,22,.18);color:#bef264;}
+.ec-opec{background:rgba(202,138,4,.2);color:#fde047;}
+.ec-holiday{background:rgba(148,163,184,.14);color:var(--text3);}
+.ec-other{background:var(--bg2);color:var(--text2);}
+.ec-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.ec-label{color:var(--text);}
+.ec-note{font-size:11px;color:var(--text3);line-height:1.35;}
+.ec-impact{font-size:10px;font-weight:700;white-space:nowrap;padding:2px 6px;border-radius:5px;text-align:center;}
+.ec-imp-vh{background:rgba(239,68,68,.16);color:#fca5a5;}
+.ec-imp-h{background:rgba(234,179,8,.16);color:#fcd34d;}
+.ec-imp-m{background:rgba(34,197,94,.14);color:#86efac;}
+.ec-when{color:var(--text3);font-size:11px;white-space:nowrap;}
+.ec-legend{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 12px;font-size:11px;color:var(--text3);}
+.ec-legend span{display:inline-flex;align-items:center;gap:4px;}
+.ec-empty{color:var(--text3);font-size:13px;}
+@media(max-width:540px){.ec-row{grid-template-columns:74px 50px 1fr auto;}.ec-when{display:none;}}
+/* Market news */
+.news-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.news-item{padding:8px 0;border-bottom:1px solid var(--border);}
+.news-item:last-child{border-bottom:none;}
+.news-title{font-size:13.5px;font-weight:500;margin-bottom:3px;line-height:1.4;}
+.news-title a{color:var(--text);text-decoration:none;}
+.news-title a:hover{color:var(--accent);text-decoration:underline;}
+.news-meta{font-size:11px;color:var(--text3);}
+.news-empty{color:var(--text3);font-size:13px;padding:6px 0;}
 .snap-price{font-size:15px;font-weight:700;}
 .snap-chg{font-size:13px;font-weight:500;margin-top:2px;}
 .snap-trend{font-size:11px;margin-top:3px;}
@@ -2503,6 +3184,68 @@ function showTab(id){
   document.querySelector('[data-tab="'+id+'"]').classList.add('active');
   localStorage.setItem('activeTab',id);
   setTimeout(_tvAttachHovers, 50);
+  setTimeout(_rvHookLinks, 100);
+}
+
+// ── Bookmarks (localStorage per page) ─────────────────────────────────────────
+function _bmKey(){return'bm:'+(location.pathname.split('/').pop()||'index');}
+function _bmLoad(){try{return JSON.parse(localStorage.getItem(_bmKey())||'[]');}catch(e){return[];}}
+function _bmSave(a){try{localStorage.setItem(_bmKey(),JSON.stringify(a));}catch(e){}}
+function toggleBookmark(sym,el){
+  var a=_bmLoad(),i=a.indexOf(sym);
+  if(i>=0){a.splice(i,1);el.classList.remove('bm-on');}
+  else{a.push(sym);el.classList.add('bm-on');}
+  _bmSave(a);
+}
+function _bmInit(){
+  var a=_bmLoad();
+  document.querySelectorAll('.bm-star').forEach(function(el){
+    if(a.indexOf(el.dataset.sym)>=0)el.classList.add('bm-on');
+  });
+}
+
+// ── Recently Viewed stocks ─────────────────────────────────────────────────────
+var _RV_KEY='rv:'+(location.pathname.split('/').pop()||'index');
+function _rvAdd(sym){
+  try{
+    var a=JSON.parse(localStorage.getItem(_RV_KEY)||'[]');
+    a=a.filter(function(x){return x!==sym;});
+    a.unshift(sym);a=a.slice(0,10);
+    localStorage.setItem(_RV_KEY,JSON.stringify(a));
+    _rvRender();
+  }catch(e){}
+}
+function _rvRender(){
+  try{
+    var bar=document.getElementById('rv-bar');if(!bar)return;
+    var a=JSON.parse(localStorage.getItem(_RV_KEY)||'[]');
+    if(!a.length){bar.style.display='none';return;}
+    bar.style.display='flex';
+    var h='<span class="rv-label">Recent:</span>';
+    a.forEach(function(s){
+      h+='<span class="rv-chip" onclick="showTab(\'stocks\')" title="'+s+'">'+s+'</span>';
+    });
+    h+='<span class="rv-clear" onclick="_rvClear()" title="Clear history">✕ clear</span>';
+    bar.innerHTML=h;
+  }catch(e){}
+}
+function _rvClear(){
+  try{localStorage.removeItem(_RV_KEY);}catch(e){}
+  var bar=document.getElementById('rv-bar');if(bar)bar.style.display='none';
+}
+function _rvHookLinks(){
+  document.querySelectorAll('a.tv-link[data-tv]').forEach(function(el){
+    if(el.dataset.rvBound)return;el.dataset.rvBound='1';
+    el.addEventListener('click',function(){_rvAdd(el.textContent.trim());});
+  });
+}
+
+// ── Top Movers sub-tab switcher ────────────────────────────────────────────────
+function showMoverPeriod(p){
+  document.querySelectorAll('.mover-period').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.mover-btn').forEach(function(el){el.classList.remove('active');});
+  var ep=document.getElementById('mover-'+p),eb=document.querySelector('[data-mover="'+p+'"]');
+  if(ep)ep.classList.add('active');if(eb)eb.classList.add('active');
 }
 
 // Local-time append: show visitor's timezone alongside UTC run time
@@ -2547,6 +3290,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     btn.className   = _tvEnabled ? 'tv-on' : 'tv-off';
   }
   _tvAttachHovers();
+  _bmInit();
+  _rvRender();
+  _rvHookLinks();
 
   // Default sort: RS22% descending for Market Breadth, Sector Performance, Sector Rotation, Industry Rotation
   ['tbl-breadth','tbl-secperf','tbl-secrot','tbl-indrot'].forEach(tid=>{
@@ -2933,6 +3679,55 @@ function _scResetFilter(grp){
     )
 
 
+def _build_top_movers_tab(stock_df):
+    """Top Movers tab: top/bottom 15 stocks by 1D% and 5D%."""
+    if stock_df is None or stock_df.empty:
+        return '<p class="empty">No stock data available.</p>'
+
+    import pandas as _pd
+
+    COLS_1D = ["Symbol", "Company", "Price", "Chg_1D%", "Chg_5D%",
+               "RS_22d_Idx%", "Signal_Label", "Sector"]
+    COLS_5D = ["Symbol", "Company", "Price", "Chg_5D%", "Chg_1D%",
+               "RS_22d_Idx%", "Signal_Label", "Sector"]
+
+    def _sub(df, col, asc, n=15):
+        if col not in df.columns:
+            return _pd.DataFrame()
+        avail_cols = [c for c in (COLS_1D if "1D" in col else COLS_5D) if c in df.columns]
+        return (df.dropna(subset=[col])
+                  .sort_values(col, ascending=asc)
+                  .head(n)[avail_cols]
+                  .reset_index(drop=True))
+
+    def _half(df, label, table_id):
+        if df.empty:
+            return f'<div class="mover-half"><h3>{label}</h3><p class="empty">No data.</p></div>'
+        return (f'<div class="mover-half"><h3>{label}</h3>'
+                + _build_table(df, table_id, searchable=False, no_bg=True)
+                + '</div>')
+
+    def _period_block(period_id, col, label_up, label_dn, id_up, id_dn):
+        up = _sub(stock_df, col, False)
+        dn = _sub(stock_df, col, True)
+        return (f'<div class="mover-period{" active" if period_id=="1d" else ""}" id="mover-{period_id}">'
+                f'<div class="mover-grid">'
+                + _half(up, label_up, id_up)
+                + _half(dn, label_dn, id_dn)
+                + '</div></div>')
+
+    btn_bar = (
+        '<div class="mover-tabs">'
+        '<button class="mover-btn active" data-mover="1d" onclick="showMoverPeriod(\'1d\')">1 Day</button>'
+        '<button class="mover-btn" data-mover="5d" onclick="showMoverPeriod(\'5d\')">5 Day</button>'
+        '</div>'
+    )
+    day_block  = _period_block("1d", "Chg_1D%", "📈 Top Gainers (1D)", "📉 Top Losers (1D)",  "tbl-mv-up1d",  "tbl-mv-dn1d")
+    week_block = _period_block("5d", "Chg_5D%", "📈 Top Gainers (5D)", "📉 Top Losers (5D)",  "tbl-mv-up5d",  "tbl-mv-dn5d")
+
+    return btn_bar + day_block + week_block
+
+
 def build_html_report(
     market, snapshot_df, sector_str_df, sector_rot_df, industry_rot_df,
     breadth_df, sector_perf_df, stock_str_df, top_buy_df, top_sell_df,
@@ -2947,6 +3742,12 @@ def build_html_report(
     run_time = run_time or datetime.now().strftime("%d %b %Y  %H:%M")
     global _CUR_MKT
     _CUR_MKT = market
+    try:
+        import market_engine as _me_dq
+        if hasattr(_me_dq, 'write_data_quality_log'):
+            _me_dq.write_data_quality_log(market)
+    except Exception:
+        pass
     # ── Scans tab content built HERE so it's ready before tabs list & sections_html ──
     scans_content = (
         _build_scans_tab(scans_df)
@@ -2976,7 +3777,12 @@ def build_html_report(
                  "ROE%","D/E","P/E","EPS","Mkt_Cap_B","Chart_Pattern",
                  "MST_Signal","LST_Signal","RS30_Signal"]
     if stock_str_df is not None and not stock_str_df.empty:
-        stock_main = stock_str_df[[c for c in MAIN_COLS if c in stock_str_df.columns]]
+        stock_main = stock_str_df[[c for c in MAIN_COLS if c in stock_str_df.columns]].copy()
+        # Inject bookmark star column as first column
+        def _bm_star(sym):
+            s = str(sym).replace("'", "\\'")
+            return f'<span class="bm-star" data-sym="{s}" onclick="toggleBookmark(\'{s}\',this)" title="Bookmark">★</span>'
+        stock_main.insert(0, "★", stock_main["Symbol"].map(_bm_star) if "Symbol" in stock_main.columns else "")
     else:
         stock_main = stock_str_df
 
@@ -2986,10 +3792,13 @@ def build_html_report(
         ("sectors",       "🏭 Sectors"),
         *([("rrg",        "📡 RRG")]     if rrg_section else []),
         ("opportunities", "🎯 Opportunities"),
-        ("stocks",        "📊 Stocks"),
+        ("stocks",        "📊 All Stocks"),
+        ("movers",        "📈 Movers"),
         *([("scans", "📡 Scans")] if scans_content else []),
         ("screener",      "🔎 Screener"),
         ("patterns",      "📐 Patterns"),
+        ("news",          "📰 News"),
+        ("econ",          "📅 Econ Calendar"),
         ("global",        "🌍 Global"),
         ("sleeves",       "📋 Sleeves"),
         ("guide",         "📚 Guide"),
@@ -3165,7 +3974,7 @@ def build_html_report(
   </div>
 </div>'''
     stock_content = _STOCK_PANEL + _stock_toolbar + _build_table(
-        stock_main, "tbl-stocks", max_rows=500, no_bg=True, groups=True)
+        stock_main, "tbl-stocks", max_rows=500, no_bg=True, groups=True, raw_html_cols=("★",))
 
     # ── Patterns: enforce a hard recency cap (request #8). Keep only setups
     #    whose Date is within the last PATTERN_RECENT_DAYS days. Rows without a
@@ -3206,9 +4015,12 @@ def build_html_report(
         (f'<div class="tab-content" id="tab-rrg">{rrg_section}</div>' if rrg_section else "") +
         _sec("opportunities", "🎯 Opportunities",              opp_content) +
         _sec("stocks",        "📊 All Stocks",                 stock_content) +
+        _sec("movers",        "📈 Top Movers",                 _build_top_movers_tab(stock_str_df)) +
         (_sec("scans", "📡 India Scans", scans_content) if scans_content else "") +
         _sec("screener",      "🔎 Screener",                   _build_screener_tab()) +
         _sec("patterns",      "📐 Chart Patterns",             patterns_content) +
+        _sec("news",          "📰 Market News",                _build_news_tab(market, stock_str_df)) +
+        _sec("econ",          "📅 Economic Calendar",          _build_econ_calendar(market)) +
         _sec("global",        "🌍 Global Markets",             global_content) +
         _sec("sleeves",       "📋 RS Momentum Portfolios",     sleeves_content) +
         _sec("guide",         "📚 Signal Guide & Reference",   guide_content) +
@@ -3298,6 +4110,22 @@ def build_html_report(
         '</div>'
     )
 
+    # ── Newsletter strip (compact inline form for country pages) ─────────────
+    newsletter_html = (
+        '<div class="nl-strip" id="newsletter">'
+        '<div class="nl-strip-copy">'
+        '<span class="nl-strip-title">📬 Get the Weekly Market Summary</span>'
+        '<span class="nl-strip-sub">Signal shifts &amp; sector rotation — every Sunday. Free, no spam.</span>'
+        '</div>'
+        '<form class="nl-strip-form" id="nl-strip-form" onsubmit="nlStripSubmit(event)">'
+        '<input type="email" id="nl-strip-email" class="nl-strip-input" placeholder="Your email address" required autocomplete="email">'
+        '<button type="submit" class="nl-strip-btn" id="nl-strip-btn">Subscribe →</button>'
+        '<span id="nl-strip-msg" class="nl-strip-msg" style="display:none">✅ Subscribed!</span>'
+        '<span id="nl-strip-err" class="nl-strip-err" style="display:none">❌ Try again</span>'
+        '</form>'
+        '</div>'
+    )
+
     # ── Investment disclaimer footer (regulator-neutral, global) ────────────
     disclaimer_html = (
         '<div class="disclaimer-footer">'
@@ -3368,13 +4196,51 @@ def build_html_report(
     </div>
   </div>
 </header>
-
+<div id="rv-bar" class="rv-bar" style="display:none"></div>
 <nav class="tab-bar">{tab_btns}</nav>
 <main>{sections_html}</main>
 {feedback_html}
+{newsletter_html}
 {stats_bar_embed}
 <a href="#feedback" class="fb-float" title="Share feedback or suggestions">💬 Feedback</a>
-<script>{JS}</script>
+<script>{JS}
+// ── Newsletter strip (country pages) ────────────────────────────────────────
+// Set BREVO_API_KEY and BREVO_LIST_ID to activate.
+// Keys configured in build_index.py apply here too; copy the same values.
+const _BREVO_KEY  = "YOUR_BREVO_API_KEY_HERE";
+const _BREVO_LIST = 0;
+async function nlStripSubmit(e) {{
+  e.preventDefault();
+  const btn   = document.getElementById('nl-strip-btn');
+  const email = document.getElementById('nl-strip-email').value.trim();
+  if (!email) return;
+  btn.disabled = true; btn.textContent = '…';
+  document.getElementById('nl-strip-msg').style.display = 'none';
+  document.getElementById('nl-strip-err').style.display = 'none';
+  if (_BREVO_KEY === 'YOUR_BREVO_API_KEY_HERE') {{
+    document.getElementById('nl-strip-err').textContent = '⚙️ Coming soon!';
+    document.getElementById('nl-strip-err').style.display = 'inline';
+    btn.disabled = false; btn.textContent = 'Subscribe →'; return;
+  }}
+  try {{
+    const body = {{ email, updateEnabled: true }};
+    if (_BREVO_LIST > 0) body.listIds = [_BREVO_LIST];
+    const r = await fetch('https://api.brevo.com/v3/contacts', {{
+      method:'POST',
+      headers:{{'accept':'application/json','content-type':'application/json','api-key':_BREVO_KEY}},
+      body: JSON.stringify(body)
+    }});
+    if (r.ok || r.status === 204) {{
+      document.getElementById('nl-strip-msg').style.display = 'inline';
+      document.getElementById('nl-strip-form').reset();
+      btn.textContent = 'Done!';
+    }} else {{ throw new Error(r.status); }}
+  }} catch {{
+    document.getElementById('nl-strip-err').style.display = 'inline';
+    btn.disabled = false; btn.textContent = 'Subscribe →';
+  }}
+}}
+</script>
 </body>
 </html>"""
 

@@ -75,17 +75,17 @@ PL_INDUSTRY_TO_SECTOR = {
     "Materials":"Materials","Mining":"Materials","Gold":"Materials",
     "Metals":"Materials","Chemicals":"Materials","Technology":"Technology",
     "Software":"Technology","IT Services":"Technology","Electronics":"Technology",
-    "Semiconductors":"Technology","Healthcare":"Healthcare",
-    "Pharmaceuticals":"Healthcare","Biotechnology":"Healthcare",
-    "Medical Devices":"Healthcare","Industrials":"Industrials",
+    "Semiconductors":"Technology","Health Care":"Health Care",
+    "Pharmaceuticals":"Health Care","Biotechnology":"Health Care",
+    "Medical Devices":"Health Care","Industrials":"Industrials",
     "Railways":"Industrials","Aerospace":"Industrials","Engineering":"Industrials",
     "Machinery":"Industrials","Shipbuilding":"Industrials",
-    "ConsumerDisc":"ConsumerDisc","Retail":"ConsumerDisc",
-    "Automotive":"ConsumerDisc","Luxury":"ConsumerDisc",
+    "Consumer Discretionary":"Consumer Discretionary","Retail":"Consumer Discretionary",
+    "Automotive":"Consumer Discretionary","Luxury":"Consumer Discretionary",
     "Consumer Staples":"Consumer Staples","Food & Beverage":"Consumer Staples",
-    "Utilities":"Utilities","Power":"Utilities","CommServices":"CommServices",
-    "Telecoms":"CommServices","Media":"CommServices","RealEstate":"RealEstate",
-    "REITs":"RealEstate",
+    "Utilities":"Utilities","Power":"Utilities","Communication Services":"Communication Services",
+    "Telecoms":"Communication Services","Media":"Communication Services","Real Estate":"Real Estate",
+    "REITs":"Real Estate",
 }
 
 PL_BREADTH_INDICES = {
@@ -141,13 +141,13 @@ PL_SECTORS = {
     "Energy":          {"yahoo": None, "csv": "pl_sector_energy.csv"},
     "Materials":       {"yahoo": None, "csv": "pl_sector_materials.csv"},
     "Technology":      {"yahoo": None, "csv": "pl_sector_technology.csv"},
-    "Healthcare":      {"yahoo": None, "csv": "pl_sector_health_care.csv"},
+    "Health Care":      {"yahoo": None, "csv": "pl_sector_health_care.csv"},
     "Industrials":     {"yahoo": None, "csv": "pl_sector_industrials.csv"},
-    "ConsumerDisc":    {"yahoo": None, "csv": "pl_sector_consumer_discretionary.csv"},
+    "Consumer Discretionary":    {"yahoo": None, "csv": "pl_sector_consumer_discretionary.csv"},
     "Consumer Staples":{"yahoo": None, "csv": "pl_sector_consumer_staples.csv"},
     "Utilities":       {"yahoo": None, "csv": "pl_sector_utilities.csv"},
-    "CommServices":    {"yahoo": None, "csv": "pl_sector_communication_services.csv"},
-    "RealEstate":      {"yahoo": None, "csv": "pl_sector_real_estate.csv"},
+    "Communication Services":    {"yahoo": None, "csv": "pl_sector_communication_services.csv"},
+    "Real Estate":      {"yahoo": None, "csv": "pl_sector_real_estate.csv"},
 }
 
 def fetch_pl_sector_prices():
@@ -345,6 +345,14 @@ def main():
     except Exception as e:
         print(f"  \u274c HTML generation failed: {e}")
         import traceback; traceback.print_exc()
+    # ── Save to local DB (silently skipped when db_excel is unavailable) ──────
+    try:
+        from db_excel import auto_save_run as _db_save
+        _db_save(stock_df, sec_str_df, market="pl",
+                 elapsed=time.time() - t0, primary_rs=PRIMARY_RS_PERIOD)
+    except Exception:
+        pass
+
 
     elapsed = time.time() - t0
     print(f"\n{'='*68}")

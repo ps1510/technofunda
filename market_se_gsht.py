@@ -75,18 +75,18 @@ SE_INDUSTRY_TO_SECTOR = {
     "Technology": "Technology", "Software": "Technology",
     "IT Services": "Technology", "Electronics": "Technology",
     "Semiconductors": "Technology",
-    "Healthcare": "Health Care", "Pharmaceuticals": "Health Care",
+    "Health Care": "Health Care", "Pharmaceuticals": "Health Care",
     "Biotechnology": "Health Care", "Medical Devices": "Health Care",
     "Industrials": "Industrials", "Railways": "Industrials",
     "Aerospace": "Industrials", "Engineering": "Industrials",
     "Machinery": "Industrials", "Shipbuilding": "Industrials",
-    "ConsumerDisc": "Consumer Discretionary", "Retail": "Consumer Discretionary",
+    "Consumer Discretionary": "Consumer Discretionary", "Retail": "Consumer Discretionary",
     "Automotive": "Consumer Discretionary", "Luxury": "Consumer Discretionary",
     "Consumer Staples": "Consumer Staples", "Food & Beverage": "Consumer Staples",
     "Utilities": "Utilities", "Power": "Utilities",
-    "CommServices": "Communication Services", "Telecoms": "Communication Services",
+    "Communication Services": "Communication Services", "Telecoms": "Communication Services",
     "Media": "Communication Services",
-    "RealEstate": "Real Estate", "REITs": "Real Estate",
+    "Real Estate": "Real Estate", "REITs": "Real Estate",
 }
 
 SE_BREADTH_INDICES = {
@@ -341,6 +341,14 @@ def main():
     except Exception as e:
         print(f"  HTML generation failed: {e}")
         import traceback; traceback.print_exc()
+    # ── Save to local DB (silently skipped when db_excel is unavailable) ──────
+    try:
+        from db_excel import auto_save_run as _db_save
+        _db_save(stock_df, sec_str_df, market="se",
+                 elapsed=time.time() - t0, primary_rs=PRIMARY_RS_PERIOD)
+    except Exception:
+        pass
+
 
     elapsed = time.time() - t0
     print(f"\n{'='*68}")

@@ -1,17 +1,18 @@
-#    "market_india_html.py",
-#    "market_usa_html.py",
-#    "market_ae_gsht.py",
-#    "market_au_gsht.py",
-#    "market_br_gsht.py",
+
 
 import subprocess
 import sys
 import time
 
 SCRIPTS = [
+    "market_india_html.py",
+    "market_usa_html.py",
     "market_ca_gsht.py",
+    "market_ae_gsht.py",
     "market_ch_gsht.py",
+    "market_au_gsht.py",
     "market_cn_gsht.py",
+    "market_br_gsht.py",
     "market_de_gsht.py",
     "market_es_gsht.py",
     "market_fr_gsht.py",

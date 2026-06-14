@@ -36,6 +36,58 @@ from market_signals import (
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  DATA QUALITY TRACKER
+#  Accumulates download failures across all fetch_close_batch() calls in a run.
+#  write_data_quality_log() is called once per run (from market_html.build_html_report).
+# ─────────────────────────────────────────────────────────────────────────────
+_DQ_FAILURES: dict = {}   # {symbol: reason}
+_DQ_SUCCESS:  int  = 0    # total symbols downloaded OK this run
+
+
+def write_data_quality_log(market: str = "", out_dir: str = ".") -> None:
+    """Write data quality summary to CSV and GitHub Actions step summary."""
+    global _DQ_FAILURES, _DQ_SUCCESS
+    total = _DQ_SUCCESS + len(_DQ_FAILURES)
+    if total == 0:
+        return
+
+    pct_fail = 100 * len(_DQ_FAILURES) / total
+
+    import csv
+    csv_path = os.path.join(out_dir, "data_quality_log.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["Market", "Symbol", "Reason"])
+        for sym, reason in _DQ_FAILURES.items():
+            w.writerow([market, sym, reason])
+
+    if _DQ_FAILURES:
+        print(f"\n[DATA QUALITY] {market}: {len(_DQ_FAILURES)}/{total} failed "
+              f"({pct_fail:.1f}%) → {csv_path}")
+    else:
+        print(f"\n[DATA QUALITY] {market}: All {total} symbols OK")
+
+    gh_summary = os.environ.get("GITHUB_STEP_SUMMARY", "")
+    if gh_summary:
+        status = "✅" if not _DQ_FAILURES else ("⚠️" if pct_fail < 10 else "❌")
+        with open(gh_summary, "a", encoding="utf-8") as f:
+            f.write(f"\n## {status} Data Quality — {market}\n\n")
+            f.write(f"| Metric | Value |\n|---|---|\n")
+            f.write(f"| Total requested | {total} |\n")
+            f.write(f"| Downloaded OK | {_DQ_SUCCESS} |\n")
+            f.write(f"| Failed | {len(_DQ_FAILURES)} ({pct_fail:.1f}%) |\n")
+            if _DQ_FAILURES:
+                f.write(f"\n**Failed symbols:**\n\n")
+                for sym, reason in list(_DQ_FAILURES.items())[:30]:
+                    f.write(f"- `{sym}` — {reason}\n")
+                if len(_DQ_FAILURES) > 30:
+                    f.write(f"- _(and {len(_DQ_FAILURES) - 30} more — see data\\_quality\\_log.csv)_\n")
+
+    _DQ_FAILURES.clear()
+    _DQ_SUCCESS = 0
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  SNAPSHOT TICKERS
 # ─────────────────────────────────────────────────────────────────────────────
 SNAPSHOT_TICKERS = {
@@ -95,12 +147,12 @@ INDIA_SECTORS = {
     "PSU Bank":      {"yahoo":"^CNXPSUBANK", "csv":"ind_niftypsubanklist.csv"},
     "Chemicals":     {"yahoo":None,           "csv":"ind_niftyChemicals_list.csv"},
     "Consumer Dur.": {"yahoo":None,           "csv":"ind_niftyconsumerdurableslist.csv"},
-    "Healthcare":    {"yahoo":None,           "csv":"ind_niftyhealthcarelist.csv"},
+    "Health Care":    {"yahoo":None,           "csv":"ind_niftyhealthcarelist.csv"},
     "Cement":        {"yahoo":None,           "csv":"ind_NiftyCement_list.csv"},
 }
 INDIA_INDUSTRY_TO_SECTOR = {
     "Automobile and Auto Components":"Automobile","Information Technology":"IT",
-    "Financial Services":"Finance","Healthcare":"Healthcare",
+    "Financial Services":"Finance","Health Care":"Health Care",
     "Fast Moving Consumer Goods":"FMCG","Metals & Mining":"Metal",
     "Oil, Gas & Consumable Fuels":"Oil & Gas","Oil Gas & Consumable Fuels":"Oil & Gas",
     "Realty":"Realty","Capital Goods":"Infra","Construction":"Infra",
@@ -121,9 +173,9 @@ INDIA_INDUSTRY_TO_SECTOR = {
     "Banks":"Finance",
     "Steel":"Metal",
     "Cement & Cement Products":"Cement",
-    "Healthcare Services":"Healthcare",
-    "Hospital":"Healthcare",
-    "Diagnostics":"Healthcare",
+    "Healthcare Services":"Health Care",
+    "Hospital":"Health Care",
+    "Diagnostics":"Health Care",
     "Power Generation":"Oil & Gas",
     "Power Distribution":"Oil & Gas",
 }
@@ -173,7 +225,7 @@ US_INDEX = "SPY"
 US_SECTORS = {
     "Technology":             {"yahoo":"XLK",  "csv":"us_sector_technology.csv"},
     "Financials":             {"yahoo":"XLF",  "csv":"us_sector_financials.csv"},
-    "Healthcare":             {"yahoo":"XLV",  "csv":"us_sector_healthcare.csv"},
+    "Health Care":             {"yahoo":"XLV",  "csv":"us_sector_health_care.csv"},
     "Consumer Discretionary": {"yahoo":"XLY",  "csv":"us_sector_consumer_discretionary.csv"},
     "Industrials":            {"yahoo":"XLI",  "csv":"us_sector_industrials.csv"},
     "Communication Services": {"yahoo":"XLC",  "csv":"us_sector_communication_services.csv"},
@@ -187,8 +239,8 @@ US_INDUSTRY_TO_SECTOR = {
     "Technology":"Technology","Information Technology":"Technology",
     "Semiconductors":"Technology","Software":"Technology",
     "Financials":"Financials",
-    "Healthcare":"Healthcare","Health Care":"Healthcare",
-    "Pharmaceuticals":"Healthcare","Biotechnology":"Healthcare",
+    "Health Care":"Health Care","Healthcare":"Health Care",
+    "Pharmaceuticals":"Health Care","Biotechnology":"Health Care",
     "Consumer Discretionary":"Consumer Discretionary",
     "Industrials":"Industrials",
     "Communication Services":"Communication Services","Media":"Communication Services",
@@ -205,7 +257,7 @@ US_BREADTH_INDICES = {
     "Russell 2000":           {"yahoo":"IWM",  "csv":None},
     "Technology":             {"yahoo":"XLK",  "csv":"us_sector_technology.csv"},
     "Financials":             {"yahoo":"XLF",  "csv":"us_sector_financials.csv"},
-    "Healthcare":             {"yahoo":"XLV",  "csv":"us_sector_healthcare.csv"},
+    "Health Care":             {"yahoo":"XLV",  "csv":"us_sector_health_care.csv"},
     "Consumer Discretionary": {"yahoo":"XLY",  "csv":"us_sector_consumer_discretionary.csv"},
     "Industrials":            {"yahoo":"XLI",  "csv":"us_sector_industrials.csv"},
     "Communication Services": {"yahoo":"XLC",  "csv":"us_sector_communication_services.csv"},
@@ -420,6 +472,20 @@ def _sf(v):
     except: return np.nan
 
 def fetch_close_batch(symbols, days=PERIOD_DAYS, end_date=None):
+    global _DQ_FAILURES, _DQ_SUCCESS
+    # ── SQLite cache-first (local only; silently skipped on GitHub Actions) ────
+    if not end_date:
+        try:
+            from price_cache_db import PriceCache as _PC
+            _start = (datetime.today() - timedelta(days=days + 10)).strftime("%Y-%m-%d")
+            _cache = _PC()
+            _wide, _meta = _cache.get(symbols, _start, days=days)
+            _cache.close()
+            if _wide is not None and not _wide.empty:
+                return _wide.sort_index()
+        except Exception:
+            pass
+    # ── original yfinance fetch ───────────────────────────────────────────────
     end = (pd.Timestamp(end_date) + timedelta(days=1)) if end_date else (datetime.today() + timedelta(days=1))
     start=end-timedelta(days=days+5)
     data={}
@@ -452,7 +518,9 @@ def fetch_close_batch(symbols, days=PERIOD_DAYS, end_date=None):
             for sym in batch: _failed[sym]=f"error:{type(e).__name__}"
         if i+BATCH_SIZE<len(symbols): time.sleep(BATCH_DELAY)
     total=len(symbols); success=len(data); failed=len(_failed)
+    _DQ_SUCCESS += success
     if failed>0:
+        _DQ_FAILURES.update(_failed)
         pct=100*failed/total if total else 0
         print(f"\n[DATA QUALITY] {total} requested | {success} OK | {failed} failed ({pct:.1f}%)")
         reasons=", ".join(f"{s}({r})" for s,r in list(_failed.items())[:30])
@@ -583,8 +651,6 @@ def _engine_cache_base() -> str:
         "StockPriceCache",
     )
 
-_FIN_FILE=os.path.join(_engine_cache_base(),"_fin_v52.json")
-
 def _load_fin():
     global _FIN_CACHE
 
@@ -667,6 +733,19 @@ def _fetch_fin_one(sym):
     return blank
 
 def get_financials_batch(symbols, force=False):
+    # ── SQLite cache-first (local only; silently skipped on GitHub Actions) ────
+    if not force:
+        try:
+            from price_cache_db import get_fundamentals_db as _get_funda
+            result = _get_funda(symbols, force=False)
+            if result:
+                cached_count = sum(1 for v in result.values() if v.get("SalesYoY") is not None)
+                if cached_count > len(symbols) * 0.5:
+                    print(f"    Financials DB: {cached_count}/{len(symbols)} from SQLite")
+                    return result
+        except Exception:
+            pass
+    # ── original JSON cache path ─────────────────────────────────────────────
     _load_fin(); result={}
     stale=(datetime.now()-timedelta(days=7)).strftime("%Y-%m-%d")
     to_fetch=[]
@@ -711,6 +790,55 @@ def load_csv_constituents(csv_path, is_nse=True):
         syms=df["Symbol"].str.strip().dropna().tolist()
         return [s+".NS" for s in syms] if is_nse else syms
     except: return []
+
+def fetch_sector_prices_generic(sectors_cfg, period_days, index_data_dir, script_dir="", is_nse=False, label=""):
+    """
+    Generic sector price fetcher for all market runners (non-India/non-USA).
+    Priority: (1) Yahoo ticker  →  (2) CSV constituent composite  →  synthetic fallback.
+    """
+    result = {}
+    end   = datetime.today() + timedelta(days=1)
+    start = end - timedelta(days=period_days + 5)
+    for sec_name, cfg in sectors_cfg.items():
+        # ── 1. Direct Yahoo ticker ─────────────────────────────────────────
+        ticker = cfg.get("yahoo")
+        if ticker:
+            try:
+                raw = yf.download(ticker, start=start.strftime("%Y-%m-%d"),
+                                  end=end.strftime("%Y-%m-%d"),
+                                  auto_adjust=True, progress=False)
+                if not raw.empty:
+                    cl = raw["Close"]
+                    if isinstance(cl, pd.DataFrame): cl = cl.squeeze()
+                    s = _normalize(cl.dropna())
+                    if len(s) >= 22:
+                        result[sec_name] = s
+                        continue
+            except Exception:
+                pass
+        # ── 2. CSV constituent composite ───────────────────────────────────
+        csv_f = cfg.get("csv")
+        if csv_f:
+            for base in [d for d in [index_data_dir, script_dir] if d]:
+                path = os.path.join(base, csv_f)
+                if os.path.exists(path):
+                    syms = load_csv_constituents(path, is_nse=is_nse)
+                    if syms:
+                        try:
+                            raw = yf.download(syms[:30], start=start.strftime("%Y-%m-%d"),
+                                              end=end.strftime("%Y-%m-%d"),
+                                              auto_adjust=True, progress=False)
+                            cls = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw[["Close"]]
+                            cls = cls.dropna(how="all")
+                            if len(cls) >= 22:
+                                norm = cls / cls.iloc[0] * 1000
+                                result[sec_name] = _normalize(norm.mean(axis=1))
+                        except Exception:
+                            pass
+                    break
+    tag = f" [{label}]" if label else ""
+    print(f"  ✅ Sector prices{tag}: {len(result)}/{len(sectors_cfg)}")
+    return result
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  PEER GROUP METRICS
@@ -813,7 +941,7 @@ def build_market_snapshot(market):
                     elif chg5>0: trend="→ Recovering"
                     else: trend="→ Pulling Back"
         except: pass
-        rows.append({"Name":t["name"],"Type":t["type"],"Price":price,"Chg_1D%":chg1,"Chg_5D%":chg5,"Trend":trend})
+        rows.append({"Name":t["name"],"Ticker":sym,"Type":t["type"],"Price":price,"Chg_1D%":chg1,"Chg_5D%":chg5,"Trend":trend})
     df=pd.DataFrame(rows)
     idxs=df[df["Type"]=="Index"]["Chg_1D%"].dropna()
     pct_up=(idxs>0).mean()*100 if len(idxs)>0 else 50
@@ -3072,19 +3200,36 @@ def fetch_ohlcv_with_cache(symbols: list, days: int = 300,
                             force_refresh: bool = False) -> dict:
     """
     Smart OHLCV fetch:
-      1. Load from cache what's already there and fresh enough
-      2. Download only missing / stale symbols
-      3. Save new data back to cache
-      4. Return combined dict
+      1. Try SQLite DB first (local runs only; falls back silently on GitHub Actions)
+      2. Load from parquet cache what's already there and fresh enough
+      3. Download only missing / stale symbols
+      4. Save new data back to cache
+      5. Return combined dict
 
-    'Stale' = last bar is more than 1 trading day old.
+    'Stale' = last bar is older than the most recent trading weekday before today.
+    Friday's data stays fresh through the weekend and on Monday morning.
     """
-    today     = pd.Timestamp.today().normalize()
-    stale_cutoff = today - pd.Timedelta(days=1)
+    # ── SQLite cache-first (local only; silently skipped on GitHub Actions) ────
+    if not force_refresh:
+        try:
+            from price_cache_db import get_ohlcv_cache as _get_ohlcv
+            result = _get_ohlcv(symbols, days=days)
+            if result:
+                print(f"  OHLCV DB: {len(result)}/{len(symbols)} loaded from SQLite")
+                return result
+        except Exception:
+            pass
+    # ── original parquet cache path ──────────────────────────────────────────
+    today = pd.Timestamp.today().normalize()
+    # Roll back to the most recent weekday (Mon–Fri) strictly before today.
+    # Mon → Fri, Sat → Fri, Sun → Fri, Tue–Fri → previous weekday.
+    last_trading_day = today - pd.Timedelta(days=1)
+    while last_trading_day.dayofweek >= 5:   # 5=Sat, 6=Sun
+        last_trading_day -= pd.Timedelta(days=1)
 
     cached    = {} if force_refresh else load_ohlcv_cache(symbols, days)
     fresh     = {s: df for s, df in cached.items()
-                 if not df.empty and pd.Timestamp(df.index[-1]) >= stale_cutoff}
+                 if not df.empty and pd.Timestamp(df.index[-1]) >= last_trading_day}
     to_fetch  = [s for s in symbols if s not in fresh]
 
     if to_fetch:
@@ -3099,55 +3244,6 @@ def fetch_ohlcv_with_cache(symbols: list, days: int = 300,
     return fresh
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  FINANCIAL CACHE  (JSON, keyed by symbol, expires after FIN_CACHE_DAYS)
-#  Stores: SalesQoQ, SalesYoY, PATQoQ, PATYoY, Margin, ROE, DE, EPS, PE, MCap
-# ─────────────────────────────────────────────────────────────────────────────
-
-FIN_CACHE_DAYS = 7   # re-fetch fundamentals after this many days
-
-def _fin_cache_path():
-    try:
-        from price_cache import CACHE_DIR
-        base = _pl.Path(CACHE_DIR)
-    except Exception:
-        base = _pl.Path.home() / "StockPriceCache"
-    base.mkdir(parents=True, exist_ok=True)
-    return base / "_fin_v5.json"
-
-
-def load_fin_cache() -> dict:
-    """Load financial cache from JSON. Returns {symbol: {data..., '_ts': timestamp}}."""
-    path = _fin_cache_path()
-    if not path.exists():
-        return {}
-    try:
-        with open(path, "r") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-def save_fin_cache(cache: dict):
-    """Write full financial cache dict to JSON."""
-    try:
-        with open(_fin_cache_path(), "w") as f:
-            json.dump(cache, f, indent=2, default=str)
-    except Exception as e:
-        print(f"  ⚠ Financial cache write failed: {e}")
-
-
-
-def _fin_is_fresh(entry: dict) -> bool:
-    """Return True if the cached financial entry is not expired."""
-    try:
-        import time
-        ts = entry.get("_ts", 0)
-        return (time.time() - ts) < 8640
-    except Exception:
-        return False
-
-
 def fetch_financials_with_cache(symbols, force_refresh=False):
     """Wrapper around get_financials_batch (which already caches to JSON)."""
-    return get_financials_batch(symbols, force_refresh=force_refresh)
+    return get_financials_batch(symbols, force=force_refresh)

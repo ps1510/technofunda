@@ -179,13 +179,13 @@ US_ETF_UNIVERSE = [
     # ── US Sector ETFs ────────────────────────────────────────────────────────
     {"Symbol": "XLK",  "Company Name": "Technology Select SPDR",          "Industry": "Sector ETF",    "Sector": "Tech"},
     {"Symbol": "XLF",  "Company Name": "Financials Select SPDR",          "Industry": "Sector ETF",    "Sector": "Financials"},
-    {"Symbol": "XLV",  "Company Name": "Healthcare Select SPDR",          "Industry": "Sector ETF",    "Sector": "Healthcare"},
-    {"Symbol": "XLY",  "Company Name": "Consumer Disc SPDR",              "Industry": "Sector ETF",    "Sector": "ConsumerDisc"},
+    {"Symbol": "XLV",  "Company Name": "Healthcare Select SPDR",          "Industry": "Sector ETF",    "Sector": "Health Care"},
+    {"Symbol": "XLY",  "Company Name": "Consumer Disc SPDR",              "Industry": "Sector ETF",    "Sector": "Consumer Discretionary"},
     {"Symbol": "XLI",  "Company Name": "Industrials Select SPDR",         "Industry": "Sector ETF",    "Sector": "Industrials"},
     {"Symbol": "XLE",  "Company Name": "Energy Select SPDR",              "Industry": "Sector ETF",    "Sector": "Energy"},
     {"Symbol": "XLB",  "Company Name": "Materials Select SPDR",           "Industry": "Sector ETF",    "Sector": "Materials"},
-    {"Symbol": "XLRE", "Company Name": "Real Estate Select SPDR",         "Industry": "Sector ETF",    "Sector": "RealEstate"},
-    {"Symbol": "XLC",  "Company Name": "Communication Services SPDR",     "Industry": "Sector ETF",    "Sector": "CommServices"},
+    {"Symbol": "XLRE", "Company Name": "Real Estate Select SPDR",         "Industry": "Sector ETF",    "Sector": "Real Estate"},
+    {"Symbol": "XLC",  "Company Name": "Communication Services SPDR",     "Industry": "Sector ETF",    "Sector": "Communication Services"},
 ]
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -336,12 +336,12 @@ INDIA_SECTORS = {
 }
 US_INDEX   = "SPY"
 US_SECTORS = {
-    "Technology": "XLK", "Financials": "XLF", "Healthcare": "XLV",
-    "ConsumerDisc": "XLY", "Industrials": "XLI", "Energy": "XLE",
+    "Technology": "XLK", "Financials": "XLF", "Health Care": "XLV",
+    "Consumer Discretionary": "XLY", "Industrials": "XLI", "Energy": "XLE",
 }
 INDIA_IND_MAP = {
     "Automobile and Auto Components": "Automobile", "Information Technology": "IT",
-    "Financial Services": "Finance", "Healthcare": "Healthcare",
+    "Financial Services": "Finance", "Health Care": "Health Care",
     "Fast Moving Consumer Goods": "FMCG", "Metals & Mining": "Metal",
     "Oil, Gas & Consumable Fuels": "OilGas", "Oil Gas & Consumable Fuels": "OilGas",
     "Realty": "Realty", "Capital Goods": "Infra", "Construction": "Infra",
@@ -351,8 +351,8 @@ INDIA_IND_MAP = {
 }
 US_IND_MAP = {
     "Information Technology": "Technology", "Semiconductors": "Technology",
-    "Financials": "Financials", "Health Care": "Healthcare",
-    "Consumer Discretionary": "ConsumerDisc", "Industrials": "Industrials",
+    "Financials": "Financials", "Health Care": "Health Care",
+    "Consumer Discretionary": "Consumer Discretionary", "Industrials": "Industrials",
     "Energy": "Energy", "Materials": "Materials",
 }
 

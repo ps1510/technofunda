@@ -146,7 +146,7 @@ JP_INDUSTRY_TO_SECTOR = {
     "Application Software":            "Technology",
     # ── Health Care ──────────────────────────────────────────────────────────
     "Health Care":                     "Health Care",
-    "Healthcare":                      "Health Care",
+    "Health Care":                      "Health Care",
     "Pharmaceutical":                  "Health Care",
     "Pharmaceuticals":                 "Health Care",
     "Drugs":                           "Health Care",
@@ -176,7 +176,7 @@ JP_INDUSTRY_TO_SECTOR = {
     "Commercial Services":             "Industrials",
     # ── Consumer Discretionary ───────────────────────────────────────────────
     "Consumer Discretionary":          "Consumer Discretionary",
-    "ConsumerDisc":                    "Consumer Discretionary",
+    "Consumer Discretionary":                    "Consumer Discretionary",
     "Consumer Cyclical":               "Consumer Discretionary",
     "Retail Trade":                    "Consumer Discretionary",
     "Retail":                          "Consumer Discretionary",
@@ -213,7 +213,7 @@ JP_INDUSTRY_TO_SECTOR = {
     "Renewable Energy":                "Utilities",
     # ── Communication Services ───────────────────────────────────────────────
     "Communication Services":          "Communication Services",
-    "CommServices":                    "Communication Services",
+    "Communication Services":                    "Communication Services",
     "Telecommunications":              "Communication Services",
     "Telecoms":                        "Communication Services",
     "Wireless Telecom Services":       "Communication Services",
@@ -223,7 +223,7 @@ JP_INDUSTRY_TO_SECTOR = {
     "Advertising":                     "Communication Services",
     # ── Real Estate ──────────────────────────────────────────────────────────
     "Real Estate":                     "Real Estate",
-    "RealEstate":                      "Real Estate",
+    "Real Estate":                      "Real Estate",
     "REITs":                           "Real Estate",
     "Property":                        "Real Estate",
     "Real Estate Management":          "Real Estate",
@@ -505,6 +505,14 @@ def main():
             rrg_section=rrg_html)
         print(f"  ✅ HTML: {html_path}")
     except Exception as e: print(f"  ⚠ HTML skipped: {e}")
+    # ── Save to local DB (silently skipped when db_excel is unavailable) ──────
+    try:
+        from db_excel import auto_save_run as _db_save
+        _db_save(stock_df, sec_str_df, market="JP",
+                 elapsed=time.time() - t0, primary_rs=PRIMARY_RS_PERIOD)
+    except Exception:
+        pass
+
 
     elapsed = time.time()-t0
     print(f"\n{'═'*68}")

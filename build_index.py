@@ -616,6 +616,29 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .legend-badge{{flex-shrink:0;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;letter-spacing:.3px;white-space:nowrap}}
 .legend-text{{font-size:13px;color:var(--text2);line-height:1.5}}
 .legend-text strong{{color:var(--text);font-size:14px}}
+/* ── Newsletter ─────────────────────────────────────────────────────────── */
+.newsletter-section{{border-top:1px solid var(--border);padding:64px 0}}
+.nl-inner{{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}}
+.nl-title{{font-family:var(--font-head);font-size:26px;font-weight:400;margin:8px 0 12px;letter-spacing:-.3px}}
+.nl-sub{{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px}}
+.nl-bullets{{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2)}}
+.nl-form-wrap{{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px}}
+.nl-form{{display:flex;flex-direction:column;gap:12px}}
+.nl-field-row{{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+.nl-input{{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);
+  padding:10px 14px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%}}
+.nl-input:focus{{border-color:var(--gold)}}
+.nl-btn{{background:linear-gradient(135deg,var(--gold),#e07b00);color:#000;border:none;
+  border-radius:var(--radius-sm);padding:12px 22px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:opacity .15s;letter-spacing:.3px}}
+.nl-btn:hover{{opacity:.88}}.nl-btn:disabled{{opacity:.5;cursor:not-allowed}}
+.nl-privacy{{font-size:11px;color:var(--text3);margin-top:2px}}
+.nl-success{{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--green)}}
+.nl-error{{background:var(--red-dim);border:1px solid rgba(239,68,68,.3);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--red)}}
+@media(max-width:720px){{.nl-inner{{grid-template-columns:1fr}}.nl-field-row{{grid-template-columns:1fr}}}}
+/* ── End Newsletter ──────────────────────────────────────────────────────── */
 .feedback-section-home{{border-top:1px solid var(--border);padding:64px 0}}
 .fh-sub{{font-size:14px;color:var(--text2);margin:0 0 20px;}}
 .feedback-form-home{{display:flex;flex-direction:column;gap:12px;max-width:640px}}
@@ -724,6 +747,53 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="legend-item"><span class="legend-badge" style="background:rgba(156,163,175,.1);color:#9ca3af;border:1px solid rgba(156,163,175,.15)">👁 Watch</span><div class="legend-text"><strong>Neutral — Setup Building</strong><br>Pre-conditions met but not yet confirmed. Stock is setting up — check back daily for progression.</div></div>
       <div class="legend-item"><span class="legend-badge" style="background:rgba(107,114,128,.1);color:#6b7280;border:1px solid rgba(107,114,128,.15)">⬜ Neutral</span><div class="legend-text"><strong>Neutral — No Signal</strong><br>Mixed signals — stock is neither a clear leader nor laggard vs the market right now.</div></div>
       <div class="legend-item"><span class="legend-badge sig-avoid">🔴 RS Breakdown</span><div class="legend-text"><strong>Bearish Relative Strength</strong><br>Stock is significantly underperforming both its sector and the market. Caution advised.</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       NEWSLETTER OPT-IN
+       Powered by Brevo (brevo.com). To activate:
+         1. Create a free Brevo account at https://brevo.com
+         2. Go to Settings → API Keys → Create an API key
+         3. Go to Contacts → Lists → Create a list, note the List ID (number)
+         4. Replace BREVO_API_KEY and BREVO_LIST_ID in the <script> at the
+            bottom of this file.
+       Alternatively, replace this entire section with Brevo's hosted form
+       embed code (Campaigns → Forms → Share/embed).
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="newsletter-section animate-in" id="newsletter">
+    <div class="pw">
+      <div class="nl-inner">
+        <div class="nl-copy">
+          <span class="sec-label">Stay Ahead of the Market</span>
+          <h2 class="nl-title">Weekly Market Intelligence — Free</h2>
+          <p class="nl-sub">Get the Sunday market summary delivered to your inbox. Signal shifts, sector rotation, and what changed this week — in 2 minutes.</p>
+          <ul class="nl-bullets">
+            <li>📊 Weekly signal changes across {total_countries}+ global markets</li>
+            <li>🏭 Sector rotation highlights</li>
+            <li>📈 Top momentum leaders</li>
+            <li>🔔 No spam. Unsubscribe anytime.</li>
+          </ul>
+        </div>
+        <div class="nl-form-wrap">
+          <form class="nl-form" id="nl-form" onsubmit="nlSubmit(event)">
+            <div class="nl-field-row">
+              <input type="text"  id="nl-name"  placeholder="First name (optional)" class="nl-input" autocomplete="given-name">
+              <input type="email" id="nl-email" placeholder="Your email address"     class="nl-input" required autocomplete="email">
+            </div>
+            <button type="submit" class="nl-btn" id="nl-btn">
+              <span id="nl-btn-text">Subscribe — It's Free →</span>
+            </button>
+            <p class="nl-privacy">No spam · No data sharing · Unsubscribe with one click</p>
+            <div id="nl-success" class="nl-success" style="display:none">
+              ✅ You're on the list! Check your inbox for a confirmation email.
+            </div>
+            <div id="nl-error" class="nl-error" style="display:none">
+              ❌ Something went wrong. Please try again or email us directly.
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -842,6 +912,61 @@ document.addEventListener('DOMContentLoaded',()=>{{
     }}catch(e){{}}
   }})();
 }});
+
+// ── Newsletter signup via Brevo API ─────────────────────────────────────────
+// Step 1: Replace with your API key from brevo.com → Settings → API Keys
+// Step 2: Replace with your list ID from brevo.com → Contacts → Lists
+const BREVO_API_KEY = "YOUR_BREVO_API_KEY_HERE";
+const BREVO_LIST_ID = 0;  // e.g. 3
+
+async function nlSubmit(e) {{
+  e.preventDefault();
+  const btn   = document.getElementById('nl-btn');
+  const email = document.getElementById('nl-email').value.trim();
+  const name  = (document.getElementById('nl-name').value || '').trim();
+  if (!email) return;
+
+  btn.disabled = true;
+  document.getElementById('nl-btn-text').textContent = 'Subscribing…';
+  document.getElementById('nl-success').style.display = 'none';
+  document.getElementById('nl-error').style.display   = 'none';
+
+  // If API key not yet configured, show a friendly message
+  if (BREVO_API_KEY === 'YOUR_BREVO_API_KEY_HERE') {{
+    document.getElementById('nl-error').textContent =
+      '⚙️ Newsletter not yet configured. Please check back soon!';
+    document.getElementById('nl-error').style.display = 'block';
+    btn.disabled = false;
+    document.getElementById('nl-btn-text').textContent = 'Subscribe — It\'s Free →';
+    return;
+  }}
+
+  try {{
+    const body = {{ email, updateEnabled: true }};
+    if (BREVO_LIST_ID > 0) body.listIds = [BREVO_LIST_ID];
+    if (name) {{
+      const [fname, ...rest] = name.split(' ');
+      body.attributes = {{ FIRSTNAME: fname, LASTNAME: rest.join(' ') }};
+    }}
+    const resp = await fetch('https://api.brevo.com/v3/contacts', {{
+      method:  'POST',
+      headers: {{ 'accept':'application/json','content-type':'application/json','api-key': BREVO_API_KEY }},
+      body:    JSON.stringify(body),
+    }});
+    // 201 = created, 204 = already exists (both are success from user's POV)
+    if (resp.ok || resp.status === 204) {{
+      document.getElementById('nl-success').style.display = 'block';
+      document.getElementById('nl-form').reset();
+      document.getElementById('nl-btn-text').textContent = 'Subscribed!';
+    }} else {{
+      throw new Error(resp.status);
+    }}
+  }} catch(err) {{
+    document.getElementById('nl-error').style.display = 'block';
+    document.getElementById('nl-btn-text').textContent = 'Try Again →';
+    btn.disabled = false;
+  }}
+}}
 </script>
 </body>
 </html>"""
