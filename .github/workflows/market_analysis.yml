@@ -185,7 +185,7 @@ jobs:
   #         # ignore pycache noise
   #         echo "__pycache__/" >> .gitignore 2>/dev/null || true
   #         git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-  #         git add -f India_Market_Analysis*.html index.html 2>/dev/null || true
+  #         git add -f India_Market_Analysis*.html 2>/dev/null || true
   #         if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
   #         git commit -m "India HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
   #         PUSHED=0
@@ -244,7 +244,7 @@ jobs:
   #         # ignore pycache noise
   #         echo "__pycache__/" >> .gitignore 2>/dev/null || true
   #         git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-  #         git add -f USA_Market_Analysis*.html index.html 2>/dev/null || true
+  #         git add -f USA_Market_Analysis*.html 2>/dev/null || true
   #         if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
   #         git commit -m "USA HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
   #         PUSHED=0
@@ -292,8 +292,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run UK analysis
         run: python market_uk_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -301,7 +299,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f UK.html index.html 2>/dev/null || true
+          git add -f UK.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "UK HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -314,6 +312,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -346,8 +348,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Canada analysis
         run: python market_ca_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -355,7 +355,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f CA.html index.html 2>/dev/null || true
+          git add -f CA.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Canada HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -368,6 +368,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -400,8 +404,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Australia analysis
         run: python market_au_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -409,7 +411,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f AU.html index.html 2>/dev/null || true
+          git add -f AU.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Australia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -422,6 +424,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -454,8 +460,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Germany analysis
         run: python market_de_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -463,7 +467,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f DE.html index.html 2>/dev/null || true
+          git add -f DE.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Germany HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -476,6 +480,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -508,8 +516,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Japan analysis
         run: python market_jp_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -517,7 +523,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f JP.html index.html 2>/dev/null || true
+          git add -f JP.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Japan HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -530,6 +536,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -562,8 +572,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run France analysis
         run: python market_fr_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -571,7 +579,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f FR.html index.html 2>/dev/null || true
+          git add -f FR.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "France HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -584,6 +592,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -616,8 +628,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Brazil analysis
         run: python market_br_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -625,7 +635,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f BR.html index.html 2>/dev/null || true
+          git add -f BR.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Brazil HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -638,6 +648,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -674,8 +688,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run China analysis
         run: python market_cn_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -683,7 +695,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f CN.html index.html 2>/dev/null || true
+          git add -f CN.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "China HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -696,6 +708,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -728,8 +744,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run South Korea analysis
         run: python market_kr_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -737,7 +751,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f KR.html index.html 2>/dev/null || true
+          git add -f KR.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "SouthKorea HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -750,6 +764,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -782,8 +800,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Taiwan analysis
         run: python market_tw_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -791,7 +807,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f TW.html index.html 2>/dev/null || true
+          git add -f TW.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Taiwan HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -804,6 +820,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -836,8 +856,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Switzerland analysis
         run: python market_ch_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -845,7 +863,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f CH.html index.html 2>/dev/null || true
+          git add -f CH.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Switzerland HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -858,6 +876,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -890,8 +912,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Saudi Arabia analysis
         run: python market_sa_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -899,7 +919,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f SA.html index.html 2>/dev/null || true
+          git add -f SA.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "SaudiArabia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -912,6 +932,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -944,8 +968,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Netherlands analysis
         run: python market_nl_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -953,7 +975,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f NL.html index.html 2>/dev/null || true
+          git add -f NL.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Netherlands HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -966,6 +988,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -998,8 +1024,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Spain analysis
         run: python market_es_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1007,7 +1031,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f ES.html index.html 2>/dev/null || true
+          git add -f ES.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Spain HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1020,6 +1044,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1052,8 +1080,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Sweden analysis
         run: python market_se_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1061,7 +1087,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f SE.html index.html 2>/dev/null || true
+          git add -f SE.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Sweden HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1074,6 +1100,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1110,8 +1140,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Hong Kong analysis (HTML-only)
         run: python market_hk_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1119,7 +1147,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f HK.html index.html 2>/dev/null || true
+          git add -f HK.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Hong Kong HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1132,6 +1160,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1164,8 +1196,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Italy analysis (HTML-only)
         run: python market_it_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1173,7 +1203,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f IT.html index.html 2>/dev/null || true
+          git add -f IT.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Italy HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1186,6 +1216,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1218,8 +1252,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Singapore analysis (HTML-only)
         run: python market_sg_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1227,7 +1259,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f SG.html index.html 2>/dev/null || true
+          git add -f SG.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Singapore HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1240,6 +1272,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1272,8 +1308,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Indonesia analysis (HTML-only)
         run: python market_id_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1281,7 +1315,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f ID.html index.html 2>/dev/null || true
+          git add -f ID.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Indonesia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1294,6 +1328,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1326,8 +1364,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run South Africa analysis (HTML-only)
         run: python market_za_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1335,7 +1371,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f ZA.html index.html 2>/dev/null || true
+          git add -f ZA.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "South Africa HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1348,6 +1384,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1380,8 +1420,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Mexico analysis (HTML-only)
         run: python market_mx_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1389,7 +1427,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f MX.html index.html 2>/dev/null || true
+          git add -f MX.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Mexico HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1402,6 +1440,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1434,8 +1476,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Thailand analysis (HTML-only)
         run: python market_th_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1443,7 +1483,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f TH.html index.html 2>/dev/null || true
+          git add -f TH.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Thailand HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1456,6 +1496,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1488,8 +1532,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Malaysia analysis (HTML-only)
         run: python market_my_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1497,7 +1539,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f MY.html index.html 2>/dev/null || true
+          git add -f MY.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Malaysia HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1510,6 +1552,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1542,8 +1588,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run UAE analysis (HTML-only)
         run: python market_uae_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1551,7 +1595,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f UAE.html index.html 2>/dev/null || true
+          git add -f UAE.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "UAE HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1564,6 +1608,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1596,8 +1644,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Poland analysis (HTML-only)
         run: python market_pl_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1605,7 +1651,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f PL.html index.html 2>/dev/null || true
+          git add -f PL.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Poland HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1618,6 +1664,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1650,8 +1700,6 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run Turkey analysis (HTML-only)
         run: python market_tr_gsht.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -1659,7 +1707,7 @@ jobs:
           # ignore pycache noise
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f TR.html index.html 2>/dev/null || true
+          git add -f TR.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "Turkey HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1672,6 +1720,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1708,15 +1760,13 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run India analysis (HTML-only)
         run: python market_india_html.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f IN.html index.html 2>/dev/null || true
+          git add -f IN.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "India IN HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1729,6 +1779,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"
@@ -1764,15 +1818,13 @@ jobs:
         run: pip install --upgrade pip && pip install -r requirements.txt
       - name: Run USA analysis (HTML-only)
         run: python market_usa_html.py
-      - name: Rebuild homepage
-        run: python build_index.py
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           echo "__pycache__/" >> .gitignore 2>/dev/null || true
           git rm -r --cached SupportFiles/__pycache__ 2>/dev/null || true
-          git add -f US.html index.html 2>/dev/null || true
+          git add -f US.html 2>/dev/null || true
           if git diff --staged --quiet; then echo "No changes to commit."; exit 0; fi
           git commit -m "USA US HTML $(date -u '+%Y-%m-%d %H:%M UTC')"
           PUSHED=0
@@ -1785,6 +1837,10 @@ jobs:
               sleep $((attempt * 10))
               continue
             }
+            if python build_index.py; then
+              git add -f index.html 2>/dev/null || true
+              git diff --staged --quiet || git commit --amend --no-edit
+            fi
             PUSH_OUT=$(git push origin main 2>&1)
             PUSH_RC=$?
             echo "$PUSH_OUT"

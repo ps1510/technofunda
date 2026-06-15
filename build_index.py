@@ -438,6 +438,39 @@ def parse_country_html(html_path: str, country: dict) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  AUTH JS  — injected into index.html (raw string, safe in f-string via {_AUTH_JS})
+# ─────────────────────────────────────────────────────────────────────────────
+_AUTH_JS = r"""
+/* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
+window.currentUser = null;
+(function _initFirebaseAuth() {
+  if (typeof firebase === 'undefined') return;
+  const cfg = window.TF_FIREBASE_CONFIG;
+  if (!cfg || cfg.apiKey === 'YOUR_API_KEY') return;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    const _p = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().onAuthStateChanged(u => { window.currentUser = u; _renderAuthUI(u); });
+    window.tfSignIn  = () => firebase.auth().signInWithPopup(_p).catch(console.error);
+    window.tfSignOut = () => firebase.auth().signOut();
+  } catch(e) { console.warn('Firebase auth init failed:', e); }
+})();
+function _renderAuthUI(user) {
+  const el = document.getElementById('auth-area');
+  if (!el) return;
+  if (user) {
+    const av = user.photoURL
+      ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer" alt="">`
+      : `<span class="auth-avatar" style="background:#3b82f6;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff;">${(user.displayName||'?')[0].toUpperCase()}</span>`;
+    const nm = user.displayName || user.email || '';
+    el.innerHTML = `<div class="auth-user">${av}<span class="auth-name" title="${nm}">${nm}</span></div><button class="auth-out" onclick="tfSignOut()" title="Sign out">× Sign out</button>`;
+  } else {
+    el.innerHTML = `<button class="auth-btn" onclick="tfSignIn()"><svg width="14" height="14" viewBox="0 0 18 18" style="flex-shrink:0"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg> Sign in with Google</button>`;
+  }
+}
+"""
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  HTML TEMPLATE  (inline — no external dependencies)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -495,6 +528,9 @@ def render_homepage(markets: list, output_path: str):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
 :root{{
   --bg:#080c14;--bg2:#0d1220;--bg3:#111827;
@@ -678,6 +714,20 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
   .topnav .nav-tag{{display:none}}.countries-grid{{grid-template-columns:1fr}}
   .cc-metrics{{flex-direction:column}}.footer-inner{{flex-direction:column}}
 }}
+/* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
+#auth-area{{display:flex;align-items:center;gap:8px;flex-shrink:0;}}
+.auth-btn{{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+  padding:6px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);
+  background:transparent;color:var(--text2);transition:all .15s;white-space:nowrap;}}
+.auth-btn:hover{{border-color:var(--gold);color:var(--gold);}}
+.auth-user{{display:flex;align-items:center;gap:8px;}}
+.auth-avatar{{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);}}
+.auth-name{{font-size:13px;font-weight:600;color:var(--text);max-width:120px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}}
+.auth-out{{font-size:12px;color:var(--text3);cursor:pointer;background:none;
+  border:none;padding:2px 8px;border-radius:6px;transition:color .15s;}}
+.auth-out:hover{{color:var(--red);}}
+@media(max-width:640px){{.auth-name{{display:none;}}}}
 </style>
 </head>
 <body>
@@ -692,7 +742,10 @@ body::after{{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <a href="about.html" style="font-size:13px;color:var(--text2);text-decoration:none;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">About</a>
       <span class="nav-tag">Global Market Intelligence</span>
     </div>
-    <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
+      <div id="auth-area"></div>
+    </div>
   </nav>
 </div>
 
@@ -886,7 +939,7 @@ function buildCards(){{
     const chgCls=m.index_chg==='—'?'':(chgIsPos?'pos':'neg');
     const chgPfx=chgIsPos&&m.index_chg!=='—'?'+':'';
     const total=m.signals.prime+m.signals.conf+m.signals.rs;
-    const overlay=!isLive?`<div class="cc-coming-overlay"><span class="cc-coming-text">⏳ Launching Soon</span><span class="cc-coming-eta">Add Google Sheet URL to activate</span></div>`:'';
+    const overlay=!isLive?`<div class="cc-coming-overlay"><span class="cc-coming-text">⏳ Data Coming Soon</span><span class="cc-coming-eta">Runs on schedule — updates daily</span></div>`:'';
     const cta=isLive?`<a href="${{m.url}}" class="btn-report">Open Report →</a>`:`<span class="btn-coming">Coming Soon</span>`;
     return `<div class="country-card ${{isLive?'active-card':'inactive-card'}} animate-in ${{d}}" onclick="${{isLive?`window.location='${{m.url}}'`:''}}"><div class="cc-strip ${{mood.strip}}"></div><div class="cc-body"><div class="cc-header"><div class="cc-country"><span class="cc-flag">${{m.flag}}</span><div class="cc-name-wrap"><span class="cc-name">${{m.name}}</span><span class="cc-exchange">${{m.exchange}}</span></div></div><div class="cc-mood"><span class="cc-mood-badge ${{mood.cls}}">${{mood.label}}</span><span class="cc-updated">${{m.updated}}</span></div></div>${{isLive?`<div class="cc-signals">${{buildSignals(m.signals)}}</div>`:''}}<div class="cc-metrics"><div class="cc-metric"><span class="cc-metric-label">${{m.index_name}}</span><span class="cc-metric-value">${{m.index_price}}</span><span class="cc-metric-sub ${{chgCls}}">${{chgPfx}}${{m.index_chg}}${{m.index_chg!=='—'?'%':''}} today</span></div><div class="cc-metric"><span class="cc-metric-label">Universe</span><span class="cc-metric-value">${{m.universe.toLocaleString()}}</span><span class="cc-metric-sub">stocks tracked</span></div></div>${{isLive?buildSectors(m.top_sectors):''}}<div class="cc-cta"><span class="cc-universe">${{isLive?`${{total}} opportunities`:'Not yet configured'}}</span>${{cta}}</div></div>${{overlay}}</div>`;
   }}).join('');
@@ -967,6 +1020,7 @@ async function nlSubmit(e) {{
     btn.disabled = false;
   }}
 }}
+{_AUTH_JS}
 </script>
 </body>
 </html>"""
