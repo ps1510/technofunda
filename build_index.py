@@ -330,14 +330,14 @@ def parse_country_html(html_path: str, country: dict) -> dict:
     }
 
     if not os.path.exists(html_path):
-        print(f"  ⏭  {country['name']}: HTML not found ({html_path})")
+        print(f"  --  {country['name']}: HTML not found ({html_path})")
         return result
 
     try:
         with open(html_path, "r", encoding="utf-8", errors="ignore") as f:
             html = f.read()
     except Exception as e:
-        print(f"  ❌  {country['name']}: Cannot read HTML — {e}")
+        print(f"  !!  {country['name']}: Cannot read HTML -- {e}")
         return result
 
     result["status"] = "live"
@@ -433,7 +433,7 @@ def parse_country_html(html_path: str, country: dict) -> dict:
         neg_sectors = sorted([s for s in sectors_clean if s["dir"] == "neg"], key=lambda x: x["sort"])
         result["top_sectors"] = (pos_sectors[:2] + neg_sectors[:1])[:3]
 
-    print(f"  ✅  {country['name']}: {result['status']} | mood={result['mood']} | prime={result['signals']['prime']} | updated={result['updated']}")
+    print(f"  OK  {country['name']}: {result['status']} | mood={result['mood']} | prime={result['signals']['prime']} | updated={result['updated']}")
     return result
 
 
@@ -528,9 +528,6 @@ def render_homepage(markets: list, output_path: str):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="firebase-config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
 :root{{
   --bg:#080c14;--bg2:#0d1220;--bg3:#111827;
@@ -952,7 +949,7 @@ document.addEventListener('DOMContentLoaded',()=>{{
     const el=document.getElementById('gen-time-label');
     if(!el)return;
     try{{
-      const utcStr=el.dataset.utc.replace(/\s+/g,' ').trim();
+      const utcStr=el.dataset.utc.replace(/\\s+/g,' ').trim();
       const d=new Date(utcStr+' UTC');
       if(isNaN(d))return;
       const offsetMins=-d.getTimezoneOffset();
@@ -1029,7 +1026,7 @@ async function nlSubmit(e) {{
         f.write(html)
 
     size_kb = os.path.getsize(output_path) / 1024
-    print(f"\n✅ Homepage written → {output_path}  ({size_kb:.1f} KB)")
+    print(f"\nHomepage written -> {output_path}  ({size_kb:.1f} KB)")
     print(f"   Markets: {len(markets)} | Live: {len(live)} | Prime setups: {total_prime}")
 
 
@@ -1044,11 +1041,11 @@ if __name__ == "__main__":
     # Allow overriding repo root via CLI arg: python build_index.py /path/to/repo
     repo_root = Path(sys.argv[1]) if len(sys.argv) > 1 else script_dir
 
-    print(f"\n{'═'*60}")
+    print("\n" + "="*60)
     print("  TechnoFunda Homepage Builder")
     print(f"  Repo root: {repo_root}")
     print(f"  Time:      {datetime.now().strftime('%d %b %Y %H:%M')}")
-    print(f"{'═'*60}\n")
+    print("="*60 + "\n")
 
     # Parse each country's HTML
     market_data = []
@@ -1060,4 +1057,4 @@ if __name__ == "__main__":
     # Generate homepage
     output_path = repo_root / "index.html"
     render_homepage(market_data, str(output_path))
-    print(f"{'═'*60}\n")
+    print("="*60 + "\n")

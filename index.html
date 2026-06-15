@@ -130,6 +130,29 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .legend-badge{flex-shrink:0;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;letter-spacing:.3px;white-space:nowrap}
 .legend-text{font-size:13px;color:var(--text2);line-height:1.5}
 .legend-text strong{color:var(--text);font-size:14px}
+/* ── Newsletter ─────────────────────────────────────────────────────────── */
+.newsletter-section{border-top:1px solid var(--border);padding:64px 0}
+.nl-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.nl-title{font-family:var(--font-head);font-size:26px;font-weight:400;margin:8px 0 12px;letter-spacing:-.3px}
+.nl-sub{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px}
+.nl-bullets{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2)}
+.nl-form-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px}
+.nl-form{display:flex;flex-direction:column;gap:12px}
+.nl-field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nl-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);
+  padding:10px 14px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+.nl-input:focus{border-color:var(--gold)}
+.nl-btn{background:linear-gradient(135deg,var(--gold),#e07b00);color:#000;border:none;
+  border-radius:var(--radius-sm);padding:12px 22px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:opacity .15s;letter-spacing:.3px}
+.nl-btn:hover{opacity:.88}.nl-btn:disabled{opacity:.5;cursor:not-allowed}
+.nl-privacy{font-size:11px;color:var(--text3);margin-top:2px}
+.nl-success{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--green)}
+.nl-error{background:var(--red-dim);border:1px solid rgba(239,68,68,.3);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--red)}
+@media(max-width:720px){.nl-inner{grid-template-columns:1fr}.nl-field-row{grid-template-columns:1fr}}
+/* ── End Newsletter ──────────────────────────────────────────────────────── */
 .feedback-section-home{border-top:1px solid var(--border);padding:64px 0}
 .fh-sub{font-size:14px;color:var(--text2);margin:0 0 20px;}
 .feedback-form-home{display:flex;flex-direction:column;gap:12px;max-width:640px}
@@ -169,6 +192,20 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
   .topnav .nav-tag{display:none}.countries-grid{grid-template-columns:1fr}
   .cc-metrics{flex-direction:column}.footer-inner{flex-direction:column}
 }
+/* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
+#auth-area{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.auth-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+  padding:6px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);
+  background:transparent;color:var(--text2);transition:all .15s;white-space:nowrap;}
+.auth-btn:hover{border-color:var(--gold);color:var(--gold);}
+.auth-user{display:flex;align-items:center;gap:8px;}
+.auth-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);}
+.auth-name{font-size:13px;font-weight:600;color:var(--text);max-width:120px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.auth-out{font-size:12px;color:var(--text3);cursor:pointer;background:none;
+  border:none;padding:2px 8px;border-radius:6px;transition:color .15s;}
+.auth-out:hover{color:var(--red);}
+@media(max-width:640px){.auth-name{display:none;}}
 </style>
 </head>
 <body>
@@ -183,7 +220,10 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
       <a href="about.html" style="font-size:13px;color:var(--text2);text-decoration:none;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">About</a>
       <span class="nav-tag">Global Market Intelligence</span>
     </div>
-    <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="nav-live"><div class="live-dot"></div>Daily Updated</div>
+      <div id="auth-area"></div>
+    </div>
   </nav>
 </div>
 
@@ -195,9 +235,9 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     <div class="hero-stats animate-in delay-3">
       <div class="hs-item"><span class="hs-num gold">28</span><span class="hs-label">Markets</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num">4,368+</span><span class="hs-label">Stocks Tracked</span></div>
+      <div class="hs-item"><span class="hs-num">7,259+</span><span class="hs-label">Stocks Tracked</span></div>
       <div class="hs-sep"></div>
-      <div class="hs-item"><span class="hs-num green">72</span><span class="hs-label">Prime Setups Today</span></div>
+      <div class="hs-item"><span class="hs-num green">154</span><span class="hs-label">Prime Setups Today</span></div>
       <div class="hs-sep"></div>
       <div class="hs-item"><span class="hs-num">Daily</span><span class="hs-label">Updated</span></div>
     </div>
@@ -213,7 +253,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
         <span class="sec-label">Live Reports</span>
         <h2 class="sec-title">Choose Your Market</h2>
       </div>
-      <span class="sec-updated" id="gen-time-label" data-utc="11 Jun 2026 16:35 UTC">Generated: 11 Jun 2026 16:35 UTC</span>
+      <span class="sec-updated" id="gen-time-label" data-utc="15 Jun 2026 08:50 UTC">Generated: 15 Jun 2026 08:50 UTC</span>
     </div>
     <div class="countries-grid" id="countries-grid"></div>
   </section>
@@ -238,6 +278,53 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
       <div class="legend-item"><span class="legend-badge" style="background:rgba(156,163,175,.1);color:#9ca3af;border:1px solid rgba(156,163,175,.15)">👁 Watch</span><div class="legend-text"><strong>Neutral — Setup Building</strong><br>Pre-conditions met but not yet confirmed. Stock is setting up — check back daily for progression.</div></div>
       <div class="legend-item"><span class="legend-badge" style="background:rgba(107,114,128,.1);color:#6b7280;border:1px solid rgba(107,114,128,.15)">⬜ Neutral</span><div class="legend-text"><strong>Neutral — No Signal</strong><br>Mixed signals — stock is neither a clear leader nor laggard vs the market right now.</div></div>
       <div class="legend-item"><span class="legend-badge sig-avoid">🔴 RS Breakdown</span><div class="legend-text"><strong>Bearish Relative Strength</strong><br>Stock is significantly underperforming both its sector and the market. Caution advised.</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       NEWSLETTER OPT-IN
+       Powered by Brevo (brevo.com). To activate:
+         1. Create a free Brevo account at https://brevo.com
+         2. Go to Settings → API Keys → Create an API key
+         3. Go to Contacts → Lists → Create a list, note the List ID (number)
+         4. Replace BREVO_API_KEY and BREVO_LIST_ID in the <script> at the
+            bottom of this file.
+       Alternatively, replace this entire section with Brevo's hosted form
+       embed code (Campaigns → Forms → Share/embed).
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="newsletter-section animate-in" id="newsletter">
+    <div class="pw">
+      <div class="nl-inner">
+        <div class="nl-copy">
+          <span class="sec-label">Stay Ahead of the Market</span>
+          <h2 class="nl-title">Weekly Market Intelligence — Free</h2>
+          <p class="nl-sub">Get the Sunday market summary delivered to your inbox. Signal shifts, sector rotation, and what changed this week — in 2 minutes.</p>
+          <ul class="nl-bullets">
+            <li>📊 Weekly signal changes across 28+ global markets</li>
+            <li>🏭 Sector rotation highlights</li>
+            <li>📈 Top momentum leaders</li>
+            <li>🔔 No spam. Unsubscribe anytime.</li>
+          </ul>
+        </div>
+        <div class="nl-form-wrap">
+          <form class="nl-form" id="nl-form" onsubmit="nlSubmit(event)">
+            <div class="nl-field-row">
+              <input type="text"  id="nl-name"  placeholder="First name (optional)" class="nl-input" autocomplete="given-name">
+              <input type="email" id="nl-email" placeholder="Your email address"     class="nl-input" required autocomplete="email">
+            </div>
+            <button type="submit" class="nl-btn" id="nl-btn">
+              <span id="nl-btn-text">Subscribe — It's Free →</span>
+            </button>
+            <p class="nl-privacy">No spam · No data sharing · Unsubscribe with one click</p>
+            <div id="nl-success" class="nl-success" style="display:none">
+              ✅ You're on the list! Check your inbox for a confirmation email.
+            </div>
+            <div id="nl-error" class="nl-error" style="display:none">
+              ❌ Something went wrong. Please try again or email us directly.
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -313,14 +400,14 @@ const MARKETS = [
     url:        "US.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 Jun 2026 · 15:42 ET",
+    updated:    "15 Jun 2026 · 09:06 ET",
     index_name: "S&P 500",
-    index_price:"7,300",
-    index_chg:  "+0.45",
-    universe:   502,
-    signals:    {prime:12,conf:136,rs:124,avoid:122},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   503,
+    signals:    {prime:25,conf:151,rs:90,avoid:125},
     top_sectors:[
-      {name:"Healthcare",pct:"-0.1",dir:"neg"}
+
     ]
   },
   {
@@ -331,14 +418,14 @@ const MARKETS = [
     url:        "IN.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 June 2026 · 20:47 IST",
+    updated:    "15 June 2026 · 12:25 IST",
     index_name: "NIFTY 50",
-    index_price:"23,162",
-    index_chg:  "-0.23",
+    index_price:"—",
+    index_chg:  "—",
     universe:   749,
-    signals:    {prime:21,conf:82,rs:180,avoid:333},
+    signals:    {prime:42,conf:82,rs:204,avoid:251},
     top_sectors:[
-      {name:"Media",pct:"-0.1",dir:"neg"}
+
     ]
   },
   {
@@ -347,16 +434,16 @@ const MARKETS = [
     name:       "United Kingdom",
     exchange:   "London Stock Exchange",
     url:        "UK.html",
-    status:     "live",
-    mood:       "bull",
-    updated:    "11 June 2026 · 15:27 GMT",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "FTSE 100",
-    index_price:"10,330",
-    index_chg:  "+0.73",
-    universe:   480,
-    signals:    {prime:4,conf:33,rs:98,avoid:163},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Utilities",pct:"-1.5",dir:"neg"}
+
     ]
   },
   {
@@ -367,14 +454,14 @@ const MARKETS = [
     url:        "CA.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 23:42 ET",
+    updated:    "14 June 2026 · 23:03 ET",
     index_name: "S&P/TSX",
     index_price:"—",
     index_chg:  "—",
-    universe:   330,
-    signals:    {prime:7,conf:22,rs:68,avoid:137},
+    universe:   306,
+    signals:    {prime:4,conf:46,rs:47,avoid:137},
     top_sectors:[
-      {name:"Communication Services",pct:"-0.4",dir:"neg"}
+
     ]
   },
   {
@@ -385,14 +472,14 @@ const MARKETS = [
     url:        "AU.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 June 2026 · 21:27 AEST",
+    updated:    "15 June 2026 · 05:18 AEST",
     index_name: "S&P/ASX 200",
-    index_price:"—",
+    index_price:"8,804",
     index_chg:  "N/A",
     universe:   497,
-    signals:    {prime:14,conf:79,rs:102,avoid:200},
+    signals:    {prime:14,conf:80,rs:79,avoid:193},
     top_sectors:[
-      {name:"Consumer Staples",pct:"-0.1",dir:"neg"}
+
     ]
   },
   {
@@ -403,14 +490,14 @@ const MARKETS = [
     url:        "DE.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 21:32 CET",
+    updated:    "14 June 2026 · 20:26 CET",
     index_name: "DAX 40",
-    index_price:"24,195",
-    index_chg:  "-0.97",
-    universe:   122,
-    signals:    {prime:1,conf:8,rs:23,avoid:58},
+    index_price:"24,635",
+    index_chg:  "+1.76",
+    universe:   261,
+    signals:    {prime:2,conf:9,rs:65,avoid:113},
     top_sectors:[
-      {name:"Health Care",pct:"-1.0",dir:"neg"}
+
     ]
   },
   {
@@ -421,14 +508,14 @@ const MARKETS = [
     url:        "JP.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 June 2026 · 20:54 JST",
+    updated:    "15 June 2026 · 04:49 JST",
     index_name: "Nikkei 225",
-    index_price:"64,217",
-    index_chg:  "+0.06",
+    index_price:"66,020",
+    index_chg:  "+2.81",
     universe:   499,
-    signals:    {prime:0,conf:130,rs:123,avoid:130},
+    signals:    {prime:12,conf:45,rs:134,avoid:162},
     top_sectors:[
-      {name:"Communication Services",pct:"-0.1",dir:"neg"}
+
     ]
   },
   {
@@ -439,14 +526,14 @@ const MARKETS = [
     url:        "FR.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 22:06 CET",
+    updated:    "14 June 2026 · 20:39 CET",
     index_name: "CAC 40",
-    index_price:"8,162",
-    index_chg:  "-0.51",
-    universe:   37,
-    signals:    {prime:0,conf:6,rs:10,avoid:8},
+    index_price:"8,351",
+    index_chg:  "+1.83",
+    universe:   613,
+    signals:    {prime:4,conf:51,rs:132,avoid:288},
     top_sectors:[
-      {name:"Consumer Staples",pct:"-0.3",dir:"neg"}
+
     ]
   },
   {
@@ -456,13 +543,13 @@ const MARKETS = [
     exchange:   "B3 - Bolsa Brasil",
     url:        "BR.html",
     status:     "live",
-    mood:       "bear",
-    updated:    "10 June 2026 · 19:49 ET",
+    mood:       "bull",
+    updated:    "15 June 2026 · 04:14 BRT",
     index_name: "Ibovespa",
-    index_price:"168,601",
-    index_chg:  "-0.71",
-    universe:   6,
-    signals:    {prime:0,conf:0,rs:0,avoid:0},
+    index_price:"171,133",
+    index_chg:  "-0.21",
+    universe:   657,
+    signals:    {prime:1,conf:337,rs:22,avoid:141},
     top_sectors:[
 
     ]
@@ -475,14 +562,14 @@ const MARKETS = [
     url:        "CN.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 June 2026 · 20:12 CST",
+    updated:    "15 June 2026 · 03:20 CST",
     index_name: "CSI 300",
-    index_price:"4,722",
-    index_chg:  "-0.55",
-    universe:   92,
-    signals:    {prime:1,conf:8,rs:16,avoid:41},
+    index_price:"4,777",
+    index_chg:  "+1.16",
+    universe:   500,
+    signals:    {prime:19,conf:90,rs:75,avoid:209},
     top_sectors:[
-      {name:"Utilities",pct:"-0.6",dir:"neg"}
+
     ]
   },
   {
@@ -493,14 +580,14 @@ const MARKETS = [
     url:        "KR.html",
     status:     "live",
     mood:       "mixed",
-    updated:    "11 June 2026 · 21:28 KST",
+    updated:    "15 June 2026 · 04:52 KST",
     index_name: "KOSPI",
-    index_price:"7,764",
-    index_chg:  "+0.43",
-    universe:   77,
-    signals:    {prime:0,conf:4,rs:8,avoid:50},
+    index_price:"8,124",
+    index_chg:  "+4.63",
+    universe:   495,
+    signals:    {prime:2,conf:14,rs:64,avoid:300},
     top_sectors:[
-      {name:"Technology",pct:"-5.9",dir:"neg"}
+
     ]
   },
   {
@@ -509,16 +596,16 @@ const MARKETS = [
     name:       "Taiwan",
     exchange:   "Taiwan Stock Exchange",
     url:        "TW.html",
-    status:     "live",
-    mood:       "bull",
-    updated:    "11 June 2026 · 20:59 CST",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "TAIEX",
-    index_price:"43,149",
-    index_chg:  "-0.18",
-    universe:   69,
-    signals:    {prime:1,conf:9,rs:21,avoid:18},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Financials",pct:"-1.1",dir:"neg"}
+
     ]
   },
   {
@@ -529,14 +616,14 @@ const MARKETS = [
     url:        "CH.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 20:54 CET",
+    updated:    "14 June 2026 · 20:17 CET",
     index_name: "SMI",
-    index_price:"13,463",
-    index_chg:  "+0.80",
-    universe:   58,
-    signals:    {prime:1,conf:6,rs:12,avoid:18},
+    index_price:"13,708",
+    index_chg:  "+1.32",
+    universe:   231,
+    signals:    {prime:3,conf:13,rs:38,avoid:89},
     top_sectors:[
-      {name:"Technology",pct:"-4.3",dir:"neg"}
+
     ]
   },
   {
@@ -545,16 +632,16 @@ const MARKETS = [
     name:       "Saudi Arabia",
     exchange:   "Tadawul (Saudi Exchange)",
     url:        "SA.html",
-    status:     "live",
-    mood:       "bull",
-    updated:    "11 June 2026 · 19:35 AST",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "TASI (Tadawul)",
     index_price:"—",
     index_chg:  "—",
-    universe:   74,
-    signals:    {prime:0,conf:10,rs:11,avoid:31},
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Technology",pct:"-0.1",dir:"neg"}
+
     ]
   },
   {
@@ -565,14 +652,14 @@ const MARKETS = [
     url:        "NL.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 22:25 CET",
+    updated:    "14 June 2026 · 21:06 CET",
     index_name: "AEX",
-    index_price:"1,052",
-    index_chg:  "+0.48",
-    universe:   51,
-    signals:    {prime:3,conf:5,rs:10,avoid:16},
+    index_price:"1,081",
+    index_chg:  "+1.70",
+    universe:   112,
+    signals:    {prime:6,conf:5,rs:14,avoid:41},
     top_sectors:[
-      {name:"Consumer Staples",pct:"-0.6",dir:"neg"}
+
     ]
   },
   {
@@ -582,15 +669,15 @@ const MARKETS = [
     exchange:   "Bolsas y Mercados Espanoles",
     url:        "ES.html",
     status:     "live",
-    mood:       "bull",
-    updated:    "10 June 2026 · 22:33 CET",
+    mood:       "mixed",
+    updated:    "14 June 2026 · 20:32 CET",
     index_name: "IBEX 35",
-    index_price:"18,143",
-    index_chg:  "-0.18",
-    universe:   51,
-    signals:    {prime:0,conf:6,rs:9,avoid:12},
+    index_price:"18,764",
+    index_chg:  "+2.59",
+    universe:   226,
+    signals:    {prime:2,conf:5,rs:27,avoid:123},
     top_sectors:[
-      {name:"Utilities",pct:"-0.2",dir:"neg"}
+
     ]
   },
   {
@@ -599,16 +686,16 @@ const MARKETS = [
     name:       "Sweden",
     exchange:   "Nasdaq Stockholm",
     url:        "SE.html",
-    status:     "live",
-    mood:       "bull",
-    updated:    "10 June 2026 · 22:52 CET",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "OMX Stockholm 30",
-    index_price:"3,054",
-    index_chg:  "-0.53",
-    universe:   55,
-    signals:    {prime:0,conf:11,rs:10,avoid:17},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Technology",pct:"-1.1",dir:"neg"}
+
     ]
   },
   {
@@ -619,14 +706,14 @@ const MARKETS = [
     url:        "HK.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 June 2026 · 21:55 HKT",
+    updated:    "15 June 2026 · 03:41 HKT",
     index_name: "Hang Seng",
-    index_price:"24,249",
-    index_chg:  "-0.65",
-    universe:   80,
-    signals:    {prime:0,conf:18,rs:16,avoid:36},
+    index_price:"24,718",
+    index_chg:  "+1.93",
+    universe:   496,
+    signals:    {prime:5,conf:70,rs:101,avoid:219},
     top_sectors:[
-      {name:"Energy",pct:"-0.8",dir:"neg"}
+
     ]
   },
   {
@@ -637,14 +724,14 @@ const MARKETS = [
     url:        "IT.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 20:19 CET",
+    updated:    "14 June 2026 · 20:47 CET",
     index_name: "FTSE MIB",
-    index_price:"50,029",
-    index_chg:  "-0.47",
-    universe:   54,
-    signals:    {prime:2,conf:15,rs:6,avoid:17},
+    index_price:"51,497",
+    index_chg:  "+1.96",
+    universe:   403,
+    signals:    {prime:8,conf:40,rs:75,avoid:182},
     top_sectors:[
-      {name:"Consumer Discretionary",pct:"-1.1",dir:"neg"}
+
     ]
   },
   {
@@ -653,16 +740,16 @@ const MARKETS = [
     name:       "Singapore",
     exchange:   "Singapore Exchange",
     url:        "SG.html",
-    status:     "live",
-    mood:       "mixed",
-    updated:    "11 June 2026 · 22:26 SGT",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "STI",
-    index_price:"4,988",
-    index_chg:  "+0.59",
-    universe:   57,
-    signals:    {prime:2,conf:4,rs:3,avoid:35},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Financials",pct:"-8.2",dir:"neg"}
+
     ]
   },
   {
@@ -673,14 +760,14 @@ const MARKETS = [
     url:        "ID.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 June 2026 · 21:12 WIB",
+    updated:    "15 June 2026 · 02:45 WIB",
     index_name: "IDX Composite",
-    index_price:"5,886",
-    index_chg:  "-0.28",
-    universe:   62,
-    signals:    {prime:0,conf:20,rs:9,avoid:20},
+    index_price:"6,008",
+    index_chg:  "+2.07",
+    universe:   499,
+    signals:    {prime:2,conf:85,rs:120,avoid:196},
     top_sectors:[
-      {name:"Financials",pct:"-2.8",dir:"neg"}
+
     ]
   },
   {
@@ -691,14 +778,14 @@ const MARKETS = [
     url:        "ZA.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 20:35 SAST",
+    updated:    "13 June 2026 · 08:47 SAST",
     index_name: "JSE Top 40",
-    index_price:"101,656",
-    index_chg:  "-1.48",
+    index_price:"104,698",
+    index_chg:  "+2.33",
     universe:   76,
-    signals:    {prime:0,conf:30,rs:15,avoid:18},
+    signals:    {prime:3,conf:31,rs:10,avoid:17},
     top_sectors:[
-      {name:"Consumer Staples",pct:"-12.1",dir:"neg"}
+      {name:"Financials",pct:"-9.4",dir:"neg"}
     ]
   },
   {
@@ -709,14 +796,14 @@ const MARKETS = [
     url:        "MX.html",
     status:     "live",
     mood:       "bull",
-    updated:    "10 June 2026 · 17:10 CST",
+    updated:    "14 June 2026 · 13:53 CST",
     index_name: "IPC Mexico",
-    index_price:"64,822",
-    index_chg:  "-0.90",
-    universe:   43,
-    signals:    {prime:0,conf:19,rs:6,avoid:12},
+    index_price:"67,955",
+    index_chg:  "+1.46",
+    universe:   133,
+    signals:    {prime:0,conf:51,rs:15,avoid:29},
     top_sectors:[
-      {name:"Consumer Staples",pct:"-8.0",dir:"neg"}
+
     ]
   },
   {
@@ -725,16 +812,16 @@ const MARKETS = [
     name:       "Thailand",
     exchange:   "Stock Exchange of Thailand",
     url:        "TH.html",
-    status:     "live",
-    mood:       "mixed",
-    updated:    "11 June 2026 · 21:36 ICT",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "SET Index",
-    index_price:"1,572",
-    index_chg:  "+0.56",
-    universe:   63,
-    signals:    {prime:2,conf:3,rs:7,avoid:33},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Industrials",pct:"-1.7",dir:"neg"}
+
     ]
   },
   {
@@ -743,16 +830,16 @@ const MARKETS = [
     name:       "Malaysia",
     exchange:   "Bursa Malaysia",
     url:        "MY.html",
-    status:     "live",
-    mood:       "bull",
-    updated:    "11 June 2026 · 22:14 MYT",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "KLCI",
-    index_price:"1,680",
-    index_chg:  "+0.03",
-    universe:   65,
-    signals:    {prime:1,conf:10,rs:18,avoid:29},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Technology",pct:"-3.5",dir:"neg"}
+
     ]
   },
   {
@@ -763,12 +850,12 @@ const MARKETS = [
     url:        "UAE.html",
     status:     "live",
     mood:       "bull",
-    updated:    "11 June 2026 · 19:08 GST",
+    updated:    "14 June 2026 · 23:12 GST",
     index_name: "DFM / ADX",
     index_price:"—",
     index_chg:  "—",
-    universe:   10,
-    signals:    {prime:0,conf:1,rs:1,avoid:3},
+    universe:   3,
+    signals:    {prime:0,conf:1,rs:1,avoid:1},
     top_sectors:[
 
     ]
@@ -779,13 +866,13 @@ const MARKETS = [
     name:       "Poland",
     exchange:   "Warsaw Stock Exchange",
     url:        "PL.html",
-    status:     "live",
-    mood:       "bear",
-    updated:    "10 June 2026 · 19:43 CET",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "WIG20",
     index_price:"—",
-    index_chg:  "N/A",
-    universe:   46,
+    index_chg:  "—",
+    universe:   0,
     signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
 
@@ -797,16 +884,16 @@ const MARKETS = [
     name:       "Turkey",
     exchange:   "Borsa Istanbul",
     url:        "TR.html",
-    status:     "live",
-    mood:       "bull",
-    updated:    "10 June 2026 · 22:13 TRT",
+    status:     "coming",
+    mood:       "coming",
+    updated:    "Not yet configured",
     index_name: "BIST 100",
-    index_price:"13,742",
-    index_chg:  "-0.86",
-    universe:   63,
-    signals:    {prime:0,conf:0,rs:27,avoid:22},
+    index_price:"—",
+    index_chg:  "—",
+    universe:   0,
+    signals:    {prime:0,conf:0,rs:0,avoid:0},
     top_sectors:[
-      {name:"Consumer Staples",pct:"-0.4",dir:"neg"}
+
     ]
   }
 ];
@@ -862,7 +949,7 @@ function buildCards(){
     const chgCls=m.index_chg==='—'?'':(chgIsPos?'pos':'neg');
     const chgPfx=chgIsPos&&m.index_chg!=='—'?'+':'';
     const total=m.signals.prime+m.signals.conf+m.signals.rs;
-    const overlay=!isLive?`<div class="cc-coming-overlay"><span class="cc-coming-text">⏳ Launching Soon</span><span class="cc-coming-eta">Add Google Sheet URL to activate</span></div>`:'';
+    const overlay=!isLive?`<div class="cc-coming-overlay"><span class="cc-coming-text">⏳ Data Coming Soon</span><span class="cc-coming-eta">Runs on schedule — updates daily</span></div>`:'';
     const cta=isLive?`<a href="${m.url}" class="btn-report">Open Report →</a>`:`<span class="btn-coming">Coming Soon</span>`;
     return `<div class="country-card ${isLive?'active-card':'inactive-card'} animate-in ${d}" onclick="${isLive?`window.location='${m.url}'`:''}"><div class="cc-strip ${mood.strip}"></div><div class="cc-body"><div class="cc-header"><div class="cc-country"><span class="cc-flag">${m.flag}</span><div class="cc-name-wrap"><span class="cc-name">${m.name}</span><span class="cc-exchange">${m.exchange}</span></div></div><div class="cc-mood"><span class="cc-mood-badge ${mood.cls}">${mood.label}</span><span class="cc-updated">${m.updated}</span></div></div>${isLive?`<div class="cc-signals">${buildSignals(m.signals)}</div>`:''}<div class="cc-metrics"><div class="cc-metric"><span class="cc-metric-label">${m.index_name}</span><span class="cc-metric-value">${m.index_price}</span><span class="cc-metric-sub ${chgCls}">${chgPfx}${m.index_chg}${m.index_chg!=='—'?'%':''} today</span></div><div class="cc-metric"><span class="cc-metric-label">Universe</span><span class="cc-metric-value">${m.universe.toLocaleString()}</span><span class="cc-metric-sub">stocks tracked</span></div></div>${isLive?buildSectors(m.top_sectors):''}<div class="cc-cta"><span class="cc-universe">${isLive?`${total} opportunities`:'Not yet configured'}</span>${cta}</div></div>${overlay}</div>`;
   }).join('');
@@ -888,6 +975,90 @@ document.addEventListener('DOMContentLoaded',()=>{
     }catch(e){}
   })();
 });
+
+// ── Newsletter signup via Brevo API ─────────────────────────────────────────
+// Step 1: Replace with your API key from brevo.com → Settings → API Keys
+// Step 2: Replace with your list ID from brevo.com → Contacts → Lists
+const BREVO_API_KEY = "YOUR_BREVO_API_KEY_HERE";
+const BREVO_LIST_ID = 0;  // e.g. 3
+
+async function nlSubmit(e) {
+  e.preventDefault();
+  const btn   = document.getElementById('nl-btn');
+  const email = document.getElementById('nl-email').value.trim();
+  const name  = (document.getElementById('nl-name').value || '').trim();
+  if (!email) return;
+
+  btn.disabled = true;
+  document.getElementById('nl-btn-text').textContent = 'Subscribing…';
+  document.getElementById('nl-success').style.display = 'none';
+  document.getElementById('nl-error').style.display   = 'none';
+
+  // If API key not yet configured, show a friendly message
+  if (BREVO_API_KEY === 'YOUR_BREVO_API_KEY_HERE') {
+    document.getElementById('nl-error').textContent =
+      '⚙️ Newsletter not yet configured. Please check back soon!';
+    document.getElementById('nl-error').style.display = 'block';
+    btn.disabled = false;
+    document.getElementById('nl-btn-text').textContent = 'Subscribe — It's Free →';
+    return;
+  }
+
+  try {
+    const body = { email, updateEnabled: true };
+    if (BREVO_LIST_ID > 0) body.listIds = [BREVO_LIST_ID];
+    if (name) {
+      const [fname, ...rest] = name.split(' ');
+      body.attributes = { FIRSTNAME: fname, LASTNAME: rest.join(' ') };
+    }
+    const resp = await fetch('https://api.brevo.com/v3/contacts', {
+      method:  'POST',
+      headers: { 'accept':'application/json','content-type':'application/json','api-key': BREVO_API_KEY },
+      body:    JSON.stringify(body),
+    });
+    // 201 = created, 204 = already exists (both are success from user's POV)
+    if (resp.ok || resp.status === 204) {
+      document.getElementById('nl-success').style.display = 'block';
+      document.getElementById('nl-form').reset();
+      document.getElementById('nl-btn-text').textContent = 'Subscribed!';
+    } else {
+      throw new Error(resp.status);
+    }
+  } catch(err) {
+    document.getElementById('nl-error').style.display = 'block';
+    document.getElementById('nl-btn-text').textContent = 'Try Again →';
+    btn.disabled = false;
+  }
+}
+
+/* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
+window.currentUser = null;
+(function _initFirebaseAuth() {
+  if (typeof firebase === 'undefined') return;
+  const cfg = window.TF_FIREBASE_CONFIG;
+  if (!cfg || cfg.apiKey === 'YOUR_API_KEY') return;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    const _p = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().onAuthStateChanged(u => { window.currentUser = u; _renderAuthUI(u); });
+    window.tfSignIn  = () => firebase.auth().signInWithPopup(_p).catch(console.error);
+    window.tfSignOut = () => firebase.auth().signOut();
+  } catch(e) { console.warn('Firebase auth init failed:', e); }
+})();
+function _renderAuthUI(user) {
+  const el = document.getElementById('auth-area');
+  if (!el) return;
+  if (user) {
+    const av = user.photoURL
+      ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer" alt="">`
+      : `<span class="auth-avatar" style="background:#3b82f6;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff;">${(user.displayName||'?')[0].toUpperCase()}</span>`;
+    const nm = user.displayName || user.email || '';
+    el.innerHTML = `<div class="auth-user">${av}<span class="auth-name" title="${nm}">${nm}</span></div><button class="auth-out" onclick="tfSignOut()" title="Sign out">× Sign out</button>`;
+  } else {
+    el.innerHTML = `<button class="auth-btn" onclick="tfSignIn()"><svg width="14" height="14" viewBox="0 0 18 18" style="flex-shrink:0"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg> Sign in with Google</button>`;
+  }
+}
+
 </script>
 </body>
 </html>
