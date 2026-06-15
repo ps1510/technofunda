@@ -47,7 +47,7 @@ else:
 STOCK_CSV = os.path.join(INDEX_DATA_DIR, "us_all_stocks_master.csv")
 
 # ── Tunable constants ─────────────────────────────────────────────────────────
-MAX_STOCKS        = 1500
+MAX_STOCKS        = 2500
 PERIOD_DAYS       = 500   # 420 calendar days covers RS_252d & 12M%
 ENABLE_PATTERNS   = False
 PATTERN_MAX       = 800
@@ -101,11 +101,11 @@ except Exception:
 
 def load_us_universe():
     """
-    Load S&P 500 universe from CSV.
-    Detects column names flexibly (Symbol/Ticker, GICS Sector/Sector/Industry,
-    Company Name/Security/Name).
-    IMPORTANT: us_sp500list.csv must be sorted by market cap descending so that
-    row ranges correctly separate Mega (0-49) / Large (50-199) / Mid (200-499).
+    Load US universe from CSV.
+    New format (us_all_stocks_master.csv) has both Sector and Industry columns:
+      Company Name, Sector, Industry, Symbol, Series, ISIN Code
+    Legacy format (us_sp500list.csv) has only one grouping column; Sector is
+    derived via US_INDUSTRY_TO_SECTOR as a fallback.
     """
     for path in [STOCK_CSV,
                  os.path.join(SCRIPT_DIR,    "us_sp500list.csv"),
@@ -113,20 +113,36 @@ def load_us_universe():
         if os.path.exists(path):
             break
     else:
-        print("  ❌ us_sp500list.csv not found"); sys.exit(1)
+        print("  ❌ us_all_stocks_master.csv not found"); sys.exit(1)
 
     df = pd.read_csv(path); df.columns = df.columns.str.strip()
     cm = {c.lower().replace(" ", "").replace("_", ""): c for c in df.columns}
-    sc = next((cm[k] for k in ["symbol", "ticker", "sym"]         if k in cm), df.columns[0])
-    ic = next((cm[k] for k in ["gicssector", "sector", "industry"] if k in cm), df.columns[1])
+
+    # Symbol column
+    sc = next((cm[k] for k in ["symbol", "ticker", "sym"] if k in cm), df.columns[0])
+    # Company name column
     nc = next((cm[k] for k in ["companyname", "security", "name", "company"] if k in cm),
               df.columns[2])
-    df = df.rename(columns={sc: "Symbol", ic: "Industry", nc: "Company Name"})
+
+    df = df.rename(columns={sc: "Symbol", nc: "Company Name"})
     df["Symbol"]       = df["Symbol"].astype(str).str.strip()
-    df["Industry"]     = df["Industry"].astype(str).str.strip()
     df["Company Name"] = df["Company Name"].astype(str).str.strip()
     df["Yahoo"]        = df["Symbol"]   # US tickers have no suffix
-    df["Sector"]       = df["Industry"].map(US_INDUSTRY_TO_SECTOR).fillna("Technology")
+
+    # New 6-column format: has both Sector and Industry columns directly
+    has_sector   = "sector"   in cm
+    has_industry = "industry" in cm
+    if has_sector and has_industry:
+        df["Sector"]   = df[cm["sector"]].astype(str).str.strip()
+        df["Industry"] = df[cm["industry"]].astype(str).str.strip()
+    elif has_industry:
+        # Legacy: single grouping column, derive Sector from it
+        df["Industry"] = df[cm["industry"]].astype(str).str.strip()
+        df["Sector"]   = df["Industry"].map(US_INDUSTRY_TO_SECTOR).fillna("Other")
+    else:
+        df["Sector"]   = "Technology"
+        df["Industry"] = "Technology"
+
     if MAX_STOCKS > 0:
         df = df.head(MAX_STOCKS)
     print(f"  ✅ Universe: {len(df)} stocks | {df['Sector'].nunique()} sectors "

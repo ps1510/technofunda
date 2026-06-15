@@ -1,4 +1,4 @@
-Company Name,Industry,Symbol,Series,ISIN Code
+﻿Company Name,Industry,Symbol,Series,ISIN Code
 ABB India Ltd.,Capital Goods,ABB,EQ,INE117A01022
 Adani Energy Solutions Ltd.,Power,ADANIENSOL,EQ,INE931S01010
 Adani Green Energy Ltd.,Power,ADANIGREEN,EQ,INE364U01010
@@ -26,7 +26,7 @@ Indian Hotels Co. Ltd.,Consumer Services,INDHOTEL,EQ,INE053A01029
 Indian Oil Corporation Ltd.,Oil Gas & Consumable Fuels,IOC,EQ,INE242A01010
 Indian Railway Finance Corporation Ltd.,Financial Services,IRFC,EQ,INE053F01010
 Jindal Steel Ltd.,Metals & Mining,JINDALSTEL,EQ,INE749A01030
-LTIMindtree Ltd.,Information Technology,LTM,EQ,INE214T01019
+LTM Ltd.,Information Technology,LTM,EQ,INE214T01019
 Lodha Developers Ltd.,Realty,LODHA,EQ,INE670K01029
 Mazagoan Dock Shipbuilders Ltd.,Capital Goods,MAZDOCK,EQ,INE249Z01020
 Muthoot Finance Ltd.,Financial Services,MUTHOOTFIN,EQ,INE414G01012
@@ -47,5 +47,9 @@ Torrent Pharmaceuticals Ltd.,Healthcare,TORNTPHARM,EQ,INE685A01028
 Union Bank of India,Financial Services,UNIONBANK,EQ,INE692A01016
 United Spirits Ltd.,Fast Moving Consumer Goods,UNITDSPR,EQ,INE854D01024
 Varun Beverages Ltd.,Fast Moving Consumer Goods,VBL,EQ,INE200M01039
+Vedanta Aluminium Metal Ltd.,Metals & Mining,VAML,BE,INE1CDF01017
+Vedanta Iron and Steel Ltd.,Metals & Mining,VISL,BE,INE1CLE01013
 Vedanta Ltd.,Metals & Mining,VEDL,EQ,INE205A01025
+Vedanta Oil and Gas Ltd.,Oil Gas & Consumable Fuels,VOGL,BE,INE704J01044
+Vedanta Power Ltd.,Power,VEDPOWER,BE,INE694L01019
 Zydus Lifesciences Ltd.,Healthcare,ZYDUSLIFE,EQ,INE010B01027

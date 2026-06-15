@@ -127,8 +127,7 @@ def load_nl_universe():
     df["Yahoo"]    = df["Symbol"]
     df["Company"]  = df.get("Company Name", df["Symbol"])
     df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
-    df["Sector"]   = df["Industry"].map(NL_INDUSTRY_TO_SECTOR).fillna(df["Industry"])
-    df["Sector"]   = df["Sector"].replace("", "Other").fillna("Other")
+    df["Sector"]   = df["Industry"].map(NL_INDUSTRY_TO_SECTOR).fillna("Other")
     df = df.dropna(subset=["Yahoo"])
     print(f"  Universe: {len(df)} stocks loaded")
     return df.reset_index(drop=True)

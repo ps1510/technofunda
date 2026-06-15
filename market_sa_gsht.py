@@ -136,9 +136,7 @@ def load_sa_universe():
     df["Yahoo"]    = df["Symbol"]
     df["Company"]  = df.get("Company Name", df["Symbol"])
     df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
-    # Map industry → sector; if Industry already IS a valid sector name, keep it as-is
-    df["Sector"]   = df["Industry"].map(SA_INDUSTRY_TO_SECTOR).fillna(df["Industry"])
-    df["Sector"]   = df["Sector"].replace("", "Other").fillna("Other")
+    df["Sector"]   = df["Industry"].map(SA_INDUSTRY_TO_SECTOR).fillna("Other")
     df = df.dropna(subset=["Yahoo"])
     print(f"  Universe: {len(df)} stocks loaded from {os.path.basename(csv_path)}")
     return df.reset_index(drop=True)

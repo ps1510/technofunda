@@ -88,6 +88,7 @@ on:
     - cron: "30 19 * * 1-5"   # Spain
     - cron: "0 20 * * 1-5"    # Sweden
     - cron: "0 18 * * 1-5"    # Germany
+    - cron: "30 18 * * 1-5"   # France
     - cron: "0 21 * * 1-5"    # Brazil
     - cron: "0 22 * * 1-5"    # Canada
 
@@ -113,14 +114,14 @@ on:
         type: choice
         options:
           - all
-          - india
-          - usa
+          - india-html
+          - usa-html
           - uk
           - canada
           - australia
           - germany
-          - japan
           - france
+          - japan
           - brazil
           - china
           - southkorea
@@ -141,9 +142,6 @@ on:
           - uae
           - pl
           - tr
-          - india-html
-          - usa-html
-          - scans
 
 
 # ============================================================================

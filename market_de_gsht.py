@@ -182,8 +182,7 @@ def load_de_universe():
     df["Yahoo"] = df["Symbol"].apply(lambda s: ensure_yahoo_suffix(s, "DE"))
     df["Company"]  = df.get("Company Name", df["Symbol"])
     df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
-    df["Sector"]   = df["Industry"].map(DE_INDUSTRY_TO_SECTOR).fillna(df["Industry"])
-    df["Sector"]   = df["Sector"].replace("", "Other").fillna("Other")
+    df["Sector"]   = df["Industry"].map(DE_INDUSTRY_TO_SECTOR).fillna("Other")
     print(f"  ✅ Germany Universe: {len(df)} stocks loaded")
     return df.reset_index(drop=True)
 

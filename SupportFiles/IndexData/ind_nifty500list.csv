@@ -1,4 +1,4 @@
-Company Name,Industry,Symbol,Series,ISIN Code
+﻿Company Name,Industry,Symbol,Series,ISIN Code
 360 ONE WAM Ltd.,Financial Services,360ONE,EQ,INE466L01038
 3M India Ltd.,Diversified,3MINDIA,EQ,INE470A01017
 ABB India Ltd.,Capital Goods,ABB,EQ,INE117A01022
@@ -148,10 +148,6 @@ Divi's Laboratories Ltd.,Healthcare,DIVISLAB,EQ,INE361B01024
 Dixon Technologies (India) Ltd.,Consumer Durables,DIXON,EQ,INE935N01020
 Dr. Lal Path Labs Ltd.,Healthcare,LALPATHLAB,EQ,INE600L01024
 Dr. Reddy's Laboratories Ltd.,Healthcare,DRREDDY,EQ,INE089A01031
-Dummy Vedanta Ltd. 1,Metals & Mining,DUMMYVEDL1,EQ,DU1205A01025
-Dummy Vedanta Ltd. 2,Power,DUMMYVEDL2,EQ,DU2205A01025
-Dummy Vedanta Ltd. 3,Oil Gas & Consumable Fuels,DUMMYVEDL3,EQ,DU3205A01025
-Dummy Vedanta Ltd. 4,Metals & Mining,DUMMYVEDL4,EQ,DU4205A01025
 E.I.D. Parry (India) Ltd.,Fast Moving Consumer Goods,EIDPARRY,EQ,INE126A01031
 EIH Ltd.,Consumer Services,EIHOTEL,EQ,INE230A01023
 Eicher Motors Ltd.,Automobile and Auto Components,EICHERMOT,EQ,INE066A01021
@@ -412,7 +408,7 @@ Sapphire Foods India Ltd.,Consumer Services,SAPPHIRE,EQ,INE806T01020
 Sarda Energy and Minerals Ltd.,Metals & Mining,SARDAEN,EQ,INE385C01021
 Saregama India Ltd,Media Entertainment & Publication,SAREGAMA,EQ,INE979A01025
 Schaeffler India Ltd.,Automobile and Auto Components,SCHAEFFLER,EQ,INE513A01022
-Schneider Electric Infrastructure Ltd.,Capital Goods,SCHNEIDER,BE,INE839M01018
+Schneider Electric Infrastructure Ltd.,Capital Goods,SCHNEIDER,EQ,INE839M01018
 Shipping Corporation of India Ltd.,Services,SCI,EQ,INE109A01011
 Shree Cement Ltd.,Construction Materials,SHREECEM,EQ,INE070A01015
 Shriram Finance Ltd.,Financial Services,SHRIRAMFIN,EQ,INE721A01047
@@ -484,7 +480,11 @@ Urban Company Ltd.,Consumer Services,URBANCO,EQ,INE0CAZ01013
 Usha Martin Ltd.,Capital Goods,USHAMART,EQ,INE228A01035
 Vardhman Textiles Ltd.,Textiles,VTL,EQ,INE825A01020
 Varun Beverages Ltd.,Fast Moving Consumer Goods,VBL,EQ,INE200M01039
+Vedanta Aluminium Metal Ltd.,Metals & Mining,VAML,BE,INE1CDF01017
+Vedanta Iron and Steel Ltd.,Metals & Mining,VISL,BE,INE1CLE01013
 Vedanta Ltd.,Metals & Mining,VEDL,EQ,INE205A01025
+Vedanta Oil and Gas Ltd.,Oil Gas & Consumable Fuels,VOGL,BE,INE704J01044
+Vedanta Power Ltd.,Power,VEDPOWER,BE,INE694L01019
 Vijaya Diagnostic Centre Ltd.,Healthcare,VIJAYA,EQ,INE043W01024
 Vishal Mega Mart Ltd.,Consumer Services,VMM,EQ,INE01EA01019
 Vodafone Idea Ltd.,Telecommunication,IDEA,EQ,INE669E01016

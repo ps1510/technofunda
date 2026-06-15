@@ -173,8 +173,7 @@ def load_br_universe():
     df["Yahoo"]    = df["Symbol"].apply(lambda s: ensure_yahoo_suffix(s, "BR"))
     df["Company"]  = df.get("Company Name", df["Symbol"])
     df["Industry"] = df.get("Industry", "").astype(str).fillna("").str.strip()
-    df["Sector"]   = df["Industry"].map(BR_INDUSTRY_TO_SECTOR).fillna(df["Industry"])
-    df["Sector"]   = df["Sector"].replace("", "Other").fillna("Other")
+    df["Sector"]   = df["Industry"].map(BR_INDUSTRY_TO_SECTOR).fillna("Other")
     print(f"  ✅ Brazil Universe: {len(df)} stocks loaded")
     return df.reset_index(drop=True)
 

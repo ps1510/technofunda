@@ -173,11 +173,10 @@ def build_rrg_section(
 /* All rules scoped to .rrg-wrap so they never bleed into the main page */
 .rrg-wrap {{
   display:flex; flex-direction:column;
-  height:calc(100vh - 120px); min-height:520px;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   font-size:13px;
 }}
-.rrg-body {{ display:flex; flex:1; min-height:0; gap:0; }}
+.rrg-body {{ display:flex; height:calc(100vh - 240px); min-height:400px; gap:0; }}
 
 /* Sidebar */
 .rrg-sb {{
@@ -277,7 +276,7 @@ def build_rrg_section(
   display:grid; grid-template-columns:repeat(2,1fr); gap:8px;
 }}
 .rrg-qc {{
-  border-radius:5px; padding:5px 8px; min-height:50px;
+  border-radius:5px; padding:4px 8px; min-height:28px;
 }}
 .rrg-qc.rrg-leading  {{ background:rgba(0,200,100,0.07); border:1.5px solid rgba(0,180,80,0.25); }}
 .rrg-qc.rrg-improving{{ background:rgba(70,70,245,0.06); border:1.5px solid rgba(70,70,220,0.22); }}
@@ -367,34 +366,35 @@ def build_rrg_section(
         </div>
       </div>
 
-      <!-- Quadrant table — 2×2 mirrors chart layout -->
-      <div class="rrg-qt">
-        <div class="rrg-qt-ttl">Current Quadrant Positions</div>
-        <div class="rrg-qt-legend">&#8592; RS-Ratio below 100 (underperforming) &nbsp;&bull;&nbsp; RS-Ratio above 100 (outperforming) &#8594;</div>
-        <div class="rrg-qt-grid">
-          <!-- Row 1: RS-Momentum > 100 (rising) -->
-          <div class="rrg-qc rrg-improving">
-            <div class="rrg-qh">&#9651; Improving</div>
-            <div id="rrg-qt-improving"></div>
-          </div>
-          <div class="rrg-qc rrg-leading">
-            <div class="rrg-qh">&#9650; Leading</div>
-            <div id="rrg-qt-leading"></div>
-          </div>
-          <!-- Row 2: RS-Momentum < 100 (falling) -->
-          <div class="rrg-qc rrg-lagging">
-            <div class="rrg-qh">&#9661; Lagging</div>
-            <div id="rrg-qt-lagging"></div>
-          </div>
-          <div class="rrg-qc rrg-weakening">
-            <div class="rrg-qh">&#9660; Weakening</div>
-            <div id="rrg-qt-weakening"></div>
-          </div>
-        </div>
-      </div>
-
     </div><!-- /rrg-main -->
   </div><!-- /rrg-body -->
+
+  <!-- Quadrant table lives outside rrg-body so it's never clipped by the chart flex layout -->
+  <div class="rrg-qt">
+    <div class="rrg-qt-ttl">Current Quadrant Positions</div>
+    <div class="rrg-qt-legend">&#8592; RS-Ratio below 100 (underperforming) &nbsp;&bull;&nbsp; RS-Ratio above 100 (outperforming) &#8594;</div>
+    <div class="rrg-qt-grid">
+      <!-- Row 1: RS-Momentum > 100 (rising) -->
+      <div class="rrg-qc rrg-improving">
+        <div class="rrg-qh">&#9651; Improving</div>
+        <div id="rrg-qt-improving"></div>
+      </div>
+      <div class="rrg-qc rrg-leading">
+        <div class="rrg-qh">&#9650; Leading</div>
+        <div id="rrg-qt-leading"></div>
+      </div>
+      <!-- Row 2: RS-Momentum < 100 (falling) -->
+      <div class="rrg-qc rrg-lagging">
+        <div class="rrg-qh">&#9661; Lagging</div>
+        <div id="rrg-qt-lagging"></div>
+      </div>
+      <div class="rrg-qc rrg-weakening">
+        <div class="rrg-qh">&#9660; Weakening</div>
+        <div id="rrg-qt-weakening"></div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /rrg-wrap -->
 
 <script>

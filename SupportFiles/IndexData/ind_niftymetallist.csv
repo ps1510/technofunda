@@ -1,4 +1,4 @@
-Company Name,Industry,Symbol,Series,ISIN Code
+﻿Company Name,Industry,Symbol,Series,ISIN Code
 APL Apollo Tubes Ltd.,Capital Goods,APLAPOLLO,EQ,INE702C01027
 Adani Enterprises Ltd.,Metals & Mining,ADANIENT,EQ,INE423A01024
 Hindalco Industries Ltd.,Metals & Mining,HINDALCO,EQ,INE038A01020
@@ -12,5 +12,9 @@ NMDC Ltd.,Metals & Mining,NMDC,EQ,INE584A01023
 National Aluminium Co. Ltd.,Metals & Mining,NATIONALUM,EQ,INE139A01034
 Steel Authority of India Ltd.,Metals & Mining,SAIL,EQ,INE114A01011
 Tata Steel Ltd.,Metals & Mining,TATASTEEL,EQ,INE081A01020
+Vedanta Aluminium Metal Ltd.,Metals & Mining,VAML,BE,INE1CDF01017
+Vedanta Iron and Steel Ltd.,Metals & Mining,VISL,BE,INE1CLE01013
 Vedanta Ltd.,Metals & Mining,VEDL,EQ,INE205A01025
+Vedanta Oil and Gas Ltd.,Oil Gas & Consumable Fuels,VOGL,BE,INE704J01044
+Vedanta Power Ltd.,Power,VEDPOWER,BE,INE694L01019
 Welspun Corp Ltd.,Capital Goods,WELCORP,EQ,INE191B01025

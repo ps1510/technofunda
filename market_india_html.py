@@ -35,6 +35,7 @@ PATTERN_MAX       = 400
 FETCH_FINANCIALS  = True
 ENABLE_SIGNALS    = True
 SIGNAL_MAX_STOCKS = 1400
+ENABLE_SCANS      = True
 PRIMARY_RS_PERIOD = 22   # ← change to 55 or 120 to test other RS periods
 
 # ── Chartink scan folders (India-only) — keys match Scan_Group column ──────
@@ -109,7 +110,7 @@ def load_india_universe():
     df["Industry"]     = df["Industry"].str.strip()
     df["Company Name"] = df["Company Name"].str.strip()
     df["Yahoo"]        = df["Symbol"] + ".NS"
-    df["Sector"]       = df["Industry"].map(INDIA_INDUSTRY_TO_SECTOR).fillna("Finance")
+    df["Sector"]       = df["Industry"].map(INDIA_INDUSTRY_TO_SECTOR).fillna("Other")
     if MAX_STOCKS > 0: df = df.head(MAX_STOCKS)
     print(f"  ✅ Universe: {len(df)} stocks | {df['Sector'].nunique()} sectors")
     return df
@@ -152,10 +153,24 @@ def fetch_india_sector_prices(universe=None):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main():
-    global ENABLE_PATTERNS, FETCH_FINANCIALS, ENABLE_SIGNALS
+    global ENABLE_PATTERNS, FETCH_FINANCIALS, ENABLE_SIGNALS, ENABLE_SCANS
     _mode = _me.prompt_run_mode(ENABLE_PATTERNS, FETCH_FINANCIALS, ENABLE_SIGNALS)
     ENABLE_PATTERNS, FETCH_FINANCIALS, ENABLE_SIGNALS = (
         _mode["patterns"], _mode["financials"], _mode["signals"])
+
+    # ── Scan prompt (India-only, interactive only) ─────────────────────────
+    try:
+        _interactive = bool(sys.stdin) and sys.stdin.isatty()
+    except Exception:
+        _interactive = False
+    if _interactive:
+        print("─" * 52)
+        try:
+            _ans = input("  Run Chartink Scans tab? [Y/n]: ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            _ans = ""
+        ENABLE_SCANS = (_ans == "" or _ans.startswith("y"))
+        print("─" * 52)
     print("\n"+"═"*68)
     print("  INDIA MARKET — HTML-ONLY EDITION  v6.0")
     print(f"  {datetime.now().strftime('%d %b %Y  %H:%M IST')}")
@@ -245,86 +260,89 @@ def main():
 
     # ── Chartink scan data for 📡 Scans tab (India only) ──────────────────────
     scans_df = None
-    print("  📡 Chartink scans …")
-    try:
-        _ck_path = os.path.join(SCRIPT_DIR, "Files", "support_code")
-        if _ck_path not in sys.path:
-            sys.path.insert(0, _ck_path)
-        from chartink_utils import get_data_from_chartink
+    if not ENABLE_SCANS:
+        print("  ⏩ Chartink scans skipped")
+    else:
+        print("  📡 Chartink scans …")
+        try:
+            _ck_path = os.path.join(SCRIPT_DIR, "Files", "support_code")
+            if _ck_path not in sys.path:
+                sys.path.insert(0, _ck_path)
+            from chartink_utils import get_data_from_chartink
 
-        _ck_frames = []
-        for _grp, _rel_dir in SCAN_CONFIGS:
-            _cdir = os.path.join(SCRIPT_DIR, _rel_dir)
-            if not os.path.isdir(_cdir):
-                print(f"    ⚠ {_grp}: folder not found → {_cdir}")
-                continue
+            _ck_frames = []
+            for _grp, _rel_dir in SCAN_CONFIGS:
+                _cdir = os.path.join(SCRIPT_DIR, _rel_dir)
+                if not os.path.isdir(_cdir):
+                    print(f"    ⚠ {_grp}: folder not found → {_cdir}")
+                    continue
 
-            # ── collect (filepath, condition_name, category) tuples ───────
-            # Mode A: subfolders → subfolder name is the category
-            # Mode B: flat .txt files → category derived later from prefix
-            _to_scan = []  # list of (abs_path, cname, category_override_or_None)
-            for _entry in sorted(os.listdir(_cdir)):
-                _entry_path = os.path.join(_cdir, _entry)
-                if os.path.isdir(_entry_path):
-                    # Skip legacy nested Conditions_* folders (rename artifacts)
-                    if _entry.startswith("Conditions_"):
-                        print(f"    ⚠ Skipping legacy subfolder '{_entry}' — move its files up one level to {_cdir}")
-                        continue
-                    # Subfolder: each .txt inside gets the folder name as category
-                    _cat = _entry.replace("_", " ").strip()
-                    for _fn in sorted(os.listdir(_entry_path)):
-                        if _fn.endswith(".txt"):
-                            _to_scan.append((
-                                os.path.join(_entry_path, _fn),
-                                _fn.replace(".txt", ""),
-                                _cat,
-                            ))
-                elif _entry.endswith(".txt"):
-                    # Flat file: no category override — _parse() handles prefix
-                    _to_scan.append((_entry_path, _entry.replace(".txt", ""), None))
+                # ── collect (filepath, condition_name, category) tuples ───────
+                # Mode A: subfolders → subfolder name is the category
+                # Mode B: flat .txt files → category derived later from prefix
+                _to_scan = []  # list of (abs_path, cname, category_override_or_None)
+                for _entry in sorted(os.listdir(_cdir)):
+                    _entry_path = os.path.join(_cdir, _entry)
+                    if os.path.isdir(_entry_path):
+                        # Skip legacy nested Conditions_* folders (rename artifacts)
+                        if _entry.startswith("Conditions_"):
+                            print(f"    ⚠ Skipping legacy subfolder '{_entry}' — move its files up one level to {_cdir}")
+                            continue
+                        # Subfolder: each .txt inside gets the folder name as category
+                        _cat = _entry.replace("_", " ").strip()
+                        for _fn in sorted(os.listdir(_entry_path)):
+                            if _fn.endswith(".txt"):
+                                _to_scan.append((
+                                    os.path.join(_entry_path, _fn),
+                                    _fn.replace(".txt", ""),
+                                    _cat,
+                                ))
+                    elif _entry.endswith(".txt"):
+                        # Flat file: no category override — _parse() handles prefix
+                        _to_scan.append((_entry_path, _entry.replace(".txt", ""), None))
 
-            for _fp, _cname, _cat in _to_scan:
-                try:
-                    with open(_fp) as _fh:
-                        _ctxt = _fh.read().strip()
-                    _df = get_data_from_chartink(_ctxt)
-                    if _df.empty:
-                        print(f"    ○ {_cname} → 0 stocks"); continue
-                    _df["Scan_Group"] = _grp
-                    _df["Condition"]  = _cname
-                    if _cat is not None:
-                        _df["Category"] = _cat   # subfolder-based category
-                    _ck_frames.append(_df)
-                    _cat_tag = f"[{_cat}] " if _cat else ""
-                    print(f"    ✓ {_cat_tag}{_cname} → {len(_df)} stocks")
-                except Exception as _e:
-                    print(f"    ✗ {_cname}: {_e}")
+                for _fp, _cname, _cat in _to_scan:
+                    try:
+                        with open(_fp) as _fh:
+                            _ctxt = _fh.read().strip()
+                        _df = get_data_from_chartink(_ctxt)
+                        if _df.empty:
+                            print(f"    ○ {_cname} → 0 stocks"); continue
+                        _df["Scan_Group"] = _grp
+                        _df["Condition"]  = _cname
+                        if _cat is not None:
+                            _df["Category"] = _cat   # subfolder-based category
+                        _ck_frames.append(_df)
+                        _cat_tag = f"[{_cat}] " if _cat else ""
+                        print(f"    ✓ {_cat_tag}{_cname} → {len(_df)} stocks")
+                    except Exception as _e:
+                        print(f"    ✗ {_cname}: {_e}")
 
-        if _ck_frames:
-            _ck_raw = pd.concat(_ck_frames, ignore_index=True)
-            # Normalise nsecode (strip special chars same as LongTerm.py)
-            _ck_raw["nsecode"] = (_ck_raw["nsecode"].astype(str)
-                                   .str.replace("&", "_", regex=False)
-                                   .str.replace("-", "_", regex=False))
-            # Build merge key: strip .NS from stock_df Symbol
-            _lu = stock_df.copy()
-            _lu["_sym"] = _lu["Symbol"].str.replace(".NS", "", regex=False).str.strip().str.upper()
-            _ck_raw["_sym"] = _ck_raw["nsecode"].str.strip().str.upper()
-            _mg = _ck_raw.merge(_lu, on="_sym", how="left")
-            # Fill Symbol/Company for stocks not in our universe CSV
-            _mg["Symbol"]  = _mg["Symbol"].fillna(_ck_raw["nsecode"])
-            if "company_name" in _ck_raw.columns:
-                _mg["Company"] = _mg["Company"].fillna(_ck_raw.set_index("nsecode")
-                                                               .reindex(_ck_raw["nsecode"])["company_name"].values)
-            _SCOLS = ["Scan_Group", "Category", "Condition", "Symbol", "Company", "Sector",
-                      "Price", "Chg_1D%", "Signal_Label",
-                      "RS_22d_Idx%", "RSI_14", "From_52W_High%", "Rel_Vol", "SMA_Score"]
-            scans_df = _mg[[c for c in _SCOLS if c in _mg.columns]].copy()
-            print(f"  ✅ Scans: {len(scans_df)} rows · {scans_df['Condition'].nunique()} conditions")
-        else:
-            print("  ⚠ Scans: all conditions returned empty")
-    except Exception as _ck_err:
-        print(f"  ⚠ Scans skipped: {_ck_err}")
+            if _ck_frames:
+                _ck_raw = pd.concat(_ck_frames, ignore_index=True)
+                # Normalise nsecode (strip special chars same as LongTerm.py)
+                _ck_raw["nsecode"] = (_ck_raw["nsecode"].astype(str)
+                                       .str.replace("&", "_", regex=False)
+                                       .str.replace("-", "_", regex=False))
+                # Build merge key: strip .NS from stock_df Symbol
+                _lu = stock_df.copy()
+                _lu["_sym"] = _lu["Symbol"].str.replace(".NS", "", regex=False).str.strip().str.upper()
+                _ck_raw["_sym"] = _ck_raw["nsecode"].str.strip().str.upper()
+                _mg = _ck_raw.merge(_lu, on="_sym", how="left")
+                # Fill Symbol/Company for stocks not in our universe CSV
+                _mg["Symbol"]  = _mg["Symbol"].fillna(_ck_raw["nsecode"])
+                if "company_name" in _ck_raw.columns:
+                    _mg["Company"] = _mg["Company"].fillna(_ck_raw.set_index("nsecode")
+                                                                   .reindex(_ck_raw["nsecode"])["company_name"].values)
+                _SCOLS = ["Scan_Group", "Category", "Condition", "Symbol", "Company", "Sector",
+                          "Price", "Chg_1D%", "Signal_Label",
+                          "RS_22d_Idx%", "RSI_14", "From_52W_High%", "Rel_Vol", "SMA_Score"]
+                scans_df = _mg[[c for c in _SCOLS if c in _mg.columns]].copy()
+                print(f"  ✅ Scans: {len(scans_df)} rows · {scans_df['Condition'].nunique()} conditions")
+            else:
+                print("  ⚠ Scans: all conditions returned empty")
+        except Exception as _ck_err:
+            print(f"  ⚠ Scans skipped: {_ck_err}")
 
     # ── RRG tab ─────────────────────────────────────────────────────────────────
     rrg_html = None
