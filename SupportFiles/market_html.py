@@ -2292,6 +2292,21 @@ table.data-tbl.gv-fin      .gcol:not(.g-pin):not(.g-fin){display:none;}
 }
 #tv-preview-toggle.tv-on  { background: var(--accent); color: #fff; border-color: var(--accent); }
 #tv-preview-toggle.tv-off { background: var(--bg3);    color: var(--text3); }
+/* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
+#auth-area{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.auth-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:7px;cursor:pointer;border:1px solid var(--border);
+  background:var(--bg3);color:var(--text2);transition:all .15s;white-space:nowrap;}
+.auth-btn:hover{border-color:var(--accent);color:var(--accent);}
+.auth-user{display:flex;align-items:center;gap:7px;}
+.auth-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;
+  border:1px solid var(--border);}
+.auth-name{font-size:11px;font-weight:600;color:var(--text);
+  max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.auth-out{font-size:11px;color:var(--text3);cursor:pointer;background:none;
+  border:none;padding:2px 6px;border-radius:5px;transition:color .15s;}
+.auth-out:hover{color:var(--red);}
+@media(max-width:500px){.auth-name{display:none;}}
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3316,6 +3331,36 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 window.addEventListener('scroll', _tvHide, {passive:true});
 window.addEventListener('resize', _tvHide, {passive:true});
+
+/* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
+window.currentUser = null;
+/* Show sign-in button immediately — Firebase replaces it once auth state is known */
+document.addEventListener('DOMContentLoaded', function() { _renderAuthUI(null); });
+(function _initFirebaseAuth() {
+  if (typeof firebase === 'undefined') return;
+  const cfg = window.TF_FIREBASE_CONFIG;
+  if (!cfg || cfg.apiKey === 'YOUR_API_KEY') return;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    const _p = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().onAuthStateChanged(u => { window.currentUser = u; _renderAuthUI(u); });
+    window.tfSignIn  = () => firebase.auth().signInWithPopup(_p).catch(console.error);
+    window.tfSignOut = () => firebase.auth().signOut();
+  } catch(e) { console.warn('Firebase auth init failed:', e); }
+})();
+function _renderAuthUI(user) {
+  const el = document.getElementById('auth-area');
+  if (!el) return;
+  if (user) {
+    const av = user.photoURL
+      ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer" alt="">`
+      : `<span class="auth-avatar" style="background:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;">${(user.displayName||'?')[0].toUpperCase()}</span>`;
+    const nm = user.displayName || user.email || '';
+    el.innerHTML = `<div class="auth-user">${av}<span class="auth-name" title="${nm}">${nm}</span></div><button class="auth-out" onclick="tfSignOut()" title="Sign out">× Sign out</button>`;
+  } else {
+    el.innerHTML = `<button class="auth-btn" onclick="tfSignIn()"><svg width="13" height="13" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg> Sign in</button>`;
+  }
+}
 """
 
 
@@ -4166,6 +4211,9 @@ def build_html_report(
   <meta name="theme-color" content="#0f1117">
   <title>TechnoFunda [{market}] — {run_time}</title>
   <style>{CSS}</style>
+  <script src="firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 <header class="app-header">
@@ -4194,6 +4242,7 @@ def build_html_report(
         <option value="navy">🌊 Navy Trader</option>
       </select>
     </div>
+    <div id="auth-area"></div>
   </div>
 </header>
 <div id="rv-bar" class="rv-bar" style="display:none"></div>

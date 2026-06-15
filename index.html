@@ -9,6 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
 :root{
   --bg:#080c14;--bg2:#0d1220;--bg3:#111827;
@@ -253,7 +256,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
         <span class="sec-label">Live Reports</span>
         <h2 class="sec-title">Choose Your Market</h2>
       </div>
-      <span class="sec-updated" id="gen-time-label" data-utc="15 Jun 2026 08:50 UTC">Generated: 15 Jun 2026 08:50 UTC</span>
+      <span class="sec-updated" id="gen-time-label" data-utc="15 Jun 2026 09:41 UTC">Generated: 15 Jun 2026 09:41 UTC</span>
     </div>
     <div class="countries-grid" id="countries-grid"></div>
   </section>
@@ -418,12 +421,12 @@ const MARKETS = [
     url:        "IN.html",
     status:     "live",
     mood:       "bull",
-    updated:    "15 June 2026 · 12:25 IST",
+    updated:    "15 June 2026 · 14:56 IST",
     index_name: "NIFTY 50",
     index_price:"—",
     index_chg:  "—",
     universe:   749,
-    signals:    {prime:42,conf:82,rs:204,avoid:251},
+    signals:    {prime:42,conf:82,rs:208,avoid:250},
     top_sectors:[
 
     ]
@@ -1033,6 +1036,8 @@ async function nlSubmit(e) {
 
 /* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
 window.currentUser = null;
+/* Show sign-in button immediately — Firebase replaces it once auth state is known */
+document.addEventListener('DOMContentLoaded', function() { _renderAuthUI(null); });
 (function _initFirebaseAuth() {
   if (typeof firebase === 'undefined') return;
   const cfg = window.TF_FIREBASE_CONFIG;

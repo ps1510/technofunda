@@ -443,6 +443,8 @@ def parse_country_html(html_path: str, country: dict) -> dict:
 _AUTH_JS = r"""
 /* ── Firebase Google Sign-In ─────────────────────────────────────────────── */
 window.currentUser = null;
+/* Show sign-in button immediately — Firebase replaces it once auth state is known */
+document.addEventListener('DOMContentLoaded', function() { _renderAuthUI(null); });
 (function _initFirebaseAuth() {
   if (typeof firebase === 'undefined') return;
   const cfg = window.TF_FIREBASE_CONFIG;
@@ -528,6 +530,9 @@ def render_homepage(markets: list, output_path: str):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
 :root{{
   --bg:#080c14;--bg2:#0d1220;--bg3:#111827;
